@@ -1,2 +1,2 @@
 :HL["/SMART-LV/_next/static/chunks/1w74t_vloj272.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"EMpvYev2xbVzO-dByYCRH"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"Dwz8bBpHGmGKoAedsE0iu"}

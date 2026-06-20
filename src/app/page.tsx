@@ -1185,6 +1185,28 @@ function parseEuroInput(value: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function anthropicApiUrl() {
+  if (typeof window === "undefined") return "/api/anthropic-lv/";
+  const basePath = window.location.pathname.startsWith("/SMART-LV") ? "/SMART-LV" : "";
+  return `${basePath}/api/anthropic-lv/`;
+}
+
+async function readAnthropicJson<T>(response: Response): Promise<T> {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    throw new Error("Anthropic-Backend nicht erreichbar. Lokal bitte mit Server starten; GitHub Pages kann keine API-Route ausführen.");
+  }
+  return (await response.json()) as T;
+}
+
+function readableAnthropicError(error: unknown) {
+  if (!(error instanceof Error)) return "Anthropic konnte nicht erreicht werden.";
+  if (error.message.includes("expected pattern")) {
+    return "Der Anthropic-Aufruf konnte nicht gestartet werden. Bitte Key prüfen und sicherstellen, dass die App mit Backend läuft.";
+  }
+  return error.message;
+}
+
 function OrderBillingWorkspace({
   project,
   groups,
@@ -1462,12 +1484,12 @@ function AiAssistant({
     setGeneratedGroups(null);
 
     try {
-      const response = await fetch("api/anthropic-lv/", {
+      const response = await fetch(anthropicApiUrl(), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ project, prompt: lvPrompt, apiKey: anthropicKey.trim() || undefined })
       });
-      const result = (await response.json()) as { groups?: PositionGroup[]; error?: string };
+      const result = await readAnthropicJson<{ groups?: PositionGroup[]; error?: string }>(response);
       if (!response.ok || !result.groups?.length) {
         throw new Error(result.error || "Es wurde kein gueltiges LV erzeugt.");
       }
@@ -1476,11 +1498,7 @@ function AiAssistant({
       setGenerationMessage(`${result.groups.length} Leistungsbereiche wurden generiert.`);
     } catch (error) {
       setGenerationStatus("error");
-      setGenerationMessage(
-        error instanceof Error
-          ? error.message
-          : "Anthropic konnte nicht erreicht werden. Auf GitHub Pages ist dafuer ein serverseitiges Backend erforderlich."
-      );
+      setGenerationMessage(readableAnthropicError(error));
     }
   }
 
@@ -1516,18 +1534,18 @@ function AiAssistant({
     setKeyStatus("checking");
     setKeyMessage("");
     try {
-      const response = await fetch("api/anthropic-lv/", {
+      const response = await fetch(anthropicApiUrl(), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ apiKey: trimmed, mode: "check" })
       });
-      const result = (await response.json()) as { ok?: boolean; error?: string };
+      const result = await readAnthropicJson<{ ok?: boolean; error?: string }>(response);
       if (!response.ok || !result.ok) throw new Error(result.error || "Key konnte nicht verifiziert werden.");
       setKeyStatus("valid");
       setKeyMessage("Key ist gueltig.");
     } catch (error) {
       setKeyStatus("error");
-      setKeyMessage(error instanceof Error ? error.message : "Key konnte nicht verifiziert werden.");
+      setKeyMessage(readableAnthropicError(error));
     }
   }
 
