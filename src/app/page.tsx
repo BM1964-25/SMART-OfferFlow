@@ -586,28 +586,28 @@ function Dashboard({
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">Auftragssumme</p>
               <p className="mt-2 text-lg font-semibold text-ink">{formatCurrency(orderTotal)}</p>
             </div>
-            <div className="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-blue-700">Abgerechnet</p>
-              <p className="mt-2 text-lg font-semibold text-blue-900">{formatCurrency(billedTotal)}</p>
+            <div className="rounded-md border border-emerald-100 bg-emerald-50 px-4 py-3 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-emerald-700">Abgerechnet</p>
+              <p className="mt-2 text-lg font-semibold text-emerald-900">{formatCurrency(billedTotal)}</p>
             </div>
-            <div className="rounded-md border border-line px-4 py-3 text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">Noch offen</p>
-              <p className="mt-2 text-lg font-semibold text-ink">{formatCurrency(outstandingTotal)}</p>
+            <div className="rounded-md border border-rose-100 bg-rose-50 px-4 py-3 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-rose-700">Noch offen</p>
+              <p className="mt-2 text-lg font-semibold text-rose-900">{formatCurrency(outstandingTotal)}</p>
             </div>
           </div>
         </div>
         <div className="mt-6">
-          <div className="h-5 overflow-hidden rounded-md border border-line bg-slate-100">
-            <div className="h-full bg-blue-600 transition-all" style={{ width: `${billedPercent}%` }} />
+          <div className="h-5 overflow-hidden rounded-md border border-rose-100 bg-rose-100">
+            <div className="h-full bg-emerald-600 transition-all" style={{ width: `${billedPercent}%` }} />
           </div>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
             <div className="flex items-center gap-4">
               <span className="inline-flex items-center gap-2 text-muted">
-                <span className="h-3 w-3 rounded-sm bg-blue-600" />
+                <span className="h-3 w-3 rounded-sm bg-emerald-600" />
                 abgerechnet
               </span>
               <span className="inline-flex items-center gap-2 text-muted">
-                <span className="h-3 w-3 rounded-sm border border-line bg-slate-100" />
+                <span className="h-3 w-3 rounded-sm bg-rose-100 ring-1 ring-rose-200" />
                 offen
               </span>
             </div>
