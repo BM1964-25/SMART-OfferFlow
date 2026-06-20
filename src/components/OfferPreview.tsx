@@ -79,18 +79,18 @@ export function OfferPreview({ project, groups }: { project: Project; groups: Po
                     </h3>
                     <p className="mt-1 text-sm text-muted">{group.intro}</p>
                   </div>
-                  <p className="w-fit shrink-0 rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold text-ink">
-                    Abschnitt netto {formatCurrency(groupTotal(group))}
+                  <p className="w-fit shrink-0 rounded-md border border-line bg-white px-3 py-2 text-right text-sm font-semibold text-ink">
+                    {formatCurrency(groupTotal(group))}
                   </p>
                 </div>
                 <div className="border-y border-line bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-muted">
                   <div className="grid gap-4 lg:grid-cols-[56px_minmax(260px,1fr)_76px_68px_116px_126px]">
                     <span>Nr.</span>
                     <span>Leistung</span>
-                    <span>Einheit</span>
-                    <span>Menge</span>
-                    <span>Stundensatz</span>
-                    <span>Positionssumme</span>
+                    <span className="text-right">Einheit</span>
+                    <span className="text-right">Menge</span>
+                    <span className="text-right">Stundensatz</span>
+                    <span className="text-right">Positionssumme</span>
                   </div>
                 </div>
                 <div className="divide-y divide-line">
@@ -105,13 +105,13 @@ export function OfferPreview({ project, groups }: { project: Project; groups: Po
                         <p className="mt-1 leading-6 text-muted">{position.description}</p>
                         {position.note ? <p className="mt-2 text-xs font-medium text-slate-500">{position.note}</p> : null}
                       </div>
-                      <p className="text-muted">{position.unit}</p>
-                      <p className="text-muted">{position.quantity}</p>
-                      <p className="text-muted">
+                      <p className="text-right text-muted">{position.unit}</p>
+                      <p className="text-right text-muted">{position.quantity}</p>
+                      <p className="text-right text-muted">
                         {formatCurrency(position.unitPrice)}
                         {position.unit === "Std." ? "/Std." : null}
                       </p>
-                      <p className="font-semibold text-ink">{formatCurrency(positionTotal(position))}</p>
+                      <p className="text-right font-semibold text-ink">{formatCurrency(positionTotal(position))}</p>
                     </div>
                   ))}
                 </div>
