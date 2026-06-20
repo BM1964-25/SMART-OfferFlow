@@ -82,7 +82,9 @@ export default function HomePage() {
           projectName: parsed.project.projectName
             .replace("KI-gestützte Angebots- und Wissensplattform", "KI-gestützte Angebotsplattform")
             .replace("K. I. Gestützte Angebots und Wissensplattform", "KI-gestützte Angebotsplattform"),
-          shortDescription: parsed.project.shortDescription.replace(" und Wissensbereitstellung", "")
+          shortDescription: parsed.project.shortDescription.replace(" und Wissensbereitstellung", ""),
+          skontoPercent: parsed.project.skontoPercent ?? 0,
+          skontoDays: parsed.project.skontoDays ?? 10
         });
         setGroups(parsed.groups.map((group) => ({ ...group, active: group.active ?? true })));
         setOrderBilling(parsed.orderBilling ?? sampleOrderBilling);
@@ -479,6 +481,10 @@ function Dashboard({
                 <span className="font-semibold text-ink">{formatCurrency(groupTotal(group))}</span>
               </div>
             ))}
+            <div className="flex items-center justify-between py-4 text-base">
+              <span className="font-semibold text-ink">Gesamtsumme netto</span>
+              <span className="font-semibold text-ink">{formatCurrency(summary.net)}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -561,9 +567,17 @@ function ProjectWorkspace({ project, updateProject }: { project: Project; update
           <Field label="Umsatzsteuer in %">
             <TextInput type="number" value={project.vatRate} onChange={(event) => updateProject("vatRate", Number(event.target.value))} />
           </Field>
-          <Field label="Rabatt in %">
+          <Field label="Nachlass in %">
             <TextInput type="number" value={project.discountPercent} onChange={(event) => updateProject("discountPercent", Number(event.target.value))} />
           </Field>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Skonto in %">
+              <TextInput type="number" value={project.skontoPercent} onChange={(event) => updateProject("skontoPercent", Number(event.target.value))} />
+            </Field>
+            <Field label="Skontofrist in Tagen">
+              <TextInput type="number" value={project.skontoDays} onChange={(event) => updateProject("skontoDays", Number(event.target.value))} />
+            </Field>
+          </div>
           <Field label="Optionaler Pauschalpreis netto">
             <TextInput
               type="number"

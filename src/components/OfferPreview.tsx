@@ -6,6 +6,8 @@ export function OfferPreview({ project, groups }: { project: Project; groups: Po
   const company = companyProfiles.find((profile) => profile.id === project.companyId) ?? companyProfiles[0];
   const summary = calculateSummary(groups, project);
   const today = new Intl.DateTimeFormat("de-DE", { dateStyle: "long" }).format(new Date());
+  const visibleGroups = activeGroups(groups).filter((group) => group.positions.some((position) => position.active));
+  const subtotal = summary.net + summary.discount;
 
   return (
     <article className="print-area rounded-lg border border-line bg-white p-8 shadow-soft">
@@ -64,7 +66,7 @@ export function OfferPreview({ project, groups }: { project: Project; groups: Po
           Kalkulation als Abschnittspauschale angeboten werden, wenn einzelne Stundensätze im Angebot nicht offengelegt werden sollen.
         </p>
         <div className="mt-5 overflow-hidden rounded-lg border border-line">
-          {activeGroups(groups).map((group) => {
+          {visibleGroups.map((group) => {
             const activePositions = group.positions.filter((position) => position.active);
             if (activePositions.length === 0) return null;
 
@@ -124,10 +126,41 @@ export function OfferPreview({ project, groups }: { project: Project; groups: Po
         </div>
       </section>
 
+      <section className="border-t border-line py-8">
+        <h2 className="text-lg font-semibold text-ink">Zusammenfassung der Leistungsbereiche</h2>
+        <div className="mt-5 overflow-hidden rounded-lg border border-line">
+          <div className="divide-y divide-line">
+            {visibleGroups.map((group) => (
+              <div key={group.id} className="grid gap-3 px-5 py-4 md:grid-cols-[1fr_160px]">
+                <p className="font-medium text-ink">
+                  {groupNumber(groups, group.id)} {group.title}
+                </p>
+                <p className="font-semibold text-ink md:text-right">{formatCurrency(groupTotal(group))}</p>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-line bg-slate-50 px-5 py-4">
+            <div className="ml-auto grid max-w-md gap-3">
+              <SummaryLine label="Zwischensumme netto" value={formatCurrency(subtotal)} />
+              {summary.discount > 0 ? <SummaryLine label={`Nachlass ${project.discountPercent} %`} value={`-${formatCurrency(summary.discount)}`} /> : null}
+              <SummaryLine label="Summe netto" value={formatCurrency(summary.net)} strong />
+              <SummaryLine label={`Umsatzsteuer ${project.vatRate} %`} value={formatCurrency(summary.vat)} />
+              <SummaryLine label="Gesamtbetrag brutto" value={formatCurrency(summary.gross)} strong />
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="grid gap-6 border-t border-line py-8 lg:grid-cols-[1fr_360px]">
         <div>
           <h2 className="text-lg font-semibold text-ink">Zahlungsbedingungen</h2>
           <p className="mt-3 leading-7 text-muted">{project.paymentTerms}</p>
+          {project.skontoPercent > 0 ? (
+            <p className="mt-3 leading-7 text-muted">
+              Bei Zahlung innerhalb von {project.skontoDays} Tagen wird ein Skonto in Höhe von {project.skontoPercent} % auf den
+              netto zahlbaren Rechnungsbetrag gewährt.
+            </p>
+          ) : null}
           <h2 className="mt-6 text-lg font-semibold text-ink">Gültigkeit</h2>
           <p className="mt-3 leading-7 text-muted">Dieses Angebot ist {project.validUntil} gültig.</p>
           <h2 className="mt-6 text-lg font-semibold text-ink">Haftungshinweise</h2>
@@ -136,12 +169,18 @@ export function OfferPreview({ project, groups }: { project: Project; groups: Po
         <div className="rounded-lg border border-line bg-slate-50 p-5">
           <div className="flex justify-between py-2 text-sm">
             <span className="text-muted">Summe netto</span>
-            <span className="font-semibold text-ink">{formatCurrency(summary.net + summary.discount)}</span>
+            <span className="font-semibold text-ink">{formatCurrency(summary.net)}</span>
           </div>
           {summary.discount > 0 ? (
             <div className="flex justify-between py-2 text-sm">
-              <span className="text-muted">Rabatt</span>
+              <span className="text-muted">Nachlass</span>
               <span className="font-semibold text-ink">-{formatCurrency(summary.discount)}</span>
+            </div>
+          ) : null}
+          {project.skontoPercent > 0 ? (
+            <div className="flex justify-between py-2 text-sm">
+              <span className="text-muted">Skonto bei Zahlung binnen {project.skontoDays} Tagen</span>
+              <span className="font-semibold text-ink">{project.skontoPercent} %</span>
             </div>
           ) : null}
           <div className="flex justify-between py-2 text-sm">
@@ -163,6 +202,15 @@ export function OfferPreview({ project, groups }: { project: Project; groups: Po
         </p>
       </footer>
     </article>
+  );
+}
+
+function SummaryLine({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div className={`flex justify-between gap-4 text-sm ${strong ? "font-semibold text-ink" : "text-muted"}`}>
+      <span>{label}</span>
+      <span className="text-right">{value}</span>
+    </div>
   );
 }
 

@@ -116,6 +116,8 @@ export const sampleProject: Project = {
   paymentTerms: "40 % bei Beauftragung, 40 % nach Bereitstellung der Beta-Version, 20 % nach Abnahme.",
   vatRate: 19,
   discountPercent: 0,
+  skontoPercent: 0,
+  skontoDays: 10,
   flatFee: null,
   rates: standardRates
 };

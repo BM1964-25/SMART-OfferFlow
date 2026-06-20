@@ -57,6 +57,8 @@ export type Project = {
   paymentTerms: string;
   vatRate: number;
   discountPercent: number;
+  skontoPercent: number;
+  skontoDays: number;
   flatFee: number | null;
   rates: RateCard;
 };
