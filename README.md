@@ -22,6 +22,22 @@ npm run dev
 
 Die Anwendung ist anschließend unter `http://localhost:3000` erreichbar.
 
+## Anthropic-Anbindung
+
+Die KI-generierte LV-Erstellung nutzt serverseitig die Anthropic Messages API.
+
+```bash
+ANTHROPIC_API_KEY=sk-ant-... npm run dev
+```
+
+Optional kann das Modell gesetzt werden:
+
+```bash
+ANTHROPIC_MODEL=claude-sonnet-4-5-20250929
+```
+
+GitHub Pages bleibt statisch. Fuer die echte Anthropic-Generierung ist ein Server-Deployment oder Proxy erforderlich, damit der API-Key nicht im Browser landet.
+
 ## GitHub Pages
 
 Der statische Export für GitHub Pages wird mit dem Base Path `/SMART-LV` gebaut:

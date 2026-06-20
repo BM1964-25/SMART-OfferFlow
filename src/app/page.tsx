@@ -263,6 +263,25 @@ export default function HomePage() {
     setActiveView("LV bearbeiten");
   }
 
+  function replaceGroupsFromAi(generatedGroups: PositionGroup[]) {
+    setGroups(
+      renumberGroups(
+        generatedGroups.map((group, groupIndex) => ({
+          ...group,
+          id: group.id || `ai-group-${groupIndex + 1}`,
+          active: group.active ?? true,
+          positions: group.positions.map((position, positionIndex) => ({
+            ...position,
+            id: position.id || `ai-position-${groupIndex + 1}-${positionIndex + 1}`,
+            groupId: group.id || `ai-group-${groupIndex + 1}`,
+            active: position.active ?? true
+          }))
+        }))
+      )
+    );
+    setActiveView("LV bearbeiten");
+  }
+
   function deletePosition(groupId: string, positionId: string) {
     setGroups((current) =>
       renumberGroups(
@@ -520,7 +539,7 @@ export default function HomePage() {
             />
           ) : null}
 
-          {activeView === "KI-Assistenz" ? <AiAssistant project={project} groups={groups} updatePosition={updatePosition} setActiveView={setActiveView} /> : null}
+          {activeView === "KI-Assistenz" ? <AiAssistant project={project} groups={groups} updatePosition={updatePosition} replaceGroupsFromAi={replaceGroupsFromAi} setActiveView={setActiveView} /> : null}
 
           {activeView === "Firmenprofile" ? <CompanyProfiles selectedCompanyId={project.companyId} /> : null}
 
@@ -1391,13 +1410,21 @@ function AiAssistant({
   project,
   groups,
   updatePosition,
+  replaceGroupsFromAi,
   setActiveView
 }: {
   project: Project;
   groups: PositionGroup[];
   updatePosition: (groupId: string, positionId: string, changes: Partial<Position>) => void;
+  replaceGroupsFromAi: (groups: PositionGroup[]) => void;
   setActiveView: (view: View) => void;
 }) {
+  const [lvPrompt, setLvPrompt] = useState(
+    "Erstelle ein professionelles LV fuer eine KI-gestuetzte Angebots-, Auftrags- und Abrechnungsplattform mit Dashboard, LV-Editor, Angebotsvorschau, PDF-Ausgabe, Nachtraegen, Leistungsnachweisen und Rechnungsplan."
+  );
+  const [generatedGroups, setGeneratedGroups] = useState<PositionGroup[] | null>(null);
+  const [generationStatus, setGenerationStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [generationMessage, setGenerationMessage] = useState("");
   const aiGroups = activeGroups(groups).filter((group) =>
     [group.title, group.intro, ...group.positions.map((position) => `${position.title} ${position.description} ${position.category}`)]
       .join(" ")
@@ -1407,6 +1434,34 @@ function AiAssistant({
   const aiPositions = aiGroups.flatMap((group) => group.positions.filter((position) => position.active));
   const suggestedHours = aiPositions.reduce((sum, position) => sum + position.quantity, 0);
 
+  async function generateLvWithAnthropic() {
+    setGenerationStatus("loading");
+    setGenerationMessage("");
+    setGeneratedGroups(null);
+
+    try {
+      const response = await fetch("api/anthropic-lv/", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ project, prompt: lvPrompt })
+      });
+      const result = (await response.json()) as { groups?: PositionGroup[]; error?: string };
+      if (!response.ok || !result.groups?.length) {
+        throw new Error(result.error || "Es wurde kein gueltiges LV erzeugt.");
+      }
+      setGeneratedGroups(result.groups);
+      setGenerationStatus("ready");
+      setGenerationMessage(`${result.groups.length} Leistungsbereiche wurden generiert.`);
+    } catch (error) {
+      setGenerationStatus("error");
+      setGenerationMessage(
+        error instanceof Error
+          ? error.message
+          : "Anthropic konnte nicht erreicht werden. Auf GitHub Pages ist dafuer ein serverseitiges Backend erforderlich."
+      );
+    }
+  }
+
   return (
     <div className="grid gap-6">
       <div className="rounded-lg border border-blue-100 bg-blue-50 p-6 shadow-sm">
@@ -1415,6 +1470,56 @@ function AiAssistant({
           Diese Version arbeitet lokal mit Regeln und Projektkontext. Sie markiert relevante KI-Leistungen, erzeugt Textvorschläge,
           prüft fehlende Bausteine und hilft bei Aufwand, Risiken und Abrechnung. Eine echte Modell-API kann später an dieselbe Stelle angeschlossen werden.
         </p>
+      </div>
+
+      <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
+        <SectionTitle title="LV mit Anthropic generieren" kicker="Claude-Anbindung" />
+        <p className="mt-3 text-sm leading-6 text-muted">
+          Die Generierung nutzt serverseitig die Anthropic Messages API. Lokal oder auf einem Server muss dafuer `ANTHROPIC_API_KEY`
+          gesetzt sein; auf GitHub Pages kann der geheime Schluessel nicht sicher ausgefuehrt werden.
+        </p>
+        <div className="mt-5 grid gap-4 xl:grid-cols-[1fr_280px]">
+          <Field label="Anforderung an das neue LV">
+            <TextArea value={lvPrompt} onChange={(event) => setLvPrompt(event.target.value)} className="min-h-32" />
+          </Field>
+          <div className="grid content-start gap-3">
+            <button
+              type="button"
+              onClick={generateLvWithAnthropic}
+              disabled={generationStatus === "loading"}
+              className="inline-flex h-10 items-center justify-center rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {generationStatus === "loading" ? "Generiere..." : "LV generieren"}
+            </button>
+            {generatedGroups ? (
+              <button
+                type="button"
+                onClick={() => replaceGroupsFromAi(generatedGroups)}
+                className="inline-flex h-10 items-center justify-center rounded-md border border-line bg-white px-4 text-sm font-semibold text-ink transition hover:border-slate-300"
+              >
+                Generiertes LV uebernehmen
+              </button>
+            ) : null}
+            {generationMessage ? (
+              <p className={`rounded-md border px-3 py-2 text-sm ${generationStatus === "error" ? "border-rose-100 bg-rose-50 text-rose-800" : "border-emerald-100 bg-emerald-50 text-emerald-800"}`}>
+                {generationMessage}
+              </p>
+            ) : null}
+          </div>
+        </div>
+        {generatedGroups ? (
+          <div className="mt-5 rounded-lg border border-line bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-ink">Vorschau der generierten Struktur</p>
+            <div className="mt-3 grid gap-2 text-sm">
+              {generatedGroups.map((group) => (
+                <div key={group.id} className="flex items-center justify-between rounded-md bg-white px-3 py-2">
+                  <span className="font-medium text-ink">{group.title}</span>
+                  <span className="text-muted">{group.positions.length} Positionen</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
