@@ -383,7 +383,7 @@ export default function HomePage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${project.offerNumber}-smart-lv.json`;
+    link.download = `${project.offerNumber}-smart-offerflow.json`;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -405,10 +405,10 @@ export default function HomePage() {
     <main className="min-h-screen bg-canvas">
       <aside className="no-print fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-line bg-white px-4 py-5 lg:block">
         <div className="flex items-center gap-3 px-2">
-          <div className="flex h-11 w-11 items-center justify-center rounded-md bg-ink text-sm font-bold text-white">LV</div>
+          <div className="flex h-11 w-11 items-center justify-center rounded-md bg-ink text-sm font-bold text-white">OF</div>
           <div>
-            <p className="font-semibold text-ink">SMART LV</p>
-            <p className="text-sm text-muted">Angebotsgenerator</p>
+            <p className="font-semibold text-ink">SMART OfferFlow</p>
+            <p className="text-sm text-muted">Angebote, Aufträge und Abrechnung in einem Prozess</p>
           </div>
         </div>
         <nav className="mt-8 grid gap-1">

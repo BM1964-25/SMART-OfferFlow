@@ -1,17 +1,17 @@
-# SMART LV Generator
+# SMART OfferFlow
 
-Webbasierte Anwendung zur Erstellung professioneller Leistungsverzeichnisse für Angebote zur Entwicklung KI-gestützter Softwarelösungen.
+Webbasierte Anwendung für Angebote, Aufträge und Abrechnung in einem Prozess.
 
 ## Enthalten
 
 - Next.js, TypeScript, React und Tailwind CSS
 - Mandanten- und Firmenprofilstruktur mit vier Beispielprofilen
-- Vollständige LV-Standardstruktur mit zehn Hauptgruppen
+- Vollständige Angebots- und LV-Standardstruktur mit zehn Hauptgruppen
 - Editierbare Positionen mit Aktivierung, Duplizieren, Löschen und Drag-and-drop-Sortierung
 - Stundensatzlogik, Netto-/USt-/Brutto-Berechnung, Rabatt und optionaler Pauschalpreis
 - Angebotsvorschau mit Deckblatt, Einleitung, LV, Summen, Zahlungsbedingungen und Footer
 - Lokale Speicherung im Browser
-- CSV-Export und druckfähige Vorschau für PDF/DOCX-Workflows
+- CSV-/JSON-Export und druckfähige Vorschau für PDF/DOCX-Workflows
 
 ## Entwicklung
 
