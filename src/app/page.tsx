@@ -563,6 +563,11 @@ function Dashboard({
   setActiveView: (view: View) => void;
 }) {
   const visibleGroups = activeGroups(groups);
+  const billableChangeOrders = orderBilling.changeOrders.filter((item) => item.billable).reduce((sum, item) => sum + item.amount, 0);
+  const orderTotal = summary.net + billableChangeOrders;
+  const billedTotal = orderBilling.invoicePlan.filter((item) => item.status !== "Entwurf").reduce((sum, item) => sum + item.amount, 0);
+  const outstandingTotal = Math.max(orderTotal - billedTotal, 0);
+  const billedPercent = orderTotal > 0 ? Math.min((billedTotal / orderTotal) * 100, 100) : 0;
 
   return (
     <div className="grid gap-6">
@@ -571,6 +576,44 @@ function Dashboard({
         <StatCard label="Aktive Positionen" value={String(activePositions)} detail={`${optionalPositions} optionale Positionen enthalten`} align="center" />
         <StatCard label="Aktive Hauptgruppen" value={String(visibleGroups.length)} detail="Nummerierung ohne Lücken" align="center" />
         <StatCard label="Auftrag" value={orderBilling.orderNumber} detail={orderBilling.billingMode} align="center" />
+      </div>
+
+      <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <SectionTitle title="Abrechnungsstand" kicker="Auftrag, Rechnung, offener Rest" />
+          <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[560px]">
+            <div className="rounded-md border border-line px-4 py-3 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">Auftragssumme</p>
+              <p className="mt-2 text-lg font-semibold text-ink">{formatCurrency(orderTotal)}</p>
+            </div>
+            <div className="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-blue-700">Abgerechnet</p>
+              <p className="mt-2 text-lg font-semibold text-blue-900">{formatCurrency(billedTotal)}</p>
+            </div>
+            <div className="rounded-md border border-line px-4 py-3 text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">Noch offen</p>
+              <p className="mt-2 text-lg font-semibold text-ink">{formatCurrency(outstandingTotal)}</p>
+            </div>
+          </div>
+        </div>
+        <div className="mt-6">
+          <div className="h-5 overflow-hidden rounded-md border border-line bg-slate-100">
+            <div className="h-full bg-blue-600 transition-all" style={{ width: `${billedPercent}%` }} />
+          </div>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
+            <div className="flex items-center gap-4">
+              <span className="inline-flex items-center gap-2 text-muted">
+                <span className="h-3 w-3 rounded-sm bg-blue-600" />
+                abgerechnet
+              </span>
+              <span className="inline-flex items-center gap-2 text-muted">
+                <span className="h-3 w-3 rounded-sm border border-line bg-slate-100" />
+                offen
+              </span>
+            </div>
+            <span className="font-semibold text-ink">{Math.round(billedPercent)} % abgerechnet</span>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
