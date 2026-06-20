@@ -39,11 +39,19 @@ input[type="number"]::-webkit-outer-spin-button {
 
 @media print {
   @page {
-    margin: 14mm;
+    size: A4;
+    margin: 14mm 12mm;
+  }
+
+  html {
+    font-size: 11px;
   }
 
   body {
     background: #fff;
+    color: #172033;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   .no-print {
@@ -62,13 +70,59 @@ input[type="number"]::-webkit-outer-spin-button {
   .print-area {
     width: 100% !important;
     max-width: none !important;
+    padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
   }
 
-  .break-inside-avoid {
+  .print-area h1 {
+    font-size: 22px !important;
+    line-height: 1.2 !important;
+  }
+
+  .print-area h2 {
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+  }
+
+  .print-area h3 {
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+  }
+
+  .print-area p,
+  .print-area span,
+  .print-area div {
+    line-height: 1.45;
+  }
+
+  .print-section {
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
+  }
+
+  .print-table {
+    overflow: visible !important;
+  }
+
+  .print-table > div {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  .print-table .grid {
+    display: grid !important;
+  }
+
+  .break-inside-avoid,
+  .print-keep {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  .rounded-lg,
+  .rounded-md {
+    border-radius: 0 !important;
   }
 }

@@ -1,3 +1,6 @@
+"use client";
+
+import { Printer } from "lucide-react";
 import { companyProfiles } from "@/lib/data";
 import { activeGroups, calculateSummary, formatCurrency, groupNumber, groupTotal, positionNumber, positionTotal } from "@/lib/calculations";
 import { PositionGroup, Project } from "@/lib/types";
@@ -8,10 +11,32 @@ export function OfferPreview({ project, groups }: { project: Project; groups: Po
   const today = new Intl.DateTimeFormat("de-DE", { dateStyle: "long" }).format(new Date());
   const visibleGroups = activeGroups(groups).filter((group) => group.positions.some((position) => position.active));
   const subtotal = summary.net + summary.discount;
+  const printOffer = () => {
+    const originalTitle = document.title;
+    document.title = `${project.offerNumber} ${project.projectName}`.trim();
+    window.print();
+    window.setTimeout(() => {
+      document.title = originalTitle;
+    }, 500);
+  };
 
   return (
-    <article className="print-area rounded-lg border border-line bg-white p-8 shadow-soft">
-      <section className="border-b border-line pb-8">
+    <>
+      <div className="no-print mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-white px-4 py-3 shadow-soft">
+        <div>
+          <p className="text-sm font-semibold text-ink">LV-Vorschau</p>
+        </div>
+        <button
+          type="button"
+          onClick={printOffer}
+          className="inline-flex h-10 items-center gap-2 rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-slate-700"
+        >
+          <Printer className="h-4 w-4" />
+          PDF erstellen
+        </button>
+      </div>
+      <article className="print-area rounded-lg border border-line bg-white p-8 shadow-soft">
+      <section className="print-section border-b border-line pb-8">
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div>
             <div
@@ -40,7 +65,7 @@ export function OfferPreview({ project, groups }: { project: Project; groups: Po
         </div>
       </section>
 
-      <section className="py-8">
+      <section className="print-section py-8">
         <h2 className="text-lg font-semibold text-ink">Einleitung</h2>
         <p className="mt-3 leading-7 text-muted">
           Wir bedanken uns für Ihr Interesse an der Entwicklung einer individuellen KI-gestützten Softwarelösung. Auf Grundlage
@@ -59,20 +84,20 @@ export function OfferPreview({ project, groups }: { project: Project; groups: Po
         </div>
       </section>
 
-      <section className="border-t border-line py-8">
+      <section className="print-section border-t border-line py-8">
         <h2 className="text-lg font-semibold text-ink">Leistungsverzeichnis</h2>
         <p className="mt-2 max-w-4xl text-sm leading-6 text-muted">
           Die nachfolgende Darstellung weist Mengen, Einheiten und Stundensätze transparent aus. Alternativ kann dieselbe interne
           Kalkulation als Abschnittspauschale angeboten werden, wenn einzelne Stundensätze im Angebot nicht offengelegt werden sollen.
         </p>
-        <div className="mt-5 overflow-hidden rounded-lg border border-line">
+        <div className="print-table mt-5 overflow-hidden rounded-lg border border-line">
           {visibleGroups.map((group) => {
             const activePositions = group.positions.filter((position) => position.active);
             if (activePositions.length === 0) return null;
 
             return (
               <div key={group.id} className="border-b border-line last:border-b-0">
-                <div className="flex flex-col gap-3 bg-slate-50 px-5 py-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="print-keep flex flex-col gap-3 bg-slate-50 px-5 py-4 lg:flex-row lg:items-start lg:justify-between">
                   <div>
                     <h3 className="font-semibold text-ink">
                       {groupNumber(groups, group.id)} {group.title}
@@ -121,7 +146,7 @@ export function OfferPreview({ project, groups }: { project: Project; groups: Po
         </div>
       </section>
 
-      <section className="border-t border-line py-8">
+      <section className="print-section print-keep border-t border-line py-8">
         <h2 className="text-lg font-semibold text-ink">Zusammenfassung der Leistungsbereiche</h2>
         <div className="mt-5 overflow-hidden rounded-lg border border-line">
           <div className="divide-y divide-line">
@@ -146,7 +171,7 @@ export function OfferPreview({ project, groups }: { project: Project; groups: Po
         </div>
       </section>
 
-      <section className="grid gap-6 border-t border-line py-8 lg:grid-cols-[1fr_360px]">
+      <section className="print-section grid gap-6 border-t border-line py-8 lg:grid-cols-[1fr_360px]">
         <div>
           <h2 className="text-lg font-semibold text-ink">Zahlungsbedingungen</h2>
           <p className="mt-3 leading-7 text-muted">{project.paymentTerms}</p>
@@ -189,7 +214,7 @@ export function OfferPreview({ project, groups }: { project: Project; groups: Po
         </div>
       </section>
 
-      <footer className="border-t border-line pt-6 text-sm leading-6 text-muted">
+      <footer className="print-keep border-t border-line pt-6 text-sm leading-6 text-muted">
         <p className="font-medium text-ink">{company.contact}</p>
         <p>{company.footer}</p>
         <p className="mt-3">
@@ -197,6 +222,7 @@ export function OfferPreview({ project, groups }: { project: Project; groups: Po
         </p>
       </footer>
     </article>
+    </>
   );
 }
 
