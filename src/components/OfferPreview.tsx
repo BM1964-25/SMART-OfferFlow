@@ -278,14 +278,14 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
       <footer className="print-keep border-t border-line pt-6 text-sm leading-6 text-muted">
         <p className="font-medium text-ink">{company.name}</p>
         <p>{company.footer}</p>
-        <div className="mt-3 grid gap-1">
-          <p>Web: {company.website}</p>
-          <p>E-Mail: {company.email}</p>
-          <p>Telefon: {company.phone}</p>
-          {company.agbUrl ? <p>AGB: {company.agbUrl}</p> : null}
-          {company.bookingUrl ? <p>Terminbuchung: {company.bookingUrl}</p> : null}
-          <p>USt-ID / Steuernummer: {company.vatId}</p>
-          <p>Bankverbindung: {company.bank}</p>
+        <div className="mt-4 grid gap-x-8 gap-y-2 md:grid-cols-3">
+          <p className="break-words">Web: {company.website}</p>
+          <p className="break-words">E-Mail: {company.email}</p>
+          <p className="break-words">Telefon: {company.phone}</p>
+          {company.agbUrl ? <p className="break-words">AGB: {company.agbUrl}</p> : null}
+          {company.bookingUrl ? <p className="break-words">Terminbuchung: {company.bookingUrl}</p> : null}
+          <p className="break-words">USt-ID / Steuernummer: {company.vatId}</p>
+          <p className="break-words md:col-span-3">Bankverbindung: {company.bank}</p>
         </div>
       </footer>
     </article>
