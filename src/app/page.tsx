@@ -1329,14 +1329,6 @@ export default function HomePage() {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => setHelpOpen(true)}
-                className="inline-flex h-10 items-center gap-2 rounded-md border border-blue-100 bg-blue-50 px-3 text-sm font-semibold text-blue-800 transition hover:border-blue-200 hover:bg-blue-100"
-              >
-                <HelpCircle className="h-4 w-4" />
-                Hilfe
-              </button>
-              <button
-                type="button"
                 onClick={() => setActiveView("Firmenprofile")}
                 className="inline-flex h-10 items-center gap-2 rounded-md border border-line bg-white px-3 text-sm font-semibold text-ink transition hover:border-slate-300"
                 title="Aktives Firmenprofil bearbeiten"
@@ -1349,6 +1341,14 @@ export default function HomePage() {
               <IconButton icon={Download} label="CSV exportieren" onClick={exportCsv} />
               <IconButton icon={Braces} label="JSON exportieren" onClick={exportJson} />
               <IconButton icon={Printer} label="PDF/DOCX über Druckdialog vorbereiten" onClick={printOfferArea} />
+              <button
+                type="button"
+                onClick={() => setHelpOpen(true)}
+                className="inline-flex h-10 items-center gap-2 rounded-md border border-blue-100 bg-blue-50 px-3 text-sm font-semibold text-blue-800 transition hover:border-blue-200 hover:bg-blue-100"
+              >
+                <HelpCircle className="h-4 w-4" />
+                Hilfe
+              </button>
             </div>
           </div>
           <div className="mt-4 flex gap-2 overflow-x-auto pb-1 lg:hidden">
