@@ -283,7 +283,13 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
           <p className="break-words">E-Mail: {company.email}</p>
           <p className="break-words">Telefon: {company.phone}</p>
           {company.agbUrl ? <p className="break-words">AGB: {company.agbUrl}</p> : null}
-          {company.bookingUrl ? <p className="break-words">Terminbuchung: {company.bookingUrl}</p> : null}
+          {company.bookingUrl ? (
+            <p className="break-words">
+              <a className="font-medium text-ink underline underline-offset-2" href={company.bookingUrl} target="_blank" rel="noreferrer">
+                Online-Terminbuchung
+              </a>
+            </p>
+          ) : null}
           <p className="break-words">USt-ID / Steuernummer: {company.vatId}</p>
           <p className="break-words md:col-span-3">Bankverbindung: {company.bank}</p>
         </div>
