@@ -357,7 +357,7 @@ function SummaryLine({ label, value, strong = false }: { label: string; value: s
 
 function PreviewMeta({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-line bg-slate-50 p-4">
+    <div className="flex min-h-24 flex-col items-center justify-center rounded-lg border border-line bg-slate-50 p-4 text-center">
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">{label}</p>
       <p className="mt-2 text-sm font-medium text-ink">{value}</p>
     </div>
