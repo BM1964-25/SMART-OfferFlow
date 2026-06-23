@@ -222,9 +222,10 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
       <footer className="print-keep border-t border-line pt-6 text-sm leading-6 text-muted">
         <p className="font-medium text-ink">{company.name}</p>
         <p>{company.footer}</p>
-        <p className="mt-3">
-          {company.vatId} · {company.bank}
-        </p>
+        <div className="mt-3 grid gap-1">
+          <p>USt-ID / Steuernummer: {company.vatId}</p>
+          <p>Bankverbindung: {company.bank}</p>
+        </div>
       </footer>
     </article>
     </>

@@ -146,6 +146,17 @@ function normalizeCustomers(customers: Partial<Customer>[] | undefined): Custome
   }));
 }
 
+function normalizeCompanyProfiles(profiles: CompanyProfile[] | undefined): CompanyProfile[] {
+  return (profiles ?? companyProfiles).map((profile) => {
+    if (profile.id !== "metzger-real-estate") return profile;
+    if (/kontoinhaber\s+bernhard\s+metzger/i.test(profile.bank)) return profile;
+    return {
+      ...profile,
+      bank: `Kontoinhaber Bernhard Metzger, ${profile.bank}`
+    };
+  });
+}
+
 function createInitialLibraryPositions() {
   return initialGroups.flatMap((group) =>
     group.positions.map((position) => ({
@@ -446,11 +457,11 @@ function metzgerAlignedProject(project: Project): Project {
 }
 
 function normalizeSavedState(parsed: Partial<AppStatePayload> & { savedAt?: string }): AppStatePayload {
-  const profiles = parsed.profiles ?? companyProfiles;
+  const profiles = normalizeCompanyProfiles(parsed.profiles);
   const billing = parsed.orderBilling ?? sampleOrderBilling;
   const sanitizedProject = sanitizeProject(parsed.project ?? sampleProject);
   const project = isMetzgerAiDemoMismatch(sanitizedProject) ? metzgerAlignedProject(sanitizedProject) : sanitizedProject;
-  const groups = isMetzgerAiDemoMismatch(sanitizedProject) ? createMetzgerReaStandardGroups() : (parsed.groups ?? initialGroups);
+  const groups = parsed.groups ?? initialGroups;
 
   return {
     version: parsed.version ?? 2,
@@ -2129,13 +2140,14 @@ function CompanyProfiles({
         const importedProfile = parsed.profile ?? parsed;
         if (!importedProfile.name || !importedProfile.logoText) throw new Error("invalid-profile");
         if (!window.confirm(`Aktuelles Profil "${activeProfile.name}" mit Daten aus "${file.name}" überschreiben?`)) return;
+        const normalizedImportedProfile = normalizeCompanyProfiles([{ ...activeProfile, ...importedProfile, id: activeProfile.id } as CompanyProfile])[0];
         updateCompanyProfile(activeProfile.id, {
           ...activeProfile,
-          ...importedProfile,
+          ...normalizedImportedProfile,
           id: activeProfile.id,
           colors: {
             ...activeProfile.colors,
-            ...(importedProfile.colors ?? {})
+            ...(normalizedImportedProfile.colors ?? {})
           }
         });
         setProfileStorageMessage(`Profil wurde aus ${file.name} geladen.`);
