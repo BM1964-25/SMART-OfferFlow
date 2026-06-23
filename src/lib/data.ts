@@ -41,9 +41,6 @@ export const defaultContractorRole =
 export const defaultServiceExclusion =
   "Nicht ausdrücklich aufgeführte Leistungen sind nicht Bestandteil dieses Angebots und bedürfen einer gesonderten Beauftragung.";
 
-export const defaultAncillaryCosts =
-  "Sofern nicht anders vereinbart, werden Reise- und Nebenkosten nach tatsächlichem Aufwand berechnet.";
-
 export const defaultMeetingBillingNote =
   "Projektbesprechungen, Workshops, Baustellenbegehungen, Jour-fixe-Termine sowie sonstige Vor-Ort-Einsätze werden nach tatsächlichem Aufwand gemäß den vereinbarten Vergütungssätzen abgerechnet.";
 
@@ -166,7 +163,6 @@ export const sampleProject: Project = {
   contractorRole: defaultContractorRole,
   serviceDirectoryIntro: defaultServiceDirectoryIntro,
   serviceExclusion: defaultServiceExclusion,
-  ancillaryCosts: defaultAncillaryCosts,
   meetingBillingNote: defaultMeetingBillingNote,
   changeTerms: defaultChangeTerms,
   contractBasis: defaultContractBasis,

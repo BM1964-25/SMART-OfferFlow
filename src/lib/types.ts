@@ -61,7 +61,6 @@ export type Project = {
   contractorRole: string;
   serviceDirectoryIntro: string;
   serviceExclusion: string;
-  ancillaryCosts: string;
   meetingBillingNote: string;
   changeTerms: string;
   contractBasis: string;

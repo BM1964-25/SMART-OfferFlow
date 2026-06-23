@@ -178,12 +178,6 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
             <p className="mt-3 leading-7 text-muted">{project.serviceExclusion}</p>
           </div>
         ) : null}
-        {project.ancillaryCosts ? (
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-ink">Nebenkosten und Auslagen</h2>
-            <p className="mt-3 leading-7 text-muted">{project.ancillaryCosts}</p>
-          </div>
-        ) : null}
         <h2 className="text-lg font-semibold text-ink">Leistungsverzeichnis</h2>
         {project.serviceDirectoryIntro ? <p className="mt-2 max-w-4xl text-sm leading-6 text-muted">{project.serviceDirectoryIntro}</p> : null}
         <div className="print-table mt-5 overflow-hidden rounded-lg border border-line">

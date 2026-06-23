@@ -40,7 +40,6 @@ import { activeGroups, calculateSummary, formatCurrency, groupNumber, groupTotal
 import {
   companyProfiles,
   defaultAcceptanceText,
-  defaultAncillaryCosts,
   defaultAssignmentReason,
   defaultChangeTerms,
   defaultContractBasis,
@@ -495,7 +494,6 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
     contractorRole: project.contractorRole ?? defaultContractorRole,
     serviceDirectoryIntro: project.serviceDirectoryIntro ?? defaultServiceDirectoryIntro,
     serviceExclusion: project.serviceExclusion ?? defaultServiceExclusion,
-    ancillaryCosts: project.ancillaryCosts ?? defaultAncillaryCosts,
     meetingBillingNote: project.meetingBillingNote ?? defaultMeetingBillingNote,
     changeTerms: project.changeTerms ?? defaultChangeTerms,
     contractBasis: !project.contractBasis || project.contractBasis === defaultContractBasis || project.contractBasis === oldContractBasis ? contractBasisForProfile(activeProfile) : project.contractBasis,
@@ -1821,9 +1819,6 @@ function ProjectWorkspace({
               </Field>
               <Field label="Leistungsabgrenzung">
                 <TextArea value={project.serviceExclusion} onChange={(event) => updateProject("serviceExclusion", event.target.value)} className="min-h-28" />
-              </Field>
-              <Field label="Nebenkosten und Auslagen">
-                <TextArea value={project.ancillaryCosts} onChange={(event) => updateProject("ancillaryCosts", event.target.value)} className="min-h-28" />
               </Field>
               <Field label="Projektbesprechungen und Ortstermine">
                 <TextArea value={project.meetingBillingNote} onChange={(event) => updateProject("meetingBillingNote", event.target.value)} className="min-h-28" />
