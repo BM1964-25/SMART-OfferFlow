@@ -439,13 +439,32 @@ function stripCompanyNameFromProjectName(projectName: string, profiles: CompanyP
   return cleaned || projectName.trim();
 }
 
+function normalizeProfiles(savedProfiles: CompanyProfile[] | undefined) {
+  const profiles = savedProfiles ?? companyProfiles;
+  return profiles.map((profile) => {
+    const defaultProfile = companyProfiles.find((item) => item.id === profile.id);
+    return {
+      ...profile,
+      agbUrl: profile.agbUrl ?? defaultProfile?.agbUrl ?? "",
+      bookingUrl: profile.bookingUrl ?? defaultProfile?.bookingUrl ?? ""
+    };
+  });
+}
+
+function contractBasisForProfile(profile?: CompanyProfile) {
+  const agbPart = profile?.agbUrl ? ` Die AGB sind abrufbar unter: ${profile.agbUrl}.` : "";
+  return `Die Leistungserbringung erfolgt auf Grundlage dieses Angebots sowie der Allgemeinen Geschäftsbedingungen von ${profile?.name ?? "dem Auftragnehmer"}.${agbPart} Mit Auftragserteilung erkennt der Auftraggeber diese als Vertragsbestandteil an.`;
+}
+
 function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyProfiles): Project {
   const profileDefaults = companyProfiles.find((profile) => profile.id === project.companyId) ?? companyProfiles[0];
+  const activeProfile = profiles.find((profile) => profile.id === project.companyId) ?? profileDefaults;
   const oldSoftwarePaymentTerms = "40 % bei Beauftragung, 40 % nach Bereitstellung der Beta-Version, 20 % nach Abnahme.";
   const oldOfferClarifications = new Set([
     "KI-Ausgaben werden durch geeignete Prüf-, Logging- und Freigabemechanismen abgesichert; produktive Nutzung erfolgt nach gemeinsam definierten Qualitätskriterien.",
     "Dieses Angebot basiert auf den zum Angebotszeitpunkt bekannten Rahmenbedingungen und ersetzt keine rechtliche oder steuerliche Prüfung."
   ]);
+  const oldContractBasis = "Die Leistungserbringung erfolgt auf Grundlage dieses Angebots sowie der Allgemeinen Geschäftsbedingungen von Metzger - Real Estate Advisory. Mit Auftragserteilung erkennt der Auftraggeber diese als Vertragsbestandteil an.";
   return {
     ...project,
     projectName: stripCompanyNameFromProjectName(project.projectName ?? sampleProject.projectName, profiles),
@@ -457,7 +476,7 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
     serviceExclusion: project.serviceExclusion ?? defaultServiceExclusion,
     meetingBillingNote: project.meetingBillingNote ?? defaultMeetingBillingNote,
     changeTerms: project.changeTerms ?? defaultChangeTerms,
-    contractBasis: project.contractBasis ?? defaultContractBasis,
+    contractBasis: !project.contractBasis || project.contractBasis === defaultContractBasis || project.contractBasis === oldContractBasis ? contractBasisForProfile(activeProfile) : project.contractBasis,
     validityText: project.validityText ?? defaultValidityText,
     offerClarification: !project.offerClarification || oldOfferClarifications.has(project.offerClarification) ? defaultOfferBasis : project.offerClarification,
     acceptanceText: project.acceptanceText ?? defaultAcceptanceText,
@@ -498,7 +517,7 @@ function metzgerAlignedProject(project: Project): Project {
 }
 
 function normalizeSavedState(parsed: Partial<AppStatePayload> & { savedAt?: string }): AppStatePayload {
-  const profiles = parsed.profiles ?? companyProfiles;
+  const profiles = normalizeProfiles(parsed.profiles);
   const billing = parsed.orderBilling ?? sampleOrderBilling;
   const sanitizedProject = sanitizeProject(parsed.project ?? sampleProject, profiles);
   const project = sanitizedProject;
@@ -2352,6 +2371,12 @@ function CompanyProfiles({
             <Field label="Website">
               <TextInput value={activeProfile.website} onChange={(event) => updateCompanyProfile(activeProfile.id, { website: event.target.value })} />
             </Field>
+            <Field label="AGB-Link">
+              <TextInput value={activeProfile.agbUrl} onChange={(event) => updateCompanyProfile(activeProfile.id, { agbUrl: event.target.value })} />
+            </Field>
+            <Field label="Terminbuchung">
+              <TextInput value={activeProfile.bookingUrl} onChange={(event) => updateCompanyProfile(activeProfile.id, { bookingUrl: event.target.value })} />
+            </Field>
             <Field label="USt-ID / Steuernummer">
               <TextInput value={activeProfile.vatId} onChange={(event) => updateCompanyProfile(activeProfile.id, { vatId: event.target.value })} />
             </Field>
@@ -2391,6 +2416,8 @@ function CompanyProfiles({
                 <p>{activeProfile.email}</p>
                 <p>{activeProfile.phone}</p>
                 <p>{activeProfile.website}</p>
+                <p>{activeProfile.agbUrl}</p>
+                <p>{activeProfile.bookingUrl}</p>
                 <p>{activeProfile.vatId}</p>
               </div>
             </div>

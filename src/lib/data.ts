@@ -45,7 +45,7 @@ export const defaultChangeTerms =
   "Änderungen, Ergänzungen oder Erweiterungen des vereinbarten Leistungsumfangs werden nach vorheriger Abstimmung gesondert vergütet.";
 
 export const defaultContractBasis =
-  "Die Leistungserbringung erfolgt auf Grundlage dieses Angebots sowie der Allgemeinen Geschäftsbedingungen von Metzger - Real Estate Advisory. Mit Auftragserteilung erkennt der Auftraggeber diese als Vertragsbestandteil an.";
+  "Die Leistungserbringung erfolgt auf Grundlage dieses Angebots sowie der Allgemeinen Geschäftsbedingungen von Metzger - Real Estate Advisory. Die AGB sind abrufbar unter: https://www.metzger-rea.de/agb. Mit Auftragserteilung erkennt der Auftraggeber diese als Vertragsbestandteil an.";
 
 export const defaultValidityText =
   "Dieses Angebot ist 30 Kalendertage ab Angebotsdatum gültig. Danach behalten wir uns eine Anpassung aufgrund geänderter Rahmenbedingungen vor.";
@@ -65,6 +65,8 @@ export const companyProfiles: CompanyProfile[] = [
     email: "angebote@builtsmart-hub.de",
     phone: "+49 711 000 000",
     website: "www.builtsmart-hub.de",
+    agbUrl: "https://www.builtsmart-hub.de/agb",
+    bookingUrl: "https://www.builtsmart-hub.de/termin",
     vatId: "DE000000001",
     bank: "IBAN DE00 0000 0000 0000 0000 01, BIC BUILDEFF",
     contact: "Bernhard Metzger",
@@ -82,6 +84,8 @@ export const companyProfiles: CompanyProfile[] = [
     email: "hello@builtsmart-ai.de",
     phone: "+49 89 000 000",
     website: "www.builtsmart-ai.de",
+    agbUrl: "https://www.builtsmart-ai.de/agb",
+    bookingUrl: "https://www.builtsmart-ai.de/termin",
     vatId: "DE000000002",
     bank: "IBAN DE00 0000 0000 0000 0000 02, BIC BSAIDEFF",
     contact: "AI Delivery Team",
@@ -99,6 +103,8 @@ export const companyProfiles: CompanyProfile[] = [
     email: "metzger@metzger-rea.de",
     phone: "+49 162 7111 911",
     website: "www.metzger-rea.de",
+    agbUrl: "https://www.metzger-rea.de/agb",
+    bookingUrl: "https://www.metzger-rea.de/termin",
     vatId: "DE000000003",
     bank: "Kontoinhaber Bernhard Metzger, IBAN DE00 0000 0000 0000 0000 03, BIC MREADDE",
     contact: "Bernhard Metzger",
@@ -116,6 +122,8 @@ export const companyProfiles: CompanyProfile[] = [
     email: "angebot@musterfirma.de",
     phone: "+49 30 000 000",
     website: "www.musterfirma.de",
+    agbUrl: "https://www.musterfirma.de/agb",
+    bookingUrl: "https://www.musterfirma.de/termin",
     vatId: "DE000000004",
     bank: "IBAN DE00 0000 0000 0000 0000 04, BIC FREEDEFF",
     contact: "Projektteam",

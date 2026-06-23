@@ -218,6 +218,14 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
             <>
               <h2 className="mt-6 text-lg font-semibold text-ink">Vertragsgrundlage</h2>
               <p className="mt-3 leading-7 text-muted">{project.contractBasis}</p>
+              {company.agbUrl ? (
+                <p className="mt-2 leading-7 text-muted">
+                  AGB:{" "}
+                  <a className="font-medium text-ink underline underline-offset-2" href={company.agbUrl} target="_blank" rel="noreferrer">
+                    {company.agbUrl}
+                  </a>
+                </p>
+              ) : null}
             </>
           ) : null}
           <h2 className="mt-6 text-lg font-semibold text-ink">Gültigkeit</h2>
@@ -274,6 +282,8 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
           <p>Web: {company.website}</p>
           <p>E-Mail: {company.email}</p>
           <p>Telefon: {company.phone}</p>
+          {company.agbUrl ? <p>AGB: {company.agbUrl}</p> : null}
+          {company.bookingUrl ? <p>Terminbuchung: {company.bookingUrl}</p> : null}
           <p>USt-ID / Steuernummer: {company.vatId}</p>
           <p>Bankverbindung: {company.bank}</p>
         </div>

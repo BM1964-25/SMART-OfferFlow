@@ -24,6 +24,8 @@ export type CompanyProfile = {
   email: string;
   phone: string;
   website: string;
+  agbUrl: string;
+  bookingUrl: string;
   vatId: string;
   bank: string;
   contact: string;
