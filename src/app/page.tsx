@@ -146,17 +146,6 @@ function normalizeCustomers(customers: Partial<Customer>[] | undefined): Custome
   }));
 }
 
-function normalizeCompanyProfiles(profiles: CompanyProfile[] | undefined): CompanyProfile[] {
-  return (profiles ?? companyProfiles).map((profile) => {
-    if (profile.id !== "metzger-real-estate") return profile;
-    if (/kontoinhaber\s+bernhard\s+metzger/i.test(profile.bank)) return profile;
-    return {
-      ...profile,
-      bank: `Kontoinhaber Bernhard Metzger, ${profile.bank}`
-    };
-  });
-}
-
 function createInitialLibraryPositions() {
   return initialGroups.flatMap((group) =>
     group.positions.map((position) => ({
@@ -414,11 +403,8 @@ function sanitizeProject(project: Project): Project {
   const profileDefaults = companyProfiles.find((profile) => profile.id === project.companyId) ?? companyProfiles[0];
   return {
     ...project,
-    projectName: project.projectName
-      .replace("KI-gestützte Angebots- und Wissensplattform", "KI-gestützte Angebotsplattform")
-      .replace("K. I. Gestützte Angebots und Wissensplattform", "KI-gestützte Angebotsplattform")
-      .replace("KI gestützte Arbeitsblatt Form", "KI-gestützte Angebotsplattform"),
-    shortDescription: project.shortDescription.replace(" und Wissensbereitstellung", ""),
+    projectName: project.projectName ?? sampleProject.projectName,
+    shortDescription: project.shortDescription ?? sampleProject.shortDescription,
     offerIntro: project.offerIntro ?? profileDefaults.offerText,
     offerClarification: project.offerClarification ?? profileDefaults.liability,
     offerDate: project.offerDate ?? sampleProject.offerDate,
@@ -457,10 +443,10 @@ function metzgerAlignedProject(project: Project): Project {
 }
 
 function normalizeSavedState(parsed: Partial<AppStatePayload> & { savedAt?: string }): AppStatePayload {
-  const profiles = normalizeCompanyProfiles(parsed.profiles);
+  const profiles = parsed.profiles ?? companyProfiles;
   const billing = parsed.orderBilling ?? sampleOrderBilling;
   const sanitizedProject = sanitizeProject(parsed.project ?? sampleProject);
-  const project = isMetzgerAiDemoMismatch(sanitizedProject) ? metzgerAlignedProject(sanitizedProject) : sanitizedProject;
+  const project = sanitizedProject;
   const groups = parsed.groups ?? initialGroups;
 
   return {
@@ -1028,17 +1014,18 @@ export default function HomePage() {
   function applyMasterLv() {
     const masterTemplate = findMasterTemplate();
     if (!masterTemplate) return;
+    if (!window.confirm("Aktuelles Angebots-LV durch das Master-LV ersetzen? Bestehende Titel und Positionen im Angebot werden ersetzt.")) return;
     setGroups(cloneGroups(masterTemplate.groups));
     setActiveView("LV bearbeiten");
   }
 
   function repairCompanyLvAlignment() {
+    if (!window.confirm("Projektdaten bewusst auf das aktive Firmenprofil bereinigen? Das aktuelle LV wird nicht ersetzt.")) return;
     if (project.companyId !== "metzger-real-estate") {
-      applyMasterLv();
+      setActiveView("Neues LV");
       return;
     }
 
-    const masterTemplate = findMasterTemplate("metzger-real-estate");
     setProject((current) => ({
       ...current,
       companyId: "metzger-real-estate",
@@ -1054,7 +1041,6 @@ export default function HomePage() {
       modules: ["Strategische Beratung", "Projektsteuerung", "Due Diligence", "Qualitätsmanagement", "Sachverständigenleistungen", "Vergütung und Auslagen"],
       offerNumber: current.offerNumber.startsWith("BSAI") ? "MREA-2026-001" : current.offerNumber
     }));
-    if (masterTemplate) setGroups(cloneGroups(masterTemplate.groups));
     setActiveView("Qualitätsmanagement");
   }
 
@@ -2140,14 +2126,14 @@ function CompanyProfiles({
         const importedProfile = parsed.profile ?? parsed;
         if (!importedProfile.name || !importedProfile.logoText) throw new Error("invalid-profile");
         if (!window.confirm(`Aktuelles Profil "${activeProfile.name}" mit Daten aus "${file.name}" überschreiben?`)) return;
-        const normalizedImportedProfile = normalizeCompanyProfiles([{ ...activeProfile, ...importedProfile, id: activeProfile.id } as CompanyProfile])[0];
+        const importedProfileForSlot = { ...activeProfile, ...importedProfile, id: activeProfile.id } as CompanyProfile;
         updateCompanyProfile(activeProfile.id, {
           ...activeProfile,
-          ...normalizedImportedProfile,
+          ...importedProfileForSlot,
           id: activeProfile.id,
           colors: {
             ...activeProfile.colors,
-            ...(normalizedImportedProfile.colors ?? {})
+            ...(importedProfileForSlot.colors ?? {})
           }
         });
         setProfileStorageMessage(`Profil wurde aus ${file.name} geladen.`);
@@ -2428,6 +2414,17 @@ function QualityManagement({
     });
   }
 
+  if (project.companyId === "metzger-real-estate" && !/kontoinhaber\s+bernhard\s+metzger/i.test(company.bank)) {
+    issues.push({
+      id: "mrea-bank-owner",
+      severity: "Warnung",
+      area: "Firmenprofil",
+      title: "Kontoinhaber fehlt in der Bankverbindung",
+      detail: "Die Bankverbindung sollte den Kontoinhaber Bernhard Metzger ausdrücklich enthalten. Die App ändert das nicht automatisch.",
+      action: "Firmenprofil öffnen"
+    });
+  }
+
   if (!activePositions.length) {
     issues.push({
       id: "no-positions",
@@ -2506,6 +2503,7 @@ function QualityManagement({
     else if (issue.id === "mrea-master-missing") applyMasterLv();
     else if (issue.action === "Angebotsdaten öffnen") setActiveView("Neues Angebot");
     else if (issue.action === "Kunden öffnen") setActiveView("Kunden");
+    else if (issue.action === "Firmenprofil öffnen") setActiveView("Firmenprofile");
     else if (issue.action === "LV bearbeiten") setActiveView("LV bearbeiten");
     else if (issue.action === "Vorlagen öffnen") setActiveView("Vorlagen");
   }
