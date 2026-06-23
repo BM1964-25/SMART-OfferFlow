@@ -92,6 +92,8 @@ type Customer = {
   address: string;
   email: string;
   phone: string;
+  mobile: string;
+  website: string;
   customerNumber: string;
   industry: string;
   notes: string;
@@ -118,11 +120,29 @@ function createInitialCustomers(): Customer[] {
       address: "Musterbau Immobilien GmbH, Beispielstraße 10, 80331 München",
       email: "julia.hartmann@musterbau.de",
       phone: "+49 89 123456",
+      mobile: "",
+      website: "www.musterbau.de",
       customerNumber: "KD-2026-001",
       industry: "Immobilienwirtschaft",
       notes: "Beispielkunde für Angebots- und LV-Prozesse."
     }
   ];
+}
+
+function normalizeCustomers(customers: Partial<Customer>[] | undefined): Customer[] {
+  return (customers ?? createInitialCustomers()).map((customer, index) => ({
+    id: customer.id ?? `customer-${Date.now()}-${index}`,
+    companyName: customer.companyName ?? "",
+    contactPerson: customer.contactPerson ?? "",
+    address: customer.address ?? "",
+    email: customer.email ?? "",
+    phone: customer.phone ?? "",
+    mobile: customer.mobile ?? "",
+    website: customer.website ?? "",
+    customerNumber: customer.customerNumber ?? `KD-${new Date().getFullYear()}-${String(index + 1).padStart(3, "0")}`,
+    industry: customer.industry ?? "",
+    notes: customer.notes ?? ""
+  }));
 }
 
 function createInitialLibraryPositions() {
@@ -430,7 +450,7 @@ function normalizeSavedState(parsed: Partial<AppStatePayload> & { savedAt?: stri
     project,
     groups: groups.map((group) => ({ ...group, active: group.active ?? true })),
     profiles,
-    customers: parsed.customers ?? createInitialCustomers(),
+    customers: normalizeCustomers(parsed.customers),
     libraryPositions: parsed.libraryPositions ?? createInitialLibraryPositions(),
     lvTemplates: mergeProfileTemplates(parsed.lvTemplates, profiles),
     orderBilling: {
@@ -638,6 +658,8 @@ export default function HomePage() {
         address: "",
         email: "",
         phone: "",
+        mobile: "",
+        website: "",
         customerNumber: `KD-${new Date().getFullYear()}-${String(current.length + 1).padStart(3, "0")}`,
         industry: "",
         notes: ""
@@ -2525,10 +2547,10 @@ function Customers({
 
       <div className="grid gap-4">
         {customers.map((customer) => (
-          <div key={customer.id} className="rounded-lg border border-line bg-white p-5 shadow-sm">
-            <div className="grid gap-4 xl:grid-cols-[1fr_220px]">
-              <div className="grid gap-4">
-                <div className="grid gap-3 md:grid-cols-2">
+          <div key={customer.id} className="rounded-lg border border-line bg-white shadow-sm">
+            <div className="grid gap-4 p-4 xl:grid-cols-[1fr_220px]">
+              <div className="grid gap-3">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.2fr_1fr_160px_170px]">
                   <Field label="Firma / Empfänger">
                     <TextInput value={customer.companyName} onChange={(event) => updateCustomer(customer.id, { companyName: event.target.value })} />
                   </Field>
@@ -2541,19 +2563,29 @@ function Customers({
                   <Field label="Branche">
                     <TextInput value={customer.industry} onChange={(event) => updateCustomer(customer.id, { industry: event.target.value })} />
                   </Field>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                   <Field label="E-Mail">
                     <TextInput value={customer.email} onChange={(event) => updateCustomer(customer.id, { email: event.target.value })} />
                   </Field>
                   <Field label="Telefon">
                     <TextInput value={customer.phone} onChange={(event) => updateCustomer(customer.id, { phone: event.target.value })} />
                   </Field>
+                  <Field label="Mobiltelefon">
+                    <TextInput value={customer.mobile} onChange={(event) => updateCustomer(customer.id, { mobile: event.target.value })} />
+                  </Field>
+                  <Field label="Webadresse">
+                    <TextInput value={customer.website} onChange={(event) => updateCustomer(customer.id, { website: event.target.value })} />
+                  </Field>
                 </div>
-                <Field label="Adresse">
-                  <TextArea value={customer.address} onChange={(event) => updateCustomer(customer.id, { address: event.target.value })} />
-                </Field>
-                <Field label="Notizen">
-                  <TextArea value={customer.notes} onChange={(event) => updateCustomer(customer.id, { notes: event.target.value })} />
-                </Field>
+                <div className="grid gap-3 lg:grid-cols-2">
+                  <Field label="Adresse">
+                    <TextArea value={customer.address} onChange={(event) => updateCustomer(customer.id, { address: event.target.value })} className="min-h-20" />
+                  </Field>
+                  <Field label="Notizen">
+                    <TextArea value={customer.notes} onChange={(event) => updateCustomer(customer.id, { notes: event.target.value })} className="min-h-20" />
+                  </Field>
+                </div>
               </div>
               <div className="grid content-start gap-3 rounded-md border border-line bg-slate-50 p-4">
                 <button type="button" onClick={() => applyCustomerToProject(customer.id)} className="rounded-md bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700">
@@ -2565,9 +2597,11 @@ function Customers({
                 </button>
                 <div className="border-t border-line pt-3 text-sm text-muted">
                   <p className="font-semibold text-ink">{customer.companyName}</p>
-                  <p className="mt-2">{customer.contactPerson || "Kein Ansprechpartner hinterlegt"}</p>
-                  <p className="mt-2">{customer.email}</p>
-                  <p>{customer.phone}</p>
+                  <p className="mt-1">{customer.contactPerson || "Kein Ansprechpartner hinterlegt"}</p>
+                  <p className="mt-2 truncate">{customer.email || "Keine E-Mail"}</p>
+                  <p>{customer.phone || "Kein Festnetz"}</p>
+                  <p>{customer.mobile || "Kein Mobiltelefon"}</p>
+                  <p className="truncate">{customer.website || "Keine Webadresse"}</p>
                 </div>
               </div>
             </div>
