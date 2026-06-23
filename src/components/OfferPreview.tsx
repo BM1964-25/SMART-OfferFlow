@@ -223,6 +223,9 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
         <p className="font-medium text-ink">{company.name}</p>
         <p>{company.footer}</p>
         <div className="mt-3 grid gap-1">
+          <p>Web: {company.website}</p>
+          <p>E-Mail: {company.email}</p>
+          <p>Telefon: {company.phone}</p>
           <p>USt-ID / Steuernummer: {company.vatId}</p>
           <p>Bankverbindung: {company.bank}</p>
         </div>

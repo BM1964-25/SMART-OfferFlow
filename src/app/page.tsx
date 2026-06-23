@@ -1613,108 +1613,125 @@ function ProjectWorkspace({
   const selectedCustomer = customers.find((customer) => customer.companyName === project.client && customer.contactPerson === project.contactPerson);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_380px]">
+    <div className="grid gap-6">
       <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
-        <SectionTitle title="Angebotsdaten" kicker="Projekt" />
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          <Field label="Kunde auswählen">
-            <div className="grid gap-2 md:grid-cols-[1fr_auto]">
-              <Select value={selectedCustomer?.id ?? ""} onChange={(event) => event.target.value && applyCustomerToProject(event.target.value)}>
-                <option value="">Manuelle Eingabe</option>
-                {customers.map((customer) => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.companyName} · {customer.contactPerson || "ohne Ansprechpartner"}
-                  </option>
-                ))}
-              </Select>
-              <button type="button" onClick={() => setActiveView("Kunden")} className="rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold text-ink transition hover:border-slate-300">
+        <SectionTitle title="Neues Angebot" kicker="Strukturierte Angebotsdaten" />
+        <div className="mt-6 grid gap-5">
+          <section className="rounded-md border border-line bg-slate-50 p-4">
+            <h3 className="font-semibold text-ink">1 Empfänger und Ansprechpartner</h3>
+            <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_auto]">
+              <Field label="Kunde auswählen">
+                <Select value={selectedCustomer?.id ?? ""} onChange={(event) => event.target.value && applyCustomerToProject(event.target.value)}>
+                  <option value="">Manuelle Eingabe</option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>
+                      {customer.companyName} · {customer.contactPerson || "ohne Ansprechpartner"}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <button type="button" onClick={() => setActiveView("Kunden")} className="h-10 self-end rounded-md border border-line bg-white px-3 text-sm font-semibold text-ink transition hover:border-slate-300">
                 Kunden öffnen
               </button>
             </div>
-          </Field>
-          <div />
-          <Field label="Auftraggeber">
-            <TextInput value={project.client} onChange={(event) => updateProject("client", event.target.value)} />
-          </Field>
-          <Field label="Ansprechpartner">
-            <TextInput value={project.contactPerson} onChange={(event) => updateProject("contactPerson", event.target.value)} />
-          </Field>
-          <Field label="Projektname">
-            <TextInput value={project.projectName} onChange={(event) => updateProject("projectName", event.target.value)} />
-          </Field>
-          <Field label="Angebotsnummer">
-            <TextInput value={project.offerNumber} onChange={(event) => updateProject("offerNumber", event.target.value)} />
-          </Field>
-          <Field label="Angebotsdatum">
-            <TextInput type="date" value={project.offerDate} onChange={(event) => updateProject("offerDate", event.target.value)} />
-          </Field>
-          <Field label="Kalkulationsart">
-            <Select value={project.calculationType} onChange={(event) => updateProject("calculationType", event.target.value as Project["calculationType"])}>
-              <option>Stundenbasiert</option>
-              <option>Pauschal</option>
-              <option>Hybrid</option>
-            </Select>
-          </Field>
-          <Field label="Angebotsstatus">
-            <Select value={project.status} onChange={(event) => updateProject("status", event.target.value as Project["status"])}>
-              <option>Entwurf</option>
-              <option>In Prüfung</option>
-              <option>Versendet</option>
-              <option>Beauftragt</option>
-              <option>Archiviert</option>
-            </Select>
-          </Field>
-          <Field label="Kurzbeschreibung">
-            <TextArea value={project.shortDescription} onChange={(event) => updateProject("shortDescription", event.target.value)} />
-          </Field>
-          <Field label="Angebotseinleitung">
-            <TextArea value={project.offerIntro} onChange={(event) => updateProject("offerIntro", event.target.value)} />
-          </Field>
-          <Field label="Haftungs- und Angebotsklarstellung">
-            <TextArea value={project.offerClarification} onChange={(event) => updateProject("offerClarification", event.target.value)} />
-          </Field>
-          <Field label="Zielsetzung">
-            <TextArea value={project.objective} onChange={(event) => updateProject("objective", event.target.value)} />
-          </Field>
-          <Field label="Technische Rahmenbedingungen">
-            <TextArea value={project.technicalContext} onChange={(event) => updateProject("technicalContext", event.target.value)} />
-          </Field>
-          <Field label="Module">
-            <TextArea value={project.modules.join("\n")} onChange={(event) => updateProject("modules", event.target.value.split("\n").filter(Boolean))} />
-          </Field>
-        </div>
-      </div>
-      <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
-        <SectionTitle title="Konditionen" />
-        <div className="mt-6 grid gap-4">
-          <Field label="Zahlungsbedingungen">
-            <TextArea value={project.paymentTerms} onChange={(event) => updateProject("paymentTerms", event.target.value)} />
-          </Field>
-          <Field label="Gültigkeitsdauer">
-            <TextInput value={project.validUntil} onChange={(event) => updateProject("validUntil", event.target.value)} />
-          </Field>
-          <Field label="Umsatzsteuer in %">
-            <TextInput type="number" value={project.vatRate} onChange={(event) => updateProject("vatRate", Number(event.target.value))} />
-          </Field>
-          <Field label="Nachlass in %">
-            <TextInput type="number" value={project.discountPercent} onChange={(event) => updateProject("discountPercent", Number(event.target.value))} />
-          </Field>
-          <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Skonto in %">
-              <TextInput type="number" value={project.skontoPercent} onChange={(event) => updateProject("skontoPercent", Number(event.target.value))} />
-            </Field>
-            <Field label="Skontofrist in Tagen">
-              <TextInput type="number" value={project.skontoDays} onChange={(event) => updateProject("skontoDays", Number(event.target.value))} />
-            </Field>
-          </div>
-          <Field label="Optionaler Pauschalpreis netto">
-            <TextInput
-              type="number"
-              value={project.flatFee ?? ""}
-              placeholder="Nach Positionen berechnen"
-              onChange={(event) => updateProject("flatFee", event.target.value ? Number(event.target.value) : null)}
-            />
-          </Field>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <Field label="Auftraggeber">
+                <TextInput value={project.client} onChange={(event) => updateProject("client", event.target.value)} />
+              </Field>
+              <Field label="Ansprechpartner">
+                <TextInput value={project.contactPerson} onChange={(event) => updateProject("contactPerson", event.target.value)} />
+              </Field>
+            </div>
+          </section>
+
+          <section className="rounded-md border border-line p-4">
+            <h3 className="font-semibold text-ink">2 Angebotskopf</h3>
+            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <Field label="Projektname">
+                <TextInput value={project.projectName} onChange={(event) => updateProject("projectName", event.target.value)} />
+              </Field>
+              <Field label="Angebotsnummer">
+                <TextInput value={project.offerNumber} onChange={(event) => updateProject("offerNumber", event.target.value)} />
+              </Field>
+              <Field label="Angebotsdatum">
+                <TextInput type="date" value={project.offerDate} onChange={(event) => updateProject("offerDate", event.target.value)} />
+              </Field>
+              <Field label="Angebotsstatus">
+                <Select value={project.status} onChange={(event) => updateProject("status", event.target.value as Project["status"])}>
+                  <option>Entwurf</option>
+                  <option>In Prüfung</option>
+                  <option>Versendet</option>
+                  <option>Beauftragt</option>
+                  <option>Archiviert</option>
+                </Select>
+              </Field>
+            </div>
+          </section>
+
+          <section className="rounded-md border border-line p-4">
+            <h3 className="font-semibold text-ink">3 Inhalt und Angebotsklarstellung</h3>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <Field label="Kurzbeschreibung">
+                <TextArea value={project.shortDescription} onChange={(event) => updateProject("shortDescription", event.target.value)} className="min-h-28" />
+              </Field>
+              <Field label="Angebotseinleitung">
+                <TextArea value={project.offerIntro} onChange={(event) => updateProject("offerIntro", event.target.value)} className="min-h-28" />
+              </Field>
+              <Field label="Zielsetzung">
+                <TextArea value={project.objective} onChange={(event) => updateProject("objective", event.target.value)} className="min-h-28" />
+              </Field>
+              <Field label="Haftungs- und Angebotsklarstellung">
+                <TextArea value={project.offerClarification} onChange={(event) => updateProject("offerClarification", event.target.value)} className="min-h-28" />
+              </Field>
+              <Field label="Technische oder fachliche Rahmenbedingungen">
+                <TextArea value={project.technicalContext} onChange={(event) => updateProject("technicalContext", event.target.value)} />
+              </Field>
+              <Field label="Module / Leistungsbereiche">
+                <TextArea value={project.modules.join("\n")} onChange={(event) => updateProject("modules", event.target.value.split("\n").filter(Boolean))} />
+              </Field>
+            </div>
+          </section>
+
+          <section className="rounded-md border border-line p-4">
+            <h3 className="font-semibold text-ink">4 Konditionen und Kalkulation</h3>
+            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <Field label="Kalkulationsart">
+                <Select value={project.calculationType} onChange={(event) => updateProject("calculationType", event.target.value as Project["calculationType"])}>
+                  <option>Stundenbasiert</option>
+                  <option>Pauschal</option>
+                  <option>Hybrid</option>
+                </Select>
+              </Field>
+              <Field label="Gültigkeitsdauer">
+                <TextInput value={project.validUntil} onChange={(event) => updateProject("validUntil", event.target.value)} />
+              </Field>
+              <Field label="Umsatzsteuer in %">
+                <TextInput type="number" value={project.vatRate} onChange={(event) => updateProject("vatRate", Number(event.target.value))} />
+              </Field>
+              <Field label="Optionaler Pauschalpreis netto">
+                <TextInput
+                  type="number"
+                  value={project.flatFee ?? ""}
+                  placeholder="Nach Positionen berechnen"
+                  onChange={(event) => updateProject("flatFee", event.target.value ? Number(event.target.value) : null)}
+                />
+              </Field>
+              <Field label="Nachlass in %">
+                <TextInput type="number" value={project.discountPercent} onChange={(event) => updateProject("discountPercent", Number(event.target.value))} />
+              </Field>
+              <Field label="Skonto in %">
+                <TextInput type="number" value={project.skontoPercent} onChange={(event) => updateProject("skontoPercent", Number(event.target.value))} />
+              </Field>
+              <Field label="Skontofrist in Tagen">
+                <TextInput type="number" value={project.skontoDays} onChange={(event) => updateProject("skontoDays", Number(event.target.value))} />
+              </Field>
+              <div className="xl:col-span-4">
+                <Field label="Zahlungsbedingungen">
+                  <TextArea value={project.paymentTerms} onChange={(event) => updateProject("paymentTerms", event.target.value)} className="min-h-20" />
+                </Field>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </div>
