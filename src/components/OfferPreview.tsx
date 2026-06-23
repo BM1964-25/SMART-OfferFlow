@@ -29,8 +29,21 @@ function LinkedAgbText({ text, url }: { text: string; url?: string }) {
   );
 }
 
+function formatCompanyAddressLines(profile: CompanyProfile) {
+  const withoutDuplicateName = profile.address
+    .replace(profile.name, "")
+    .replace(/^,\s*/, "")
+    .replace(/\s*,\s*/g, "\n");
+  return withoutDuplicateName
+    .replace(/\s+(\d{5}\s+\S.*)$/m, "\n$1")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
 export function OfferPreview({ project, groups, profiles }: { project: Project; groups: PositionGroup[]; profiles: CompanyProfile[] }) {
   const company = profiles.find((profile) => profile.id === project.companyId) ?? profiles[0];
+  const companyAddressLines = formatCompanyAddressLines(company);
   const summary = calculateSummary(groups, project);
   const offerDate = new Intl.DateTimeFormat("de-DE", { dateStyle: "long" }).format(new Date(`${project.offerDate}T12:00:00`));
   const visibleGroups = activeGroups(groups).filter((group) => group.positions.some((position) => position.active));
@@ -74,7 +87,11 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
           </div>
           <div className="min-w-64 rounded-lg border border-line p-4 text-sm text-muted">
             <p className="font-semibold text-ink">{company.name}</p>
-            <p className="mt-2">{company.address}</p>
+            <div className="mt-2 grid gap-1">
+              {companyAddressLines.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
             <p className="mt-3 font-semibold text-ink">Projektverantwortlicher</p>
             <p>{company.contact}</p>
             {company.contactRole ? <p>{company.contactRole}</p> : null}
