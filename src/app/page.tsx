@@ -399,11 +399,35 @@ function mergeProfileTemplates(savedTemplates: LvTemplate[] | undefined, profile
   return [...mergedDefaults, ...customTemplates];
 }
 
-function sanitizeProject(project: Project): Project {
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function stripCompanyNameFromProjectName(projectName: string, profiles: CompanyProfile[]) {
+  let cleaned = projectName.trim();
+  const companyNameVariants = profiles.flatMap((profile) => [
+    profile.name,
+    profile.name.replace(/\s+-\s+/g, " "),
+    profile.logoText
+  ]);
+
+  for (const name of companyNameVariants.filter(Boolean)) {
+    const escapedName = escapeRegExp(name.trim());
+    cleaned = cleaned
+      .replace(new RegExp(`\\s*[·|]\\s*${escapedName}\\s*$`, "i"), "")
+      .replace(new RegExp(`\\s+[-–—]\\s+${escapedName}\\s*$`, "i"), "")
+      .replace(new RegExp(`\\s*\\(${escapedName}\\)\\s*$`, "i"), "")
+      .trim();
+  }
+
+  return cleaned || projectName.trim();
+}
+
+function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyProfiles): Project {
   const profileDefaults = companyProfiles.find((profile) => profile.id === project.companyId) ?? companyProfiles[0];
   return {
     ...project,
-    projectName: project.projectName ?? sampleProject.projectName,
+    projectName: stripCompanyNameFromProjectName(project.projectName ?? sampleProject.projectName, profiles),
     shortDescription: project.shortDescription ?? sampleProject.shortDescription,
     offerIntro: project.offerIntro ?? profileDefaults.offerText,
     offerClarification: project.offerClarification ?? profileDefaults.liability,
@@ -445,7 +469,7 @@ function metzgerAlignedProject(project: Project): Project {
 function normalizeSavedState(parsed: Partial<AppStatePayload> & { savedAt?: string }): AppStatePayload {
   const profiles = parsed.profiles ?? companyProfiles;
   const billing = parsed.orderBilling ?? sampleOrderBilling;
-  const sanitizedProject = sanitizeProject(parsed.project ?? sampleProject);
+  const sanitizedProject = sanitizeProject(parsed.project ?? sampleProject, profiles);
   const project = sanitizedProject;
   const groups = parsed.groups ?? initialGroups;
 
@@ -549,7 +573,7 @@ export default function HomePage() {
       ? `Bearbeitet: ${selectedProfile.name} · Angebot aktiv: ${company.name}`
       : activeView === "Dashboard"
         ? project.projectName
-        : `${project.projectName} · ${company.name}`;
+        : project.projectName;
   const summary = calculateSummary(groups, project);
   const visibleGroups = activeGroups(groups);
   const activePositions = visibleGroups.flatMap((group) => group.positions.filter((position) => position.active));
