@@ -70,7 +70,7 @@ export const companyProfiles: CompanyProfile[] = [
     phone: "+49 211 000 000",
     website: "www.metzger-advisory.de",
     vatId: "DE000000003",
-    bank: "IBAN DE00 0000 0000 0000 0000 03, BIC MREADDE",
+    bank: "Kontoinhaber Bernhard Metzger, IBAN DE00 0000 0000 0000 0000 03, BIC MREADDE",
     contact: "Bernhard Metzger",
     footer: "Metzger Real Estate Advisory steht für präzise Analyse, belastbare Entscheidungen und digitale Exzellenz in Immobilienprojekten.",
     liability: "Dieses Angebot basiert auf den zum Angebotszeitpunkt bekannten Rahmenbedingungen und ersetzt keine rechtliche oder steuerliche Prüfung.",

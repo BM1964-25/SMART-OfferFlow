@@ -220,7 +220,7 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
       </section>
 
       <footer className="print-keep border-t border-line pt-6 text-sm leading-6 text-muted">
-        <p className="font-medium text-ink">{company.contact}</p>
+        <p className="font-medium text-ink">{company.name}</p>
         <p>{company.footer}</p>
         <p className="mt-3">
           {company.vatId} · {company.bank}
