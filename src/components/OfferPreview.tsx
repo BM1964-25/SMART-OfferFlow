@@ -75,8 +75,7 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
       </section>
 
       <section className="print-section py-8">
-        <h2 className="text-lg font-semibold text-ink">Einleitung</h2>
-        <p className="mt-3 leading-7 text-muted">{introText}</p>
+        <p className="leading-7 text-muted">{introText}</p>
         <div className="mt-6 grid gap-5 md:grid-cols-2">
           <div>
             <h3 className="text-sm font-semibold text-ink">Projektbeschreibung</h3>
