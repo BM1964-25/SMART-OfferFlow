@@ -371,9 +371,11 @@ function createInitialProfileTemplates(profiles: CompanyProfile[] = companyProfi
 function mergeProfileTemplates(savedTemplates: LvTemplate[] | undefined, profiles: CompanyProfile[]) {
   const defaultTemplates = createInitialProfileTemplates(profiles);
   if (!savedTemplates) return defaultTemplates;
+  const savedById = new Map(savedTemplates.map((template) => [template.id, template]));
+  const mergedDefaults = defaultTemplates.map((template) => savedById.get(template.id) ?? template);
   const defaultIds = new Set(defaultTemplates.map((template) => template.id));
   const customTemplates = savedTemplates.filter((template) => !defaultIds.has(template.id));
-  return [...defaultTemplates, ...customTemplates];
+  return [...mergedDefaults, ...customTemplates];
 }
 
 function sanitizeProject(project: Project): Project {
@@ -675,6 +677,87 @@ export default function HomePage() {
 
   function updateGroup(groupId: string, changes: Partial<PositionGroup>) {
     setGroups((current) => current.map((group) => (group.id === groupId ? { ...group, ...changes } : group)));
+  }
+
+  function deleteGroup(groupId: string) {
+    const group = groups.find((item) => item.id === groupId);
+    if (!group) return;
+    if (!window.confirm(`Titel "${group.title}" mit allen Positionen löschen?`)) return;
+    setGroups((current) => renumberGroups(current.filter((item) => item.id !== groupId)));
+  }
+
+  function upsertIntoMasterLv(updater: (groups: PositionGroup[]) => PositionGroup[]) {
+    const now = new Date().toISOString();
+    const defaultTemplates = createInitialProfileTemplates(profiles);
+    const fallbackTemplate =
+      lvTemplates.find((template) => template.companyId === project.companyId && template.id === `template-${project.companyId}-standard`) ??
+      defaultTemplates.find((template) => template.companyId === project.companyId);
+    if (!fallbackTemplate) return;
+
+    setLvTemplates((current) => {
+      const exists = current.some((template) => template.id === fallbackTemplate.id);
+      const baseTemplate = current.find((template) => template.id === fallbackTemplate.id) ?? fallbackTemplate;
+      const nextTemplate: LvTemplate = {
+        ...baseTemplate,
+        groups: renumberGroups(updater(cloneGroups(baseTemplate.groups))),
+        updatedAt: now
+      };
+      return exists
+        ? current.map((template) => (template.id === fallbackTemplate.id ? nextTemplate : template))
+        : [nextTemplate, ...current];
+    });
+  }
+
+  function copyOfferGroupToMaster(groupId: string) {
+    const sourceGroup = groups.find((group) => group.id === groupId);
+    if (!sourceGroup) return;
+    upsertIntoMasterLv((masterGroups) => {
+      const timestamp = Date.now();
+      const masterGroupId = `master-group-${timestamp}`;
+      const groupCopy: PositionGroup = {
+        ...sourceGroup,
+        id: masterGroupId,
+        active: true,
+        positions: sourceGroup.positions.map((position, index) => ({
+          ...position,
+          id: `master-position-${timestamp}-${index + 1}`,
+          groupId: masterGroupId,
+          active: true,
+          number: "0.0"
+        }))
+      };
+      return [...masterGroups, groupCopy];
+    });
+  }
+
+  function copyOfferPositionToMaster(groupId: string, positionId: string) {
+    const sourceGroup = groups.find((group) => group.id === groupId);
+    const sourcePosition = sourceGroup?.positions.find((position) => position.id === positionId);
+    if (!sourceGroup || !sourcePosition) return;
+    upsertIntoMasterLv((masterGroups) => {
+      const timestamp = Date.now();
+      const targetGroup = masterGroups.find((group) => group.title === sourceGroup.title);
+      const targetGroupId = targetGroup?.id ?? `master-group-${timestamp}`;
+      const positionCopy: Position = {
+        ...sourcePosition,
+        id: `master-position-${timestamp}`,
+        groupId: targetGroupId,
+        active: true,
+        number: "0.0"
+      };
+      if (targetGroup) {
+        return masterGroups.map((group) => (group.id === targetGroup.id ? { ...group, positions: [...group.positions, positionCopy] } : group));
+      }
+      return [
+        ...masterGroups,
+        {
+          ...sourceGroup,
+          id: positionCopy.groupId,
+          active: true,
+          positions: [positionCopy]
+        }
+      ];
+    });
   }
 
   function updateOrderBilling<K extends keyof OrderBilling>(key: K, value: OrderBilling[K]) {
@@ -1191,9 +1274,12 @@ export default function HomePage() {
               statuses={statuses}
               updatePosition={updatePosition}
               updateGroup={updateGroup}
+              deleteGroup={deleteGroup}
               deletePosition={deletePosition}
               duplicatePosition={duplicatePosition}
               addPosition={addPosition}
+              copyOfferGroupToMaster={copyOfferGroupToMaster}
+              copyOfferPositionToMaster={copyOfferPositionToMaster}
               onDragEnd={onDragEnd}
             />
           ) : null}
@@ -1765,9 +1851,12 @@ function LvEditor({
   statuses,
   updatePosition,
   updateGroup,
+  deleteGroup,
   deletePosition,
   duplicatePosition,
   addPosition,
+  copyOfferGroupToMaster,
+  copyOfferPositionToMaster,
   onDragEnd
 }: {
   groups: PositionGroup[];
@@ -1782,9 +1871,12 @@ function LvEditor({
   statuses: string[];
   updatePosition: (groupId: string, positionId: string, changes: Partial<Position>) => void;
   updateGroup: (groupId: string, changes: Partial<PositionGroup>) => void;
+  deleteGroup: (groupId: string) => void;
   deletePosition: (groupId: string, positionId: string) => void;
   duplicatePosition: (groupId: string, positionId: string) => void;
   addPosition: (groupId: string) => void;
+  copyOfferGroupToMaster: (groupId: string) => void;
+  copyOfferPositionToMaster: (groupId: string, positionId: string) => void;
   onDragEnd: (result: DropResult) => void;
 }) {
   const hasFilters = Boolean(query) || categoryFilter !== "Alle Kategorien" || statusFilter !== "Alle Status";
@@ -1819,14 +1911,24 @@ function LvEditor({
         <div className="grid gap-5">
           {displayedGroups.map((group) => (
             <div key={group.id} className="rounded-lg border border-line bg-white shadow-sm">
-              <div className="flex flex-col gap-3 border-b border-line p-5 md:flex-row md:items-start md:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-ink">
-                    {group.active ? groupNumber(allGroups, group.id) : "entfällt"} {group.title}
-                  </h2>
-                  <p className="mt-1 max-w-3xl text-sm leading-6 text-muted">{group.intro}</p>
+              <div className="grid gap-4 border-b border-line p-5 xl:grid-cols-[1fr_auto] xl:items-start">
+                <div className="grid gap-3">
+                  <div className="grid gap-3 md:grid-cols-[88px_1fr]">
+                    <div>
+                      <p className="text-sm font-medium text-ink">Titel-Nr.</p>
+                      <p className="mt-2 flex h-10 items-center rounded-md bg-slate-50 px-3 text-sm font-semibold text-ink">
+                        {group.active ? groupNumber(allGroups, group.id) : "entfällt"}
+                      </p>
+                    </div>
+                    <Field label="Titel bearbeiten">
+                      <TextInput value={group.title} onChange={(event) => updateGroup(group.id, { title: event.target.value })} />
+                    </Field>
+                  </div>
+                  <Field label="Titelbeschreibung">
+                    <TextArea value={group.intro} onChange={(event) => updateGroup(group.id, { intro: event.target.value })} className="min-h-20" />
+                  </Field>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                   <button
                     type="button"
                     onClick={() => updateGroup(group.id, { active: !group.active })}
@@ -1838,6 +1940,8 @@ function LvEditor({
                   </button>
                   <p className="rounded-md bg-slate-100 px-3 py-2 text-sm font-semibold text-ink">{formatCurrency(groupTotal(group))}</p>
                   <IconButton icon={Plus} label="Position hinzufügen" onClick={() => addPosition(group.id)} disabled={hasFilters} />
+                  <IconButton icon={Save} label="Titel ins Master-LV übernehmen" onClick={() => copyOfferGroupToMaster(group.id)} disabled={hasFilters} />
+                  <IconButton icon={Trash2} label="Titel löschen" onClick={() => deleteGroup(group.id)} disabled={hasFilters} />
                 </div>
               </div>
               <Droppable droppableId={group.id}>
@@ -1914,6 +2018,7 @@ function LvEditor({
                               </div>
                               <div className="flex gap-2">
                                 <IconButton icon={CheckCircle2} label="Position aktivieren/deaktivieren" active={position.active} onClick={() => updatePosition(position.groupId, position.id, { active: !position.active })} />
+                                <IconButton icon={Save} label="Position ins Master-LV übernehmen" onClick={() => copyOfferPositionToMaster(position.groupId, position.id)} />
                                 <IconButton icon={Copy} label="Position duplizieren" onClick={() => duplicatePosition(position.groupId, position.id)} />
                                 <IconButton icon={Trash2} label="Position löschen" onClick={() => deletePosition(position.groupId, position.id)} />
                               </div>
