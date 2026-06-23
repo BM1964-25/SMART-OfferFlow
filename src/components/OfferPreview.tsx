@@ -76,6 +76,12 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
 
       <section className="print-section py-8">
         <p className="leading-7 text-muted">{introText}</p>
+        {project.assignmentReason ? (
+          <div className="mt-6">
+            <h3 className="text-sm font-semibold text-ink">Anlass der Beauftragung</h3>
+            <p className="mt-2 leading-7 text-muted">{project.assignmentReason}</p>
+          </div>
+        ) : null}
         <div className="mt-6 grid gap-5 md:grid-cols-2">
           <div>
             <h3 className="text-sm font-semibold text-ink">Projektbeschreibung</h3>

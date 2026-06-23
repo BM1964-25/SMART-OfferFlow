@@ -48,6 +48,7 @@ export type Project = {
   projectName: string;
   shortDescription: string;
   offerIntro: string;
+  assignmentReason: string;
   offerClarification: string;
   objective: string;
   technicalContext: string;

@@ -37,7 +37,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { OfferPreview } from "@/components/OfferPreview";
 import { Field, IconButton, SectionTitle, Select, StatCard, TextArea, TextInput } from "@/components/ui";
 import { activeGroups, calculateSummary, formatCurrency, groupNumber, groupTotal, positionNumber, positionTotal, renumberGroups } from "@/lib/calculations";
-import { companyProfiles, initialGroups, rateLabels, sampleOrderBilling, sampleProject } from "@/lib/data";
+import { companyProfiles, defaultAssignmentReason, initialGroups, rateLabels, sampleOrderBilling, sampleProject } from "@/lib/data";
 import { printElement } from "@/lib/print";
 import { ChangeOrder, CompanyProfile, InvoicePlanItem, OrderBilling, Position, PositionGroup, Project, WorkLogItem } from "@/lib/types";
 
@@ -430,6 +430,7 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
     projectName: stripCompanyNameFromProjectName(project.projectName ?? sampleProject.projectName, profiles),
     shortDescription: project.shortDescription ?? sampleProject.shortDescription,
     offerIntro: project.offerIntro ?? profileDefaults.offerText,
+    assignmentReason: project.assignmentReason ?? defaultAssignmentReason,
     offerClarification: project.offerClarification ?? profileDefaults.liability,
     offerDate: project.offerDate ?? sampleProject.offerDate,
     skontoPercent: project.skontoPercent ?? 0,
@@ -1706,6 +1707,13 @@ function ProjectWorkspace({
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <Field label="Angebotseinleitung">
                 <TextArea value={project.offerIntro} onChange={(event) => updateProject("offerIntro", event.target.value)} className="min-h-28" />
+              </Field>
+              <Field label="Anlass der Beauftragung">
+                <TextArea
+                  value={project.assignmentReason}
+                  onChange={(event) => updateProject("assignmentReason", event.target.value)}
+                  className="min-h-28"
+                />
               </Field>
               <Field label="Projektbeschreibung">
                 <TextArea value={project.shortDescription} onChange={(event) => updateProject("shortDescription", event.target.value)} className="min-h-28" />
