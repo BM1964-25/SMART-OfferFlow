@@ -2,6 +2,7 @@
 
 import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
 import {
+  AlertTriangle,
   Archive,
   Bot,
   Braces,
@@ -23,14 +24,15 @@ import {
   Plus,
   Printer,
   ReceiptText,
+  ShieldCheck,
   Save,
   Search,
   Settings,
   SlidersHorizontal,
   Trash2,
-  Users
+  Upload
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { OfferPreview } from "@/components/OfferPreview";
 import { Field, IconButton, SectionTitle, Select, StatCard, TextArea, TextInput } from "@/components/ui";
 import { activeGroups, calculateSummary, formatCurrency, groupNumber, groupTotal, positionNumber, positionTotal, renumberGroups } from "@/lib/calculations";
@@ -49,7 +51,7 @@ type View =
   | "KI-Assistenz"
   | "Kunden"
   | "Firmenprofile"
-  | "Mandanten"
+  | "Qualitätsmanagement"
   | "Positionsbibliothek"
   | "Vorlagen"
   | "Einstellungen";
@@ -65,7 +67,7 @@ const navItems: { label: View; icon: typeof Home }[] = [
   { label: "KI-Assistenz", icon: Bot },
   { label: "Kunden", icon: Contact },
   { label: "Firmenprofile", icon: Building2 },
-  { label: "Mandanten", icon: Users },
+  { label: "Qualitätsmanagement", icon: ShieldCheck },
   { label: "Positionsbibliothek", icon: Library },
   { label: "Vorlagen", icon: LayoutTemplate },
   { label: "Einstellungen", icon: Settings }
@@ -93,6 +95,18 @@ type Customer = {
   customerNumber: string;
   industry: string;
   notes: string;
+};
+
+type AppStatePayload = {
+  version: number;
+  savedAt: string;
+  project: Project;
+  groups: PositionGroup[];
+  profiles: CompanyProfile[];
+  customers: Customer[];
+  libraryPositions: Position[];
+  lvTemplates: LvTemplate[];
+  orderBilling: OrderBilling;
 };
 
 function createInitialCustomers(): Customer[] {
@@ -362,6 +376,69 @@ function mergeProfileTemplates(savedTemplates: LvTemplate[] | undefined, profile
   return [...defaultTemplates, ...customTemplates];
 }
 
+function sanitizeProject(project: Project): Project {
+  return {
+    ...project,
+    projectName: project.projectName
+      .replace("KI-gestützte Angebots- und Wissensplattform", "KI-gestützte Angebotsplattform")
+      .replace("K. I. Gestützte Angebots und Wissensplattform", "KI-gestützte Angebotsplattform")
+      .replace("KI gestützte Arbeitsblatt Form", "KI-gestützte Angebotsplattform"),
+    shortDescription: project.shortDescription.replace(" und Wissensbereitstellung", ""),
+    offerDate: project.offerDate ?? sampleProject.offerDate,
+    skontoPercent: project.skontoPercent ?? 0,
+    skontoDays: project.skontoDays ?? 10
+  };
+}
+
+function isMetzgerAiDemoMismatch(project: Project) {
+  if (project.companyId !== "metzger-real-estate") return false;
+  return /ki-gest|dokumenten-ki|rag|prompt|wissensplattform|angebotsplattform/i.test(
+    [project.projectName, project.shortDescription, project.objective, project.technicalContext, ...project.modules].join(" ")
+  );
+}
+
+function metzgerAlignedProject(project: Project): Project {
+  return {
+    ...project,
+    companyId: "metzger-real-estate",
+    client: project.client === sampleProject.client ? "" : project.client,
+    contactPerson: project.contactPerson === sampleProject.contactPerson ? "" : project.contactPerson,
+    projectName: "Beratungs- und Unterstützungsleistungen Real Estate Advisory",
+    shortDescription:
+      "Leistungsangebot für strategische Beratung, Projektsteuerung, technische Prüfungen, Qualitätsmanagement, Baurevision, Sachverständigenleistungen sowie abrechenbare Reise- und Auslagenpositionen.",
+    objective:
+      "Ziel ist ein belastbares, fachlich klares und prüffähiges Leistungsbild für immobilienbezogene Beratungs-, Steuerungs- und Unterstützungsleistungen.",
+    technicalContext:
+      "Beratungs- und Projektkontext mit objekt-, bau-, organisations- oder bestandsbezogenen Leistungen. Digitale Werkzeuge können unterstützend eingesetzt werden, stehen aber nicht im Mittelpunkt des Angebots.",
+    modules: ["Strategische Beratung", "Projektsteuerung", "Due Diligence", "Qualitätsmanagement", "Sachverständigenleistungen", "Vergütung und Auslagen"],
+    offerNumber: project.offerNumber.startsWith("BSAI") ? "MREA-2026-001" : project.offerNumber
+  };
+}
+
+function normalizeSavedState(parsed: Partial<AppStatePayload> & { savedAt?: string }): AppStatePayload {
+  const profiles = parsed.profiles ?? companyProfiles;
+  const billing = parsed.orderBilling ?? sampleOrderBilling;
+  const sanitizedProject = sanitizeProject(parsed.project ?? sampleProject);
+  const project = isMetzgerAiDemoMismatch(sanitizedProject) ? metzgerAlignedProject(sanitizedProject) : sanitizedProject;
+  const groups = isMetzgerAiDemoMismatch(sanitizedProject) ? createMetzgerReaStandardGroups() : (parsed.groups ?? initialGroups);
+
+  return {
+    version: parsed.version ?? 2,
+    savedAt: parsed.savedAt ?? new Date().toISOString(),
+    project,
+    groups: groups.map((group) => ({ ...group, active: group.active ?? true })),
+    profiles,
+    customers: parsed.customers ?? createInitialCustomers(),
+    libraryPositions: parsed.libraryPositions ?? createInitialLibraryPositions(),
+    lvTemplates: mergeProfileTemplates(parsed.lvTemplates, profiles),
+    orderBilling: {
+      ...billing,
+      changeOrders: billing.changeOrders.map((item) => ({ ...item, billable: item.billable ?? item.status === "Beauftragt" })),
+      workLog: billing.workLog.map((item) => ({ ...item, billable: item.billable ?? true }))
+    }
+  };
+}
+
 function readableTextColor(background: string) {
   const hex = background.replace("#", "");
   if (hex.length !== 6) return "#ffffff";
@@ -375,6 +452,7 @@ function readableTextColor(background: string) {
 export default function HomePage() {
   const [activeView, setActiveView] = useState<View>("Dashboard");
   const [project, setProject] = useState<Project>(sampleProject);
+  const [selectedProfileId, setSelectedProfileId] = useState<Project["companyId"]>(sampleProject.companyId);
   const [groups, setGroups] = useState<PositionGroup[]>(initialGroups);
   const [profiles, setProfiles] = useState<CompanyProfile[]>(companyProfiles);
   const [customers, setCustomers] = useState<Customer[]>(createInitialCustomers);
@@ -385,54 +463,57 @@ export default function HomePage() {
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("Alle Kategorien");
   const [statusFilter, setStatusFilter] = useState("Alle Status");
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [storageMessage, setStorageMessage] = useState("Automatische Sicherung aktiv");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(storageKey);
     if (!saved) return;
     try {
-      const parsed = JSON.parse(saved) as {
-        project: Project;
-        groups: PositionGroup[];
-        profiles?: CompanyProfile[];
-        customers?: Customer[];
-        libraryPositions?: Position[];
-        lvTemplates?: LvTemplate[];
-        orderBilling?: OrderBilling;
-      };
+      const parsed = JSON.parse(saved) as Partial<AppStatePayload>;
+      const normalized = normalizeSavedState(parsed);
       queueMicrotask(() => {
-        setProject({
-          ...parsed.project,
-          projectName: parsed.project.projectName
-            .replace("KI-gestützte Angebots- und Wissensplattform", "KI-gestützte Angebotsplattform")
-            .replace("K. I. Gestützte Angebots und Wissensplattform", "KI-gestützte Angebotsplattform"),
-          shortDescription: parsed.project.shortDescription.replace(" und Wissensbereitstellung", ""),
-          offerDate: parsed.project.offerDate ?? sampleProject.offerDate,
-          skontoPercent: parsed.project.skontoPercent ?? 0,
-          skontoDays: parsed.project.skontoDays ?? 10
-        });
-        setGroups(parsed.groups.map((group) => ({ ...group, active: group.active ?? true })));
-        const savedProfiles = parsed.profiles ?? companyProfiles;
-        setProfiles(savedProfiles);
-        setCustomers(parsed.customers ?? createInitialCustomers());
-        setLibraryPositions(parsed.libraryPositions ?? createInitialLibraryPositions());
-        setLvTemplates(mergeProfileTemplates(parsed.lvTemplates, savedProfiles));
-        const billing = parsed.orderBilling ?? sampleOrderBilling;
-        setOrderBilling({
-          ...billing,
-          changeOrders: billing.changeOrders.map((item) => ({ ...item, billable: item.billable ?? item.status === "Beauftragt" })),
-          workLog: billing.workLog.map((item) => ({ ...item, billable: item.billable ?? true }))
-        });
+        applyState(normalized);
+        setSelectedProfileId(normalized.project.companyId);
+        setLastSavedAt(normalized.savedAt);
+        setStorageMessage("Gesicherter Stand geladen");
       });
     } catch {
       window.localStorage.removeItem(storageKey);
+      queueMicrotask(() => setStorageMessage("Lokale Sicherung war fehlerhaft und wurde verworfen"));
     }
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(storageKey, JSON.stringify({ project, groups, profiles, customers, libraryPositions, lvTemplates, orderBilling }));
+    const savedAt = new Date().toISOString();
+    const payload: AppStatePayload = {
+      version: 2,
+      savedAt,
+      project,
+      groups,
+      profiles,
+      customers,
+      libraryPositions,
+      lvTemplates,
+      orderBilling
+    };
+    window.localStorage.setItem(storageKey, JSON.stringify(payload));
+    queueMicrotask(() => {
+      setLastSavedAt(savedAt);
+      setStorageMessage("Automatisch gespeichert");
+    });
   }, [project, groups, profiles, customers, libraryPositions, lvTemplates, orderBilling]);
 
   const company = profiles.find((profile) => profile.id === project.companyId) ?? profiles[0];
+  const selectedProfile = profiles.find((profile) => profile.id === selectedProfileId) ?? company;
+  const workspaceTitle = activeView === "Dashboard" ? "Projektzentrale" : activeView;
+  const workspaceContext =
+    activeView === "Firmenprofile"
+      ? `Bearbeitet: ${selectedProfile.name} · Angebot aktiv: ${company.name}`
+      : activeView === "Dashboard"
+        ? project.projectName
+        : `${project.projectName} · ${company.name}`;
   const summary = calculateSummary(groups, project);
   const visibleGroups = activeGroups(groups);
   const activePositions = visibleGroups.flatMap((group) => group.positions.filter((position) => position.active));
@@ -464,7 +545,69 @@ export default function HomePage() {
     setProject((current) => ({ ...current, [key]: value }));
   }
 
+  function createStatePayload(savedAt = new Date().toISOString()): AppStatePayload {
+    return {
+      version: 2,
+      savedAt,
+      project,
+      groups,
+      profiles,
+      customers,
+      libraryPositions,
+      lvTemplates,
+      orderBilling
+    };
+  }
+
+  function applyState(state: AppStatePayload) {
+    setProject(state.project);
+    setSelectedProfileId(state.project.companyId);
+    setGroups(state.groups);
+    setProfiles(state.profiles);
+    setCustomers(state.customers);
+    setLibraryPositions(state.libraryPositions);
+    setLvTemplates(state.lvTemplates);
+    setOrderBilling(state.orderBilling);
+  }
+
+  function exportJson() {
+    const savedAt = new Date().toISOString();
+    const json = JSON.stringify(createStatePayload(savedAt), null, 2);
+    const blob = new Blob([json], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${project.offerNumber}-smart-offerflow.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setLastSavedAt(savedAt);
+    setStorageMessage("JSON-Datei gespeichert");
+  }
+
+  function handleJsonFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result)) as Partial<AppStatePayload>;
+        const normalized = normalizeSavedState(parsed);
+        applyState(normalized);
+        window.localStorage.setItem(storageKey, JSON.stringify(normalized));
+        setLastSavedAt(normalized.savedAt);
+        setStorageMessage(`JSON geladen: ${file.name}`);
+        setActiveView("Dashboard");
+      } catch {
+        setStorageMessage("JSON-Datei konnte nicht geladen werden");
+      } finally {
+        event.target.value = "";
+      }
+    };
+    reader.readAsText(file);
+  }
+
   function selectCompany(companyId: Project["companyId"]) {
+    setSelectedProfileId(companyId);
     updateProject("companyId", companyId);
   }
 
@@ -765,6 +908,32 @@ export default function HomePage() {
     setActiveView("LV bearbeiten");
   }
 
+  function repairCompanyLvAlignment() {
+    if (project.companyId !== "metzger-real-estate") {
+      applyMasterLv();
+      return;
+    }
+
+    const masterTemplate = findMasterTemplate("metzger-real-estate");
+    setProject((current) => ({
+      ...current,
+      companyId: "metzger-real-estate",
+      client: current.client === sampleProject.client ? "" : current.client,
+      contactPerson: current.contactPerson === sampleProject.contactPerson ? "" : current.contactPerson,
+      projectName: "Beratungs- und Unterstützungsleistungen Real Estate Advisory",
+      shortDescription:
+        "Leistungsangebot für strategische Beratung, Projektsteuerung, technische Prüfungen, Qualitätsmanagement, Baurevision, Sachverständigenleistungen sowie abrechenbare Reise- und Auslagenpositionen.",
+      objective:
+        "Ziel ist ein belastbares, fachlich klares und prüffähiges Leistungsbild für immobilienbezogene Beratungs-, Steuerungs- und Unterstützungsleistungen.",
+      technicalContext:
+        "Beratungs- und Projektkontext mit objekt-, bau-, organisations- oder bestandsbezogenen Leistungen. Digitale Werkzeuge können unterstützend eingesetzt werden, stehen aber nicht im Mittelpunkt des Angebots.",
+      modules: ["Strategische Beratung", "Projektsteuerung", "Due Diligence", "Qualitätsmanagement", "Sachverständigenleistungen", "Vergütung und Auslagen"],
+      offerNumber: current.offerNumber.startsWith("BSAI") ? "MREA-2026-001" : current.offerNumber
+    }));
+    if (masterTemplate) setGroups(cloneGroups(masterTemplate.groups));
+    setActiveView("Qualitätsmanagement");
+  }
+
   function copyMasterGroupToOffer(masterGroup: PositionGroup) {
     const timestamp = Date.now();
     const groupId = `group-${timestamp}-${masterGroup.id}`;
@@ -870,25 +1039,6 @@ export default function HomePage() {
     URL.revokeObjectURL(url);
   }
 
-  function exportJson() {
-    const payload = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      project,
-      groups,
-      orderBilling,
-      summary: calculateSummary(groups, project)
-    };
-    const json = JSON.stringify(payload, null, 2);
-    const blob = new Blob([json], { type: "application/json;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${project.offerNumber}-smart-offerflow.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-  }
-
   function printOfferArea() {
     printElement(".print-area", `${project.offerNumber} ${project.projectName}`.trim());
   }
@@ -939,6 +1089,17 @@ export default function HomePage() {
             </button>
           ))}
         </nav>
+        <div className={`mt-6 border-t border-line pt-4 ${sidebarCollapsed ? "grid justify-center gap-2" : "grid gap-3"}`}>
+          <input ref={fileInputRef} type="file" accept="application/json,.json" onChange={handleJsonFile} className="hidden" />
+          <IconButton icon={Save} label="Stand als JSON speichern" onClick={exportJson} />
+          <IconButton icon={Upload} label="Stand aus JSON laden" onClick={() => fileInputRef.current?.click()} />
+          {!sidebarCollapsed ? (
+            <div className="rounded-md bg-slate-50 px-3 py-2 text-xs leading-5 text-muted">
+              <p className="font-semibold text-ink">{storageMessage}</p>
+              <p>{lastSavedAt ? new Date(lastSavedAt).toLocaleString("de-DE") : "Noch keine Sicherung"}</p>
+            </div>
+          ) : null}
+        </div>
       </aside>
 
       <section className={`transition-all ${sidebarCollapsed ? "lg:pl-20" : "lg:pl-72"}`}>
@@ -946,16 +1107,19 @@ export default function HomePage() {
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0">
               <p className="text-sm font-medium text-muted">{company.name}</p>
-              <h1 className="truncate text-2xl font-semibold tracking-normal text-ink">{project.projectName}</h1>
+              <h1 className="truncate text-2xl font-semibold tracking-normal text-ink">{workspaceTitle}</h1>
+              <p className="mt-1 truncate text-sm text-muted">{workspaceContext}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Select value={project.companyId} onChange={(event) => selectCompany(event.target.value as Project["companyId"])} className="w-56">
-                {profiles.map((profile) => (
-                  <option key={profile.id} value={profile.id}>
-                    {profile.name}
-                  </option>
-                ))}
-              </Select>
+              <button
+                type="button"
+                onClick={() => setActiveView("Firmenprofile")}
+                className="inline-flex h-10 items-center gap-2 rounded-md border border-line bg-white px-3 text-sm font-semibold text-ink transition hover:border-slate-300"
+                title="Aktives Firmenprofil bearbeiten"
+              >
+                <Building2 className="h-4 w-4 text-muted" />
+                {company.name}
+              </button>
               <IconButton icon={Save} label="Aktuelles LV als Profil-LV speichern" onClick={saveAsTemplate} />
               <IconButton icon={Copy} label="Angebot duplizieren" onClick={duplicateOffer} />
               <IconButton icon={Download} label="CSV exportieren" onClick={exportCsv} />
@@ -988,6 +1152,8 @@ export default function HomePage() {
               activePositions={activePositions.length}
               optionalPositions={optionalPositions.length}
               groups={groups}
+              company={company}
+              repairCompanyLvAlignment={repairCompanyLvAlignment}
               setActiveView={setActiveView}
             />
           ) : null}
@@ -1056,17 +1222,32 @@ export default function HomePage() {
 
           {activeView === "Firmenprofile" ? (
             <CompanyProfiles
-              selectedCompanyId={project.companyId}
+              selectedCompanyId={selectedProfileId}
+              activeProjectCompanyId={project.companyId}
               templates={lvTemplates}
               profiles={profiles}
-              selectCompany={selectCompany}
+              selectProfile={setSelectedProfileId}
+              applyProfileToProject={selectCompany}
               updateCompanyProfile={updateCompanyProfile}
               updateCompanyProfileColors={updateCompanyProfileColors}
               setActiveView={setActiveView}
             />
           ) : null}
 
-          {activeView === "Mandanten" ? <Tenants /> : null}
+          {activeView === "Qualitätsmanagement" ? (
+            <QualityManagement
+              project={project}
+              groups={groups}
+              profiles={profiles}
+              customers={customers}
+              templates={lvTemplates}
+              lastSavedAt={lastSavedAt}
+              storageMessage={storageMessage}
+              repairCompanyLvAlignment={repairCompanyLvAlignment}
+              applyMasterLv={applyMasterLv}
+              setActiveView={setActiveView}
+            />
+          ) : null}
 
           {activeView === "Positionsbibliothek" ? (
             <PositionLibrary
@@ -1106,6 +1287,8 @@ function Dashboard({
   activePositions,
   optionalPositions,
   groups,
+  company,
+  repairCompanyLvAlignment,
   setActiveView
 }: {
   project: Project;
@@ -1114,6 +1297,8 @@ function Dashboard({
   activePositions: number;
   optionalPositions: number;
   groups: PositionGroup[];
+  company: CompanyProfile;
+  repairCompanyLvAlignment: () => void;
   setActiveView: (view: View) => void;
 }) {
   const visibleGroups = activeGroups(groups);
@@ -1122,9 +1307,77 @@ function Dashboard({
   const billedTotal = orderBilling.invoicePlan.filter((item) => item.status !== "Entwurf").reduce((sum, item) => sum + item.amount, 0);
   const outstandingTotal = Math.max(orderTotal - billedTotal, 0);
   const billedPercent = orderTotal > 0 ? Math.min((billedTotal / orderTotal) * 100, 100) : 0;
+  const projectText = [project.projectName, project.shortDescription, project.objective, project.technicalContext, ...project.modules].join(" ").toLowerCase();
+  const hasProfileConflict = project.companyId === "metzger-real-estate" && /ki-gest|dokumenten-ki|rag|prompt|wissensplattform|angebotsplattform/.test(projectText);
 
   return (
     <div className="grid gap-6">
+      {hasProfileConflict ? (
+        <div className="rounded-lg border border-rose-100 bg-rose-50 p-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="font-semibold text-rose-900">Firmenprofil und Projektdaten passen nicht zusammen</p>
+              <p className="mt-2 text-sm leading-6 text-rose-800">
+                Das Angebot nutzt {company.name}, enthält aber noch KI-Demo-Projektdaten. Bitte das passende Master-LV und die Projektdaten bereinigen.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={repairCompanyLvAlignment}
+              className="inline-flex h-10 items-center justify-center rounded-md bg-rose-700 px-4 text-sm font-semibold text-white transition hover:bg-rose-800"
+            >
+              Jetzt bereinigen
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div>
+            <SectionTitle title="Projektzentrale" kicker={company.name} />
+            <h3 className="mt-3 text-lg font-semibold text-ink">{project.projectName}</h3>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-muted">{project.shortDescription}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[
+              ["Angebotsdaten", "Neues Angebot"],
+              ["LV bearbeiten", "LV bearbeiten"],
+              ["Vorschau", "LV-Vorschau"],
+              ["Abrechnung", "Auftrag & Abrechnung"],
+              ["QM", "Qualitätsmanagement"]
+            ].map(([label, view]) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setActiveView(view as View)}
+                className="inline-flex h-10 items-center justify-center rounded-md border border-line bg-white px-4 text-sm font-semibold text-ink transition hover:border-slate-300"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-4">
+          <div className="rounded-md border border-line bg-slate-50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">Status</p>
+            <p className="mt-2 font-semibold text-ink">{project.status}</p>
+          </div>
+          <div className="rounded-md border border-line bg-slate-50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">Angebot</p>
+            <p className="mt-2 font-semibold text-ink">{project.offerNumber}</p>
+          </div>
+          <div className="rounded-md border border-line bg-slate-50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">Empfänger</p>
+            <p className="mt-2 truncate font-semibold text-ink">{project.client || "noch offen"}</p>
+          </div>
+          <div className="rounded-md border border-line bg-slate-50 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">Firmenprofil</p>
+            <p className="mt-2 truncate font-semibold text-ink">{company.name}</p>
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Angebotswert netto" value={formatCurrency(summary.net)} detail={`${project.vatRate} % Umsatzsteuer vorbereitet`} tone="accent" align="center" />
         <StatCard label="Aktive Positionen" value={String(activePositions)} detail={`${optionalPositions} optionale Positionen enthalten`} align="center" />
@@ -1683,17 +1936,21 @@ function LvEditor({
 
 function CompanyProfiles({
   selectedCompanyId,
+  activeProjectCompanyId,
   templates,
   profiles,
-  selectCompany,
+  selectProfile,
+  applyProfileToProject,
   updateCompanyProfile,
   updateCompanyProfileColors,
   setActiveView
 }: {
   selectedCompanyId: string;
+  activeProjectCompanyId: Project["companyId"];
   templates: LvTemplate[];
   profiles: CompanyProfile[];
-  selectCompany: (companyId: Project["companyId"]) => void;
+  selectProfile: (companyId: Project["companyId"]) => void;
+  applyProfileToProject: (companyId: Project["companyId"]) => void;
   updateCompanyProfile: (profileId: Project["companyId"], changes: Partial<CompanyProfile>) => void;
   updateCompanyProfileColors: (profileId: Project["companyId"], changes: Partial<CompanyProfile["colors"]>) => void;
   setActiveView: (view: View) => void;
@@ -1710,7 +1967,7 @@ function CompanyProfiles({
             <button
               key={profile.id}
               type="button"
-              onClick={() => selectCompany(profile.id)}
+              onClick={() => selectProfile(profile.id)}
               className={`flex min-w-52 items-center gap-3 rounded-md px-3 py-3 text-left transition ${
                 profile.id === activeProfile.id ? "bg-slate-100 text-ink" : "text-muted hover:bg-slate-50 hover:text-ink"
               }`}
@@ -1723,7 +1980,10 @@ function CompanyProfiles({
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-sm font-semibold">{profile.name}</span>
-                <span className="block text-xs">{templates.filter((template) => template.companyId === profile.id).length} Profil-LVs</span>
+                <span className="block text-xs">
+                  {templates.filter((template) => template.companyId === profile.id).length} Profil-LVs
+                  {profile.id === activeProjectCompanyId ? " · im Angebot aktiv" : ""}
+                </span>
               </span>
             </button>
           ))}
@@ -1732,7 +1992,20 @@ function CompanyProfiles({
 
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
-          <SectionTitle title="Firmenprofil bearbeiten" kicker={activeProfile.name} />
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <SectionTitle title="Firmenprofil bearbeiten" kicker={activeProfile.name} />
+            <button
+              type="button"
+              onClick={() => {
+                applyProfileToProject(activeProfile.id);
+                setActiveView("Neues LV");
+              }}
+              disabled={activeProfile.id === activeProjectCompanyId}
+              className="inline-flex h-10 items-center justify-center rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {activeProfile.id === activeProjectCompanyId ? "Im aktuellen Angebot aktiv" : "Für aktuelles Angebot verwenden"}
+            </button>
+          </div>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <Field label="Profilname">
               <TextInput value={activeProfile.name} onChange={(event) => updateCompanyProfile(activeProfile.id, { name: event.target.value })} />
@@ -1855,19 +2128,263 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
   );
 }
 
-function Tenants() {
-  const tenants = ["BuiltSmart Gruppe", "Beratung Immobilienwirtschaft", "KI-Softwareentwicklung", "Freier Mandant"];
+type QualityIssue = {
+  id: string;
+  severity: "Fehler" | "Warnung" | "Hinweis";
+  area: string;
+  title: string;
+  detail: string;
+  action?: string;
+};
+
+function QualityManagement({
+  project,
+  groups,
+  profiles,
+  customers,
+  templates,
+  lastSavedAt,
+  storageMessage,
+  repairCompanyLvAlignment,
+  applyMasterLv,
+  setActiveView
+}: {
+  project: Project;
+  groups: PositionGroup[];
+  profiles: CompanyProfile[];
+  customers: Customer[];
+  templates: LvTemplate[];
+  lastSavedAt: string | null;
+  storageMessage: string;
+  repairCompanyLvAlignment: () => void;
+  applyMasterLv: () => void;
+  setActiveView: (view: View) => void;
+}) {
+  const company = profiles.find((profile) => profile.id === project.companyId) ?? profiles[0];
+  const visibleGroups = activeGroups(groups);
+  const activePositions = visibleGroups.flatMap((group) => group.positions.filter((position) => position.active));
+  const summary = calculateSummary(groups, project);
+  const masterTemplate = templates.find((template) => template.companyId === project.companyId && template.id === `template-${project.companyId}-standard`);
+  const fullText = [project.projectName, project.shortDescription, project.objective, project.technicalContext, ...project.modules, ...groups.flatMap((group) => [group.title, group.intro, ...group.positions.flatMap((position) => [position.title, position.description, position.category, position.note])])]
+    .join(" ")
+    .toLowerCase();
+  const hasAiDemoLanguage = /ki-gest|rag|prompt|agentenlogik|dokumenten-ki|wissensplattform|arbeitsblatt/.test(fullText);
+  const hasMetzgerStructure = groups.some((group) => group.id.startsWith("mrea-"));
+  const staleSave = !lastSavedAt;
+
+  const issues: QualityIssue[] = [];
+
+  if (project.companyId === "metzger-real-estate" && hasAiDemoLanguage) {
+    issues.push({
+      id: "mrea-ai-copy",
+      severity: "Fehler",
+      area: "Profil und Inhalt",
+      title: "Metzger-REA enthält noch KI-Demo-Texte",
+      detail: "Im Angebot wurden Begriffe wie KI-gestützt, Wissensplattform, RAG oder Prompt gefunden. Für Metzger - Real Estate Advisory sollte das Master-LV mit Beratungs- und Immobilienleistungen verwendet werden.",
+      action: "Profil/LV bereinigen"
+    });
+  }
+
+  if (project.companyId === "metzger-real-estate" && !hasMetzgerStructure) {
+    issues.push({
+      id: "mrea-master-missing",
+      severity: "Fehler",
+      area: "Master-LV",
+      title: "Aktuelles LV passt nicht zum Firmenprofil",
+      detail: "Das aktive LV nutzt keine Metzger-REA-Titel. Dadurch entstehen falsche Angebotsinhalte und falsche Leistungszuordnungen.",
+      action: "Master-LV übernehmen"
+    });
+  }
+
+  if (!project.client.trim() || !project.contactPerson.trim()) {
+    issues.push({
+      id: "customer-missing",
+      severity: "Warnung",
+      area: "Empfänger",
+      title: "Empfänger oder Ansprechpartner fehlt",
+      detail: "Für ein versandfähiges Angebot sollten Auftraggeber und Ansprechpartner gepflegt oder aus der Kundendatenbank übernommen werden.",
+      action: "Angebotsdaten öffnen"
+    });
+  }
+
+  if (!customers.length) {
+    issues.push({
+      id: "no-customers",
+      severity: "Hinweis",
+      area: "Kunden",
+      title: "Kundendatenbank ist leer",
+      detail: "Eine Kundendatenbank ist sinnvoll, damit Empfänger, Ansprechpartner und Angebotsdaten nicht je Angebot neu eingegeben werden müssen.",
+      action: "Kunden öffnen"
+    });
+  }
+
+  if (!activePositions.length) {
+    issues.push({
+      id: "no-positions",
+      severity: "Fehler",
+      area: "LV",
+      title: "Keine aktiven Positionen",
+      detail: "Ein Angebot benötigt mindestens eine aktive Position oder ein bewusst gesetztes Pauschalhonorar.",
+      action: "LV bearbeiten"
+    });
+  }
+
+  const incompletePositions = activePositions.filter((position) => !position.title.trim() || !position.description.trim());
+  if (incompletePositions.length) {
+    issues.push({
+      id: "incomplete-positions",
+      severity: "Warnung",
+      area: "LV",
+      title: `${incompletePositions.length} Positionen sind unvollständig`,
+      detail: "Titel und Leistungsbeschreibung sollten gefüllt sein, damit Angebot, Abrechnung und spätere Nachträge nachvollziehbar bleiben.",
+      action: "LV bearbeiten"
+    });
+  }
+
+  const zeroPricePositions = activePositions.filter((position) => position.unitPrice <= 0 && project.flatFee === null);
+  if (zeroPricePositions.length) {
+    issues.push({
+      id: "zero-price",
+      severity: "Warnung",
+      area: "Kalkulation",
+      title: `${zeroPricePositions.length} aktive Positionen ohne Einzelpreis`,
+      detail: "Nullpreise sind für Platzhalter möglich, sollten im Angebot aber bewusst gesetzt sein oder durch eine Pauschale ersetzt werden.",
+      action: "LV bearbeiten"
+    });
+  }
+
+  if (summary.net <= 0) {
+    issues.push({
+      id: "no-total",
+      severity: "Fehler",
+      area: "Kalkulation",
+      title: "Keine Netto-Angebotssumme",
+      detail: "Die Netto-Summe ist 0 €. Prüfe Mengen, Einheitspreise, Pauschale und aktive Positionen.",
+      action: "LV bearbeiten"
+    });
+  }
+
+  if (!masterTemplate) {
+    issues.push({
+      id: "no-master",
+      severity: "Hinweis",
+      area: "Vorlagen",
+      title: "Kein Master-LV für dieses Firmenprofil gefunden",
+      detail: "Ein profilgebundenes Master-LV macht neue Angebote schneller und verhindert falsche Titelzuordnungen.",
+      action: "Vorlagen öffnen"
+    });
+  }
+
+  if (staleSave) {
+    issues.push({
+      id: "save-check",
+      severity: "Hinweis",
+      area: "Speicherstand",
+      title: "Speicherstand prüfen",
+      detail: "Die App speichert automatisch lokal. Zusätzlich sollte vor Versand oder größerer Änderung eine JSON-Datei exportiert werden.",
+      action: "JSON speichern"
+    });
+  }
+
+  const errorCount = issues.filter((issue) => issue.severity === "Fehler").length;
+  const warningCount = issues.filter((issue) => issue.severity === "Warnung").length;
+  const hintCount = issues.filter((issue) => issue.severity === "Hinweis").length;
+  const score = Math.max(0, 100 - errorCount * 30 - warningCount * 12 - hintCount * 4);
+
+  function handleIssueAction(issue: QualityIssue) {
+    if (issue.id === "mrea-ai-copy") repairCompanyLvAlignment();
+    else if (issue.id === "mrea-master-missing") applyMasterLv();
+    else if (issue.action === "Angebotsdaten öffnen") setActiveView("Neues Angebot");
+    else if (issue.action === "Kunden öffnen") setActiveView("Kunden");
+    else if (issue.action === "LV bearbeiten") setActiveView("LV bearbeiten");
+    else if (issue.action === "Vorlagen öffnen") setActiveView("Vorlagen");
+  }
+
   return (
-    <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
-      <SectionTitle title="Mandanten" />
-      <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {tenants.map((tenant, index) => (
-          <div key={tenant} className="rounded-lg border border-line p-5">
-            <p className="text-sm font-medium text-muted">Mandant {index + 1}</p>
-            <p className="mt-2 font-semibold text-ink">{tenant}</p>
-            <p className="mt-3 text-sm text-muted">Eigene Angebote, Vorlagen und Firmenprofile vorbereitet.</p>
+    <div className="grid gap-6">
+      <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
+        <div className="grid gap-5 xl:grid-cols-[1fr_260px] xl:items-center">
+          <div>
+            <SectionTitle title="Qualitätsmanagement" kicker={company.name} />
+            <p className="mt-3 max-w-4xl text-sm leading-6 text-muted">
+              Die Prüfung kontrolliert, ob Firmenprofil, Angebotsdaten, Master-LV, Positionen, Kalkulation, Speicherung und nächster Workflow-Schritt zusammenpassen.
+            </p>
           </div>
-        ))}
+          <div className="rounded-md border border-line bg-slate-50 px-5 py-4 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Qualitätsgrad</p>
+            <p className={`mt-2 text-3xl font-semibold ${score >= 80 ? "text-emerald-700" : score >= 55 ? "text-amber-700" : "text-rose-700"}`}>{score} %</p>
+            <p className="mt-2 text-sm text-muted">{errorCount} Fehler · {warningCount} Warnungen · {hintCount} Hinweise</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Firmenprofil" value={company.logoText} detail={company.name} align="center" />
+        <StatCard label="Aktive Titel" value={String(visibleGroups.length)} detail={`${activePositions.length} aktive Positionen`} align="center" />
+        <StatCard label="Angebotswert netto" value={formatCurrency(summary.net)} detail={project.calculationType} align="center" />
+        <StatCard label="Speicherstand" value={lastSavedAt ? "gesichert" : "offen"} detail={lastSavedAt ? new Date(lastSavedAt).toLocaleString("de-DE") : storageMessage} align="center" />
+      </div>
+
+      <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <SectionTitle title="Prüfergebnisse" />
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={repairCompanyLvAlignment} className="inline-flex h-10 items-center justify-center rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-slate-700">
+              Profil und LV bereinigen
+            </button>
+            <button type="button" onClick={() => setActiveView("LV-Vorschau")} className="inline-flex h-10 items-center justify-center rounded-md border border-line bg-white px-4 text-sm font-semibold text-ink transition hover:border-slate-300">
+              Vorschau prüfen
+            </button>
+          </div>
+        </div>
+        <div className="mt-5 grid gap-3">
+          {issues.length ? (
+            issues.map((issue) => (
+              <div key={issue.id} className={`rounded-md border p-4 ${issue.severity === "Fehler" ? "border-rose-100 bg-rose-50" : issue.severity === "Warnung" ? "border-amber-100 bg-amber-50" : "border-blue-100 bg-blue-50"}`}>
+                <div className="grid gap-3 lg:grid-cols-[160px_1fr_auto] lg:items-start">
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    {issue.severity === "Fehler" ? <AlertTriangle className="h-4 w-4 text-rose-700" /> : issue.severity === "Warnung" ? <AlertTriangle className="h-4 w-4 text-amber-700" /> : <CheckCircle2 className="h-4 w-4 text-blue-700" />}
+                    <span className={issue.severity === "Fehler" ? "text-rose-800" : issue.severity === "Warnung" ? "text-amber-800" : "text-blue-800"}>{issue.severity}</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-muted">{issue.area}</p>
+                    <h3 className="mt-1 font-semibold text-ink">{issue.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-muted">{issue.detail}</p>
+                  </div>
+                  {issue.action && issue.action !== "JSON speichern" ? (
+                    <button type="button" onClick={() => handleIssueAction(issue)} className="rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold text-ink transition hover:border-slate-300">
+                      {issue.action}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="rounded-md border border-emerald-100 bg-emerald-50 p-5">
+              <p className="font-semibold text-emerald-900">Keine offenen Qualitätsprobleme erkannt.</p>
+              <p className="mt-2 text-sm text-emerald-800">Profil, LV, Angebotsdaten, Kalkulation und Speicherstand wirken konsistent.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
+        <SectionTitle title="Empfohlener Workflow" />
+        <div className="mt-5 grid gap-3 md:grid-cols-5">
+          {[
+            ["1", "Firmenprofil", "Profil wählen, Farben und Angebotslogik prüfen."],
+            ["2", "Kunde", "Empfänger und Ansprechpartner aus der Kundendatenbank übernehmen."],
+            ["3", "Master-LV", "Passendes Profil-LV übernehmen oder gezielt Positionen kopieren."],
+            ["4", "QM-Prüfung", "Fehler, Warnungen und Summen vor Versand kontrollieren."],
+            ["5", "Vorschau", "HTML/PDF prüfen, anschließend Angebot versenden oder abrechnen."]
+          ].map(([step, title, detail]) => (
+            <div key={step} className="rounded-md border border-line p-4">
+              <p className="text-sm font-semibold text-blue-700">Schritt {step}</p>
+              <p className="mt-2 font-semibold text-ink">{title}</p>
+              <p className="mt-2 text-sm leading-6 text-muted">{detail}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -2843,7 +3360,7 @@ function SettingsPanel({ project, updateProject }: { project: Project; updatePro
       <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
         <SectionTitle title="Erweiterungen" />
         <div className="mt-6 grid gap-3">
-          {["Login und Rollenverwaltung", "Cloud-Speicherung", "Stripe-Lizenzmodell", "PDF- und DOCX-Service", "Mandantenrechte"].map((item) => (
+          {["Login und Rollenverwaltung", "Cloud-Speicherung", "Stripe-Lizenzmodell", "PDF- und DOCX-Service", "Profil- und Kundenrechte"].map((item) => (
             <div key={item} className="flex items-center justify-between rounded-md border border-line px-4 py-3 text-sm">
               <span className="font-medium text-ink">{item}</span>
               <span className="text-muted">vorbereitet</span>

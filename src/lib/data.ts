@@ -89,7 +89,7 @@ export const companyProfiles: CompanyProfile[] = [
     vatId: "DE000000004",
     bank: "IBAN DE00 0000 0000 0000 0000 04, BIC FREEDEFF",
     contact: "Projektteam",
-    footer: "Individuell konfigurierbares Firmenprofil für weitere Marken, Geschäftsbereiche oder Mandanten.",
+    footer: "Individuell konfigurierbares Firmenprofil für weitere Marken, Geschäftsbereiche oder Angebotslinien.",
     liability: "Standard-Haftungshinweise können je Firmenprofil angepasst und in Exporte übernommen werden.",
     offerText: "Auf Basis der Anforderungen erstellen wir ein transparentes Leistungsbild mit klarer Kalkulation und nachvollziehbarer Umsetzungslogik.",
     colors: { primary: "#1F7A6D", secondary: "#E9F4F1", accent: "#E08D3C" },
@@ -107,7 +107,7 @@ export const sampleProject: Project = {
   objective:
     "Ziel ist eine leistungsfähige, anwenderfreundliche und zukunftsfähige Lösung, die wiederkehrende Arbeitsabläufe beschleunigt, Informationen konsolidiert und fundierte Entscheidungen unterstützt.",
   technicalContext:
-    "Webbasierte Anwendung mit rollenfähiger Architektur, vorbereiteter Cloud-Speicherung, RAG-Komponenten, API-Anbindungen und späterer Mandantenverwaltung.",
+    "Webbasierte Anwendung mit rollenfähiger Architektur, vorbereiteter Cloud-Speicherung, RAG-Komponenten, API-Anbindungen, Firmenprofilen und Kundendatenbank.",
   modules: ["Projekt-Dashboard", "Dokumenten-KI", "Angebotsassistenz", "Workflow-Automation", "Export-Center"],
   calculationType: "Hybrid",
   status: "Entwurf",

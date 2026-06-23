@@ -21,6 +21,10 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
   const offerDate = new Intl.DateTimeFormat("de-DE", { dateStyle: "long" }).format(new Date(`${project.offerDate}T12:00:00`));
   const visibleGroups = activeGroups(groups).filter((group) => group.positions.some((position) => position.active));
   const subtotal = summary.net + summary.discount;
+  const introText =
+    project.companyId === "metzger-real-estate"
+      ? "Wir bedanken uns für Ihr Interesse an unseren Beratungs- und Unterstützungsleistungen. Auf Grundlage der vorliegenden Aufgabenstellung erstellen wir nachfolgend ein strukturiertes Leistungsverzeichnis für die vereinbarten immobilienbezogenen Beratungs-, Steuerungs-, Prüf- und Sachverständigenleistungen."
+      : "Wir bedanken uns für Ihr Interesse an der Entwicklung einer individuellen KI-gestützten Softwarelösung. Auf Grundlage der vorliegenden Anforderungen erstellen wir nachfolgend ein strukturiertes Leistungsverzeichnis für die Konzeption, Entwicklung, Implementierung und Einführung der Anwendung.";
   const printOffer = () => {
     printElement(".print-area", `${project.offerNumber} ${project.projectName}`.trim());
   };
@@ -72,11 +76,7 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
 
       <section className="print-section py-8">
         <h2 className="text-lg font-semibold text-ink">Einleitung</h2>
-        <p className="mt-3 leading-7 text-muted">
-          Wir bedanken uns für Ihr Interesse an der Entwicklung einer individuellen KI-gestützten Softwarelösung. Auf Grundlage
-          der vorliegenden Anforderungen erstellen wir nachfolgend ein strukturiertes Leistungsverzeichnis für die Konzeption,
-          Entwicklung, Implementierung und Einführung der Anwendung.
-        </p>
+        <p className="mt-3 leading-7 text-muted">{introText}</p>
         <div className="mt-6 grid gap-5 md:grid-cols-2">
           <div>
             <h3 className="text-sm font-semibold text-ink">Projektbeschreibung</h3>
@@ -92,8 +92,8 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
       <section className="print-section border-t border-line py-8">
         <h2 className="text-lg font-semibold text-ink">Leistungsverzeichnis</h2>
         <p className="mt-2 max-w-4xl text-sm leading-6 text-muted">
-          Die nachfolgende Darstellung weist Mengen, Einheiten und Stundensätze transparent aus. Alternativ kann dieselbe interne
-          Kalkulation als Abschnittspauschale angeboten werden, wenn einzelne Stundensätze im Angebot nicht offengelegt werden sollen.
+          Die nachfolgende Darstellung weist Mengen, Einheiten, Einzelpreise und Positionssummen transparent aus. Alternativ kann dieselbe interne
+          Kalkulation als Abschnittspauschale angeboten werden, wenn einzelne Preisansätze im Angebot nicht offengelegt werden sollen.
         </p>
         <div className="print-table mt-5 overflow-hidden rounded-lg border border-line">
           {visibleGroups.map((group) => {

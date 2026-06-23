@@ -5,7 +5,7 @@ Webbasierte Anwendung für Angebote, Aufträge und Abrechnung in einem Prozess.
 ## Enthalten
 
 - Next.js, TypeScript, React und Tailwind CSS
-- Mandanten- und Firmenprofilstruktur mit vier Beispielprofilen
+- Firmenprofil- und Kundendatenstruktur mit vier Beispielprofilen
 - Vollständige Angebots- und LV-Standardstruktur mit zehn Hauptgruppen
 - Editierbare Positionen mit Aktivierung, Duplizieren, Löschen und Drag-and-drop-Sortierung
 - Stundensatzlogik, Netto-/USt-/Brutto-Berechnung, Rabatt und optionaler Pauschalpreis
