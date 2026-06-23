@@ -492,11 +492,15 @@ export default function HomePage() {
   const [statusFilter, setStatusFilter] = useState("Alle Status");
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [storageMessage, setStorageMessage] = useState("Automatische Sicherung aktiv");
+  const [storageReady, setStorageReady] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(storageKey);
-    if (!saved) return;
+    if (!saved) {
+      queueMicrotask(() => setStorageReady(true));
+      return;
+    }
     try {
       const parsed = JSON.parse(saved) as Partial<AppStatePayload>;
       const normalized = normalizeSavedState(parsed);
@@ -505,14 +509,19 @@ export default function HomePage() {
         setSelectedProfileId(normalized.project.companyId);
         setLastSavedAt(normalized.savedAt);
         setStorageMessage("Gesicherter Stand geladen");
+        setStorageReady(true);
       });
     } catch {
       window.localStorage.removeItem(storageKey);
-      queueMicrotask(() => setStorageMessage("Lokale Sicherung war fehlerhaft und wurde verworfen"));
+      queueMicrotask(() => {
+        setStorageMessage("Lokale Sicherung war fehlerhaft und wurde verworfen");
+        setStorageReady(true);
+      });
     }
   }, []);
 
   useEffect(() => {
+    if (!storageReady) return;
     const savedAt = new Date().toISOString();
     const payload: AppStatePayload = {
       version: 2,
@@ -530,7 +539,7 @@ export default function HomePage() {
       setLastSavedAt(savedAt);
       setStorageMessage("Automatisch gespeichert");
     });
-  }, [project, groups, profiles, customers, libraryPositions, lvTemplates, orderBilling]);
+  }, [project, groups, profiles, customers, libraryPositions, lvTemplates, orderBilling, storageReady]);
 
   const company = profiles.find((profile) => profile.id === project.companyId) ?? profiles[0];
   const selectedProfile = profiles.find((profile) => profile.id === selectedProfileId) ?? company;
