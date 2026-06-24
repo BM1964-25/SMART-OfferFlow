@@ -21,7 +21,7 @@ function LinkedAgbText({ text, url }: { text: string; url?: string }) {
   return (
     <>
       {before}
-      <a className="font-medium text-ink underline underline-offset-2" href={url} target="_blank" rel="noreferrer">
+      <a className="font-medium text-slate-600 underline underline-offset-2" href={url} target="_blank" rel="noreferrer">
         {url}
       </a>
       {after}
@@ -71,7 +71,13 @@ function renderLinkedFooterLine(line: string, bookingUrl: string) {
     if (tokenPattern.test(part)) {
       tokenPattern.lastIndex = 0;
       return (
-        <a key={`${part}-${index}`} className="font-medium text-ink underline underline-offset-2" href={hrefForToken(part, bookingUrl)} target="_blank" rel="noreferrer">
+        <a
+          key={`${part}-${index}`}
+          className="font-medium text-slate-600 underline underline-offset-2"
+          href={hrefForToken(part, bookingUrl)}
+          target="_blank"
+          rel="noreferrer"
+        >
           {part}
         </a>
       );
@@ -393,25 +399,25 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
       ) : null}
 
       <footer className="print-keep mt-16 border-t border-line pt-6 text-base leading-7 text-black">
-        <p className="font-medium text-ink">{company.name}</p>
+        <p className="text-lg font-semibold text-slate-700">{company.name}</p>
         {hasFooterIntro ? <FooterTextBlock text={footerIntro} bookingUrl={bookingUrl} /> : null}
         {hasFooterContact || hasFooterLegal || hasFooterBank ? (
           <div className="mt-5 grid gap-6 md:grid-cols-3">
             {hasFooterContact ? (
               <div className="break-words">
-                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-black">Kontakt</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Kontakt</p>
                 <FooterTextBlock text={footerContact} bookingUrl={bookingUrl} className="mt-2" />
               </div>
             ) : null}
             {hasFooterLegal ? (
               <div className="break-words">
-                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-black">Rechtliches & Links</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Rechtliches & Links</p>
                 <FooterTextBlock text={footerLegal} bookingUrl={bookingUrl} className="mt-2" />
               </div>
             ) : null}
             {hasFooterBank ? (
               <div className="break-words">
-                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-black">Bankverbindung</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Bankverbindung</p>
                 <FooterTextBlock text={footerBank} bookingUrl={bookingUrl} className="mt-2" />
               </div>
             ) : null}
