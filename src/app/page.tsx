@@ -67,7 +67,7 @@ type View =
   | "Neues Angebot"
   | "Neues LV"
   | "LV bearbeiten"
-  | "LV-Vorschau"
+  | "Angebotsvorschau"
   | "Auftrag & Abrechnung"
   | "KI-Assistenz"
   | "Kunden"
@@ -83,7 +83,7 @@ const navItems: { label: View; icon: typeof Home }[] = [
   { label: "Neues Angebot", icon: Plus },
   { label: "Neues LV", icon: LayoutTemplate },
   { label: "LV bearbeiten", icon: FileText },
-  { label: "LV-Vorschau", icon: Eye },
+  { label: "Angebotsvorschau", icon: Eye },
   { label: "Auftrag & Abrechnung", icon: ReceiptText },
   { label: "KI-Assistenz", icon: Bot },
   { label: "Kunden", icon: Contact },
@@ -662,7 +662,7 @@ export default function HomePage() {
           setSelectedProfileId(normalized.project.companyId);
           setLastSavedAt(normalized.savedAt);
           setStorageMessage("Angebotslink geladen");
-          setActiveView("LV-Vorschau");
+          setActiveView("Angebotsvorschau");
           setPublicOfferLoading(false);
         })
         .catch((error) => {
@@ -688,7 +688,7 @@ export default function HomePage() {
         setSelectedProfileId(normalized.project.companyId);
         setLastSavedAt(normalized.savedAt);
         setStorageMessage("Angebotslink geladen");
-        setActiveView("LV-Vorschau");
+        setActiveView("Angebotsvorschau");
         setStorageReady(true);
       });
       return;
@@ -1557,7 +1557,7 @@ export default function HomePage() {
             />
           ) : null}
 
-          {activeView === "LV-Vorschau" ? <OfferPreview project={project} groups={groups} profiles={profiles} /> : null}
+          {activeView === "Angebotsvorschau" ? <OfferPreview project={project} groups={groups} profiles={profiles} /> : null}
 
           {activeView === "Auftrag & Abrechnung" ? (
             <OrderBillingWorkspace
@@ -1704,7 +1704,7 @@ function Dashboard({
             {[
               ["Angebotsdaten", "Neues Angebot"],
               ["LV bearbeiten", "LV bearbeiten"],
-              ["Vorschau", "LV-Vorschau"],
+              ["Vorschau", "Angebotsvorschau"],
               ["Abrechnung", "Auftrag & Abrechnung"],
               ["QM", "Qualitätsmanagement"]
             ].map(([label, view]) => (
@@ -1800,7 +1800,7 @@ function Dashboard({
             <button type="button" onClick={() => setActiveView("LV bearbeiten")} className="rounded-md bg-ink px-4 py-2 text-sm font-semibold text-white">
               LV bearbeiten
             </button>
-            <button type="button" onClick={() => setActiveView("LV-Vorschau")} className="rounded-md border border-line bg-white px-4 py-2 text-sm font-semibold text-ink">
+            <button type="button" onClick={() => setActiveView("Angebotsvorschau")} className="rounded-md border border-line bg-white px-4 py-2 text-sm font-semibold text-ink">
               Vorschau öffnen
             </button>
             <button type="button" onClick={() => setActiveView("KI-Assistenz")} className="rounded-md border border-line bg-white px-4 py-2 text-sm font-semibold text-ink">
@@ -2911,7 +2911,7 @@ function QualityManagement({
             <button type="button" onClick={repairCompanyLvAlignment} className="inline-flex h-10 items-center justify-center rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-slate-700">
               Profil und LV bereinigen
             </button>
-            <button type="button" onClick={() => setActiveView("LV-Vorschau")} className="inline-flex h-10 items-center justify-center rounded-md border border-line bg-white px-4 text-sm font-semibold text-ink transition hover:border-slate-300">
+            <button type="button" onClick={() => setActiveView("Angebotsvorschau")} className="inline-flex h-10 items-center justify-center rounded-md border border-line bg-white px-4 text-sm font-semibold text-ink transition hover:border-slate-300">
               Vorschau prüfen
             </button>
           </div>

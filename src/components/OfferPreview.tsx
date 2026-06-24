@@ -219,7 +219,7 @@ export function OfferPreview({
       {!publicView ? (
       <div className="no-print mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-white px-4 py-3 shadow-soft">
         <div>
-          <p className="text-sm font-semibold text-ink">LV-Vorschau</p>
+          <p className="text-sm font-semibold text-ink">Angebotsvorschau</p>
           <p className="text-xs text-muted">
             {shareMessage || "Kundenlink speichert das Angebot in Supabase und kopiert einen kurzen Link."}
           </p>

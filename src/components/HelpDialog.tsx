@@ -96,7 +96,7 @@ const helpSections: HelpSection[] = [
           <li>Firmenprofil auswählen oder anpassen.</li>
           <li>Kunden- und Projektdaten unter „Neues Angebot“ erfassen.</li>
           <li>Passendes Profil-LV übernehmen oder das LV individuell bearbeiten.</li>
-          <li>LV-Vorschau prüfen und als PDF über den Druckdialog ausgeben.</li>
+          <li>Angebotsvorschau prüfen und als PDF über den Druckdialog ausgeben.</li>
           <li>Auftrag, Nachträge, Leistungsnachweise und Abrechnungsstand weiterführen.</li>
         </ol>
         <p>
@@ -132,7 +132,7 @@ const helpSections: HelpSection[] = [
           <li>Angebotskopf, Projektinformationen, Textbausteine und Konditionen erfassen.</li>
           <li>Leistungsverzeichnisse aus Profil-LVs übernehmen, bearbeiten und wieder als Profil-LV speichern.</li>
           <li>Positionen und Titel löschen, duplizieren, bearbeiten und neu nummerieren.</li>
-          <li>LV-Vorschau, Summen, Netto, Umsatzsteuer und Brutto prüfen.</li>
+          <li>Angebotsvorschau, Summen, Netto, Umsatzsteuer und Brutto prüfen.</li>
           <li>Angebot als teilbaren Link vorbereiten, kopieren und per E-Mail an Kunden versenden.</li>
           <li>Auftrag, Nachträge, Leistungsnachweise, Rechnungsplan und offenen Rest verfolgen.</li>
           <li>Qualitätsmanagement für Plausibilität, Profilzuordnung und Datenstand nutzen.</li>
@@ -189,7 +189,7 @@ const helpSections: HelpSection[] = [
         </p>
         <h3>Leere Textfelder</h3>
         <p>
-          Optionale Textfelder werden nur dann in der LV- und Angebotsvorschau ausgegeben, wenn dort Inhalt eingetragen ist. Wenn Sie ein Textfeld
+          Optionale Textfelder werden nur dann in der Angebotsvorschau ausgegeben, wenn dort Inhalt eingetragen ist. Wenn Sie ein Textfeld
           leer lassen oder den Inhalt löschen, erscheinen weder Überschrift noch leerer Platzhalter im Angebot.
         </p>
         <p>
@@ -202,7 +202,7 @@ const helpSections: HelpSection[] = [
         </p>
         <h3>Angebot als Link versenden</h3>
         <p>
-          In der LV-Vorschau speichert der Button „Angebot an Kunden versenden“ den aktuellen Angebotsstand in Supabase und kopiert einen kurzen
+          In der Angebotsvorschau speichert der Button „Angebot an Kunden versenden“ den aktuellen Angebotsstand in Supabase und kopiert einen kurzen
           Kundenlink in die Zwischenablage. Fügen Sie den kopierten Link anschließend in Ihre E-Mail an den Kunden ein.
         </p>
         <p>
@@ -221,7 +221,7 @@ const helpSections: HelpSection[] = [
     body: (
       <>
         <p>
-          Die LV-Vorschau zeigt die Angebotsstruktur, die Projektinformationen, das Leistungsverzeichnis, Titelsummen, Netto-Summe, Umsatzsteuer,
+          Die Angebotsvorschau zeigt die Angebotsstruktur, die Projektinformationen, das Leistungsverzeichnis, Titelsummen, Netto-Summe, Umsatzsteuer,
           Brutto-Summe, rechtliche Textbausteine, Auftragserteilung und Footer.
         </p>
         <p>
@@ -229,7 +229,7 @@ const helpSections: HelpSection[] = [
           tatsächlich gepflegten Inhalte.
         </p>
         <p>
-          Wird ein Angebotslink geöffnet, lädt SMART OfferFlow das enthaltene Angebot direkt in die LV-Vorschau. Der Empfänger benötigt dafür keine
+          Wird ein Angebotslink geöffnet, lädt SMART OfferFlow das enthaltene Angebot direkt in die Angebotsvorschau. Der Empfänger benötigt dafür keine
           lokale JSON-Datei.
         </p>
         <p>
