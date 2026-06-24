@@ -267,7 +267,7 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
         {projectTextCards.length > 0 ? (
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             {projectTextCards.map((item) => (
-              <div key={item.title} className="rounded-md border border-line bg-white p-4">
+              <div key={item.title} className="rounded-md border border-[#D9DEE5] bg-[#F3F4F6] p-4">
                 <h3 className="text-base font-semibold text-black">{item.title}</h3>
                 <p className="mt-2 leading-7 text-black">{item.body}</p>
               </div>
@@ -280,25 +280,25 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
       <section className="print-section print-page-break-before screen-page-break-before border-t border-line py-8">
         <h2 className="text-lg font-semibold text-ink">Leistungsverzeichnis</h2>
         {project.serviceDirectoryIntro ? <p className="mt-2 max-w-4xl text-base leading-7 text-black">{project.serviceDirectoryIntro}</p> : null}
-        <div className="print-table mt-5 overflow-hidden rounded-lg border border-line">
+        <div className="print-table mt-5 overflow-hidden rounded-lg border border-[#D9DEE5]">
           {visibleGroups.map((group) => {
             const activePositions = group.positions.filter((position) => position.active);
             if (activePositions.length === 0) return null;
 
             return (
-              <div key={group.id} className="border-b border-line last:border-b-0">
-                <div className="print-keep flex flex-col gap-3 bg-slate-50 px-5 py-4 lg:flex-row lg:items-start lg:justify-between">
+              <div key={group.id} className="border-b border-[#D9DEE5] last:border-b-0">
+                <div className="print-keep flex flex-col gap-3 bg-[#F3F4F6] px-5 py-4 lg:flex-row lg:items-start lg:justify-between">
                   <div>
                     <h3 className="font-semibold text-ink">
                       {groupNumber(groups, group.id)} {group.title}
                     </h3>
                     <p className="mt-1 text-sm text-black">{group.intro}</p>
                   </div>
-                  <p className="w-fit shrink-0 rounded-md border border-line bg-white px-3 py-2 text-right text-sm font-semibold text-ink">
+                  <p className="w-fit shrink-0 rounded-md border border-[#D9DEE5] bg-white px-3 py-2 text-right text-sm font-semibold text-ink">
                     {formatCurrency(groupTotal(group))}
                   </p>
                 </div>
-                <div className="border-y border-line bg-white px-5 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-black">
+                <div className="border-y border-[#D9DEE5] bg-[#F3F4F6] px-5 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-black">
                   <div className="grid gap-4 lg:grid-cols-[56px_minmax(260px,1fr)_76px_68px_116px_126px]">
                     <span>Nr.</span>
                     <span>Leistung</span>
@@ -308,7 +308,7 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
                     <span className="text-right">Positionssumme</span>
                   </div>
                 </div>
-                <div className="divide-y divide-line">
+                <div className="divide-y divide-[#D9DEE5]">
                   {activePositions.map((position) => (
                     <div
                       key={position.id}
@@ -339,7 +339,7 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
 
       <section className="print-section print-compact print-keep border-t border-line py-6">
         <h2 className="text-lg font-semibold text-ink">Zusammenfassung der Leistungsbereiche</h2>
-        <div className="mt-5 overflow-hidden rounded-lg border border-line">
+        <div className="mt-5 overflow-hidden rounded-lg border border-[#D9DEE5]">
           <div className="divide-y divide-line">
             {visibleGroups.map((group) => (
               <div key={group.id} className="grid gap-3 px-5 py-4 md:grid-cols-[1fr_160px]">
@@ -350,7 +350,7 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
               </div>
             ))}
           </div>
-          <div className="border-t border-line bg-slate-50 px-5 py-4">
+          <div className="border-t border-[#D9DEE5] bg-[#F3F4F6] px-5 py-4">
             <div className="ml-auto grid max-w-md gap-3">
               <SummaryLine label="Zwischensumme netto" value={formatCurrency(subtotal)} />
               {summary.discount > 0 ? <SummaryLine label={`Nachlass ${project.discountPercent} %`} value={`-${formatCurrency(summary.discount)}`} /> : null}
@@ -477,7 +477,7 @@ function SummaryLine({ label, value, strong = false }: { label: string; value: s
 
 function PreviewMeta({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex min-h-24 flex-col items-center justify-center rounded-lg border border-line bg-slate-50 p-4 text-center">
+    <div className="flex min-h-24 flex-col items-center justify-center rounded-lg border border-[#D9DEE5] bg-[#F3F4F6] p-4 text-center">
       <p className="text-sm font-semibold uppercase tracking-[0.14em] text-black">{label}</p>
       <p className="mt-2 text-base font-semibold text-black">{value}</p>
     </div>

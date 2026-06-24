@@ -1888,9 +1888,6 @@ function ProjectWorkspace({
               <Field label="Hinweis">
                 <TextArea value={project.offerNote} onChange={(event) => updateProject("offerNote", event.target.value)} className="min-h-28" />
               </Field>
-              <Field label="Module / Leistungsbereiche">
-                <TextArea value={project.modules.join("\n")} onChange={(event) => updateProject("modules", event.target.value.split("\n").filter(Boolean))} />
-              </Field>
             </div>
           </section>
 
