@@ -292,9 +292,9 @@ export function OfferPreview({
       </section>
 
       {projectMetaItems.length > 0 || hasText(project.assignmentReason) || projectTextCards.length > 0 ? (
-        <section className="print-section py-8">
+        <section className="print-section pb-8 pt-2">
           {projectMetaItems.length > 0 ? (
-          <div className="mb-20 grid gap-4 md:grid-cols-4">
+          <div className="mb-16 grid gap-4 md:grid-cols-4">
             {projectMetaItems.map((item) => (
               <PreviewMeta key={item.label} label={item.label} value={item.value} />
             ))}
