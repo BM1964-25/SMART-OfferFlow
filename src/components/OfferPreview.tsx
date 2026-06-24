@@ -45,8 +45,12 @@ function formatCompanyAddressLines(profile: CompanyProfile) {
 
 function formatBankDetails(bank: string) {
   const raw = bank.trim();
-  const owner = raw.split(/\s+IBAN\s+/i)[0]?.replace(/^Bankverbindung:\s*/i, "").trim();
-  const iban = raw.match(/\bIBAN\s+(.+?)(?=\s+BIC\b|$)/i)?.[1]?.trim();
+  const owner = raw
+    .match(/^(.*?)(?=\bIBAN\b)/i)?.[1]
+    ?.replace(/^Bankverbindung:\s*/i, "")
+    .replace(/,\s*$/, "")
+    .trim();
+  const iban = raw.match(/\bIBAN\s+(.+?)(?:,?\s+BIC\b|$)/i)?.[1]?.replace(/,\s*$/, "").trim();
   const bic = raw.match(/\bBIC\s+([A-Z0-9]+)/i)?.[1]?.trim();
   return { owner, iban, bic, raw };
 }
@@ -314,7 +318,7 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
         </section>
       ) : null}
 
-      <footer className="print-keep border-t border-line pt-5 text-base leading-7 text-black">
+      <footer className="print-keep mt-16 border-t border-line pt-6 text-base leading-7 text-black">
         <p className="font-medium text-ink">{company.name}</p>
         <p>{company.footer}</p>
         <div className="mt-5 grid gap-6 md:grid-cols-3">
