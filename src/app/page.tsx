@@ -433,11 +433,15 @@ function escapeRegExp(value: string) {
 
 function stripCompanyNameFromProjectName(projectName: string, profiles: CompanyProfile[]) {
   let cleaned = projectName.trim();
-  const companyNameVariants = profiles.flatMap((profile) => [
-    profile.name,
-    profile.name.replace(/\s+-\s+/g, " "),
-    profile.logoText
-  ]);
+  const companyNameVariants = profiles.flatMap((profile) => {
+    const nameParts = profile.name.split(/\s+-\s+/).map((part) => part.trim()).filter(Boolean);
+    return [
+      profile.name,
+      profile.name.replace(/\s+-\s+/g, " "),
+      profile.logoText,
+      ...nameParts
+    ];
+  });
 
   for (const name of companyNameVariants.filter(Boolean)) {
     const escapedName = escapeRegExp(name.trim());
@@ -449,6 +453,11 @@ function stripCompanyNameFromProjectName(projectName: string, profiles: CompanyP
   }
 
   return cleaned || projectName.trim();
+}
+
+function hasAiDemoText(value?: string | string[]) {
+  const text = Array.isArray(value) ? value.join(" ") : value ?? "";
+  return /ki-gest|dokumenten-ki|rag|prompt|wissensplattform|angebotsplattform|arbeitsblatt|workflow-automation/i.test(text);
 }
 
 function normalizeProfiles(savedProfiles: CompanyProfile[] | undefined) {
@@ -546,29 +555,33 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
 
 function isMetzgerAiDemoMismatch(project: Project) {
   if (project.companyId !== "metzger-real-estate") return false;
-  return /ki-gest|dokumenten-ki|rag|prompt|wissensplattform|angebotsplattform/i.test(
-    [project.projectName, project.shortDescription, project.objective, project.technicalContext, ...project.modules].join(" ")
-  );
+  return hasAiDemoText([project.projectName, project.shortDescription, project.objective, project.technicalContext, ...project.modules]);
 }
 
 function metzgerAlignedProject(project: Project): Project {
+  const cleanProjectName = stripCompanyNameFromProjectName(project.projectName || "Beratungs- und Unterstützungsleistungen", companyProfiles);
   return {
     ...project,
     companyId: "metzger-real-estate",
     client: project.client === sampleProject.client ? "" : project.client,
     contactPerson: project.contactPerson === sampleProject.contactPerson ? "" : project.contactPerson,
-    projectName: "Beratungs- und Unterstützungsleistungen Real Estate Advisory",
-    shortDescription:
-      "Leistungsangebot für strategische Beratung, Projektsteuerung, technische Prüfungen, Qualitätsmanagement, Baurevision, Sachverständigenleistungen sowie abrechenbare Reise- und Auslagenpositionen.",
+    projectName: hasAiDemoText(project.projectName) ? "Beratungs- und Unterstützungsleistungen" : cleanProjectName,
+    shortDescription: hasAiDemoText(project.shortDescription)
+      ? "Leistungsangebot für strategische Beratung, Projektsteuerung, technische Prüfungen, Qualitätsmanagement, Baurevision, Sachverständigenleistungen sowie abrechenbare Reise- und Auslagenpositionen."
+      : project.shortDescription,
     offerIntro:
       "Die Leistungen werden mit besonderem Blick auf belastbare Immobilienprozesse, Entscheidungsqualität und nachhaltige Betriebsfähigkeit strukturiert.",
     offerClarification:
       "Dieses Angebot basiert auf den zum Angebotszeitpunkt bekannten Rahmenbedingungen und ersetzt keine rechtliche oder steuerliche Prüfung.",
-    objective:
-      "Ziel ist ein belastbares, fachlich klares und prüffähiges Leistungsbild für immobilienbezogene Beratungs-, Steuerungs- und Unterstützungsleistungen.",
-    technicalContext:
-      "Beratungs- und Projektkontext mit objekt-, bau-, organisations- oder bestandsbezogenen Leistungen. Digitale Werkzeuge können unterstützend eingesetzt werden, stehen aber nicht im Mittelpunkt des Angebots.",
-    modules: ["Strategische Beratung", "Projektsteuerung", "Due Diligence", "Qualitätsmanagement", "Sachverständigenleistungen", "Vergütung und Auslagen"],
+    objective: hasAiDemoText(project.objective)
+      ? "Ziel ist ein belastbares, fachlich klares und prüffähiges Leistungsbild für immobilienbezogene Beratungs-, Steuerungs- und Unterstützungsleistungen."
+      : project.objective,
+    technicalContext: hasAiDemoText(project.technicalContext)
+      ? "Beratungs- und Projektkontext mit objekt-, bau-, organisations- oder bestandsbezogenen Leistungen. Digitale Werkzeuge können unterstützend eingesetzt werden, stehen aber nicht im Mittelpunkt des Angebots."
+      : project.technicalContext,
+    modules: hasAiDemoText(project.modules)
+      ? ["Strategische Beratung", "Projektsteuerung", "Due Diligence", "Qualitätsmanagement", "Sachverständigenleistungen", "Vergütung und Auslagen"]
+      : project.modules,
     offerNumber: project.offerNumber.startsWith("BSAI") ? "MREA-2026-001" : project.offerNumber
   };
 }
@@ -1243,21 +1256,7 @@ export default function HomePage() {
       return;
     }
 
-    setProject((current) => ({
-      ...current,
-      companyId: "metzger-real-estate",
-      client: current.client === sampleProject.client ? "" : current.client,
-      contactPerson: current.contactPerson === sampleProject.contactPerson ? "" : current.contactPerson,
-      projectName: "Beratungs- und Unterstützungsleistungen Real Estate Advisory",
-      shortDescription:
-        "Leistungsangebot für strategische Beratung, Projektsteuerung, technische Prüfungen, Qualitätsmanagement, Baurevision, Sachverständigenleistungen sowie abrechenbare Reise- und Auslagenpositionen.",
-      objective:
-        "Ziel ist ein belastbares, fachlich klares und prüffähiges Leistungsbild für immobilienbezogene Beratungs-, Steuerungs- und Unterstützungsleistungen.",
-      technicalContext:
-        "Beratungs- und Projektkontext mit objekt-, bau-, organisations- oder bestandsbezogenen Leistungen. Digitale Werkzeuge können unterstützend eingesetzt werden, stehen aber nicht im Mittelpunkt des Angebots.",
-      modules: ["Strategische Beratung", "Projektsteuerung", "Due Diligence", "Qualitätsmanagement", "Sachverständigenleistungen", "Vergütung und Auslagen"],
-      offerNumber: current.offerNumber.startsWith("BSAI") ? "MREA-2026-001" : current.offerNumber
-    }));
+    setProject((current) => metzgerAlignedProject(current));
     setActiveView("Qualitätsmanagement");
   }
 
