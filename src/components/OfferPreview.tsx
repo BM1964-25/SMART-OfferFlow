@@ -308,7 +308,7 @@ export function OfferPreview({ project, groups, profiles }: { project: Project; 
         <section className="print-section print-compact print-keep border-t border-line py-6">
           <h2 className="text-lg font-semibold text-ink">Auftragserteilung</h2>
           <p className="mt-3 leading-7 text-black">{project.acceptanceText}</p>
-          <div className="mt-8 grid gap-6 md:grid-cols-4">
+          <div className="mt-16 grid gap-6 md:grid-cols-4">
             {["Ort, Datum", "Name", "Funktion", "Unterschrift"].map((label) => (
               <div key={label} className="border-t border-line pt-3 text-sm font-medium text-black">
                 {label}
