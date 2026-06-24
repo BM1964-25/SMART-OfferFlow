@@ -1932,7 +1932,7 @@ function ProjectWorkspace({
 
           <section className="rounded-md border border-line p-4">
             <h3 className="font-semibold text-ink">3 Inhalt und Angebotsklarstellung</h3>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="mt-4 grid gap-4">
               <Field label="Angebotseinleitung">
                 <TextArea value={project.offerIntro} onChange={(event) => updateProject("offerIntro", event.target.value)} className="min-h-28" />
               </Field>
