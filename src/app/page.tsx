@@ -1431,12 +1431,14 @@ export default function HomePage() {
     <main className="min-h-screen bg-canvas">
       <aside className={`no-print fixed inset-y-0 left-0 z-30 hidden border-r border-line bg-white px-4 py-5 transition-all lg:block ${sidebarCollapsed ? "w-20" : "w-72"}`}>
         <div className={`flex items-center gap-3 px-2 ${sidebarCollapsed ? "justify-center" : ""}`}>
-          <div
-            role="img"
-            aria-label="SMART OfferFlow"
-            className="h-11 w-11 rounded-md bg-cover bg-center shadow-sm"
-            style={{ backgroundImage: "url('/smart-offerflow-logo.png')" }}
-          />
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 p-1 shadow-sm">
+            <div
+              role="img"
+              aria-label="SMART OfferFlow"
+              className="h-full w-full rounded-lg bg-cover bg-center"
+              style={{ backgroundImage: "url('/smart-offerflow-logo.png')" }}
+            />
+          </div>
           <div className={sidebarCollapsed ? "hidden" : ""}>
             <p className="font-semibold text-ink">SMART OfferFlow</p>
             <p className="text-sm text-muted">Angebote, Aufträge und Abrechnung in einem Prozess</p>
