@@ -460,6 +460,33 @@ function hasAiDemoText(value?: string | string[]) {
   return /ki-gest|dokumenten-ki|rag|prompt|wissensplattform|angebotsplattform|arbeitsblatt|workflow-automation/i.test(text);
 }
 
+function findAiDemoTerms(value?: string | string[]) {
+  const text = Array.isArray(value) ? value.join(" ") : value ?? "";
+  return Array.from(new Set(text.match(/ki-gest[^\s,.;)]*|dokumenten-ki|rag|prompt|wissensplattform|angebotsplattform|arbeitsblatt|workflow-automation/gi) ?? []));
+}
+
+function collectAiDemoFindings(project: Project, groups: PositionGroup[] = []) {
+  const fields: { label: string; value: string | string[] }[] = [
+    { label: "Projektname", value: project.projectName },
+    { label: "Aufgabenstellung", value: project.shortDescription },
+    { label: "Zielsetzung", value: project.objective },
+    { label: "Leistungsrahmen", value: project.serviceScope },
+    { label: "Auftragnehmerrolle", value: project.contractorRole },
+    { label: "Module / Leistungsbereiche", value: project.modules },
+    { label: "Technischer Kontext", value: project.technicalContext }
+  ];
+  const projectFindings = fields
+    .map((field) => ({ label: field.label, terms: findAiDemoTerms(field.value) }))
+    .filter((finding) => finding.terms.length > 0);
+  const groupFindings = groups.flatMap((group) => {
+    const groupTerms = findAiDemoTerms([group.title, group.intro]);
+    const positionTerms = group.positions.flatMap((position) => findAiDemoTerms([position.title, position.description, position.category, position.note]));
+    const terms = Array.from(new Set([...groupTerms, ...positionTerms]));
+    return terms.length ? [{ label: `LV: ${group.title}`, terms }] : [];
+  });
+  return [...projectFindings, ...groupFindings];
+}
+
 function normalizeProfiles(savedProfiles: CompanyProfile[] | undefined) {
   const profiles = savedProfiles ?? companyProfiles;
   return profiles.map((profile) => {
@@ -1673,8 +1700,8 @@ function Dashboard({
   const billedTotal = orderBilling.invoicePlan.filter((item) => item.status !== "Entwurf").reduce((sum, item) => sum + item.amount, 0);
   const outstandingTotal = Math.max(orderTotal - billedTotal, 0);
   const billedPercent = orderTotal > 0 ? Math.min((billedTotal / orderTotal) * 100, 100) : 0;
-  const projectText = [project.projectName, project.shortDescription, project.objective, project.technicalContext, ...project.modules].join(" ").toLowerCase();
-  const hasProfileConflict = project.companyId === "metzger-real-estate" && /ki-gest|dokumenten-ki|rag|prompt|wissensplattform|angebotsplattform/.test(projectText);
+  const aiDemoFindings = collectAiDemoFindings(project, groups);
+  const hasProfileConflict = project.companyId === "metzger-real-estate" && aiDemoFindings.length > 0;
 
   return (
     <div className="grid gap-6">
@@ -1685,6 +1712,9 @@ function Dashboard({
               <p className="font-semibold text-rose-900">Firmenprofil und Projektdaten passen nicht zusammen</p>
               <p className="mt-2 text-sm leading-6 text-rose-800">
                 Das Angebot nutzt {company.name}, enthält aber noch KI-Demo-Projektdaten. Bitte das passende Profil-LV und die Projektdaten bereinigen.
+              </p>
+              <p className="mt-2 text-sm leading-6 text-rose-800">
+                Gefunden in: {aiDemoFindings.map((finding) => `${finding.label} (${finding.terms.join(", ")})`).join("; ")}
               </p>
             </div>
             <button
@@ -2726,10 +2756,8 @@ function QualityManagement({
   const activePositions = visibleGroups.flatMap((group) => group.positions.filter((position) => position.active));
   const summary = calculateSummary(groups, project);
   const masterTemplate = templates.find((template) => template.companyId === project.companyId && template.id === `template-${project.companyId}-standard`);
-  const fullText = [project.projectName, project.shortDescription, project.objective, project.technicalContext, ...project.modules, ...groups.flatMap((group) => [group.title, group.intro, ...group.positions.flatMap((position) => [position.title, position.description, position.category, position.note])])]
-    .join(" ")
-    .toLowerCase();
-  const hasAiDemoLanguage = /ki-gest|rag|prompt|agentenlogik|dokumenten-ki|wissensplattform|arbeitsblatt/.test(fullText);
+  const aiDemoFindings = collectAiDemoFindings(project, groups);
+  const hasAiDemoLanguage = aiDemoFindings.length > 0;
   const hasMetzgerStructure = groups.some((group) => group.id.startsWith("mrea-"));
   const staleSave = !lastSavedAt;
 
@@ -2741,7 +2769,7 @@ function QualityManagement({
       severity: "Fehler",
       area: "Profil und Inhalt",
       title: "Metzger-REA enthält noch KI-Demo-Texte",
-      detail: "Im Angebot wurden Begriffe wie KI-gestützt, Wissensplattform, RAG oder Prompt gefunden. Für Metzger - Real Estate Advisory sollte das Profil-LV mit Beratungs- und Immobilienleistungen verwendet werden.",
+      detail: `Im Angebot wurden noch Demo-Begriffe gefunden: ${aiDemoFindings.map((finding) => `${finding.label} (${finding.terms.join(", ")})`).join("; ")}. Für Metzger - Real Estate Advisory sollte das Profil-LV mit Beratungs- und Immobilienleistungen verwendet werden.`,
       action: "Profil/LV bereinigen"
     });
   }
