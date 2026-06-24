@@ -149,8 +149,15 @@ input[type="number"]::-webkit-outer-spin-button {
   }
 
   .print-page-break-before {
-    break-before: page;
-    page-break-before: always;
+    display: block !important;
+    break-before: page !important;
+    break-before: always !important;
+    page-break-before: always !important;
+    -webkit-column-break-before: always !important;
+  }
+
+  .print-page-break-before.border-t {
+    border-top: 0 !important;
   }
 
   .print-compact {
