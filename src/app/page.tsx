@@ -1868,7 +1868,7 @@ function ProjectWorkspace({
               <Field label="Zielsetzung">
                 <TextArea value={project.objective} onChange={(event) => updateProject("objective", event.target.value)} className="min-h-28" />
               </Field>
-              <Field label="Textbaustein Leistungsverzeichnis">
+              <Field label="Einleitung Leistungsverzeichnis">
                 <TextArea
                   value={project.serviceDirectoryIntro}
                   onChange={(event) => updateProject("serviceDirectoryIntro", event.target.value)}
