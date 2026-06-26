@@ -4466,21 +4466,29 @@ function Templates({
   saveCurrentTemplate: (companyId?: Project["companyId"]) => void;
 }) {
   const [activeTemplateCompanyId, setActiveTemplateCompanyId] = useState<Project["companyId"]>(project.companyId);
+  const [activeTemplateId, setActiveTemplateId] = useState("");
   const activeCompany = profiles.find((profile) => profile.id === activeTemplateCompanyId) ?? profiles[0];
   const activeTemplates = templates.filter((template) => template.companyId === activeCompany.id);
+  const activeTemplate = activeTemplates.find((template) => template.id === activeTemplateId) ?? activeTemplates[0];
+
+  useEffect(() => {
+    if (!activeTemplates.length) {
+      queueMicrotask(() => setActiveTemplateId(""));
+      return;
+    }
+    if (!activeTemplates.some((template) => template.id === activeTemplateId)) {
+      const nextTemplateId = activeTemplates[0].id;
+      queueMicrotask(() => setActiveTemplateId(nextTemplateId));
+    }
+  }, [activeTemplateId, activeTemplates]);
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-col gap-4 rounded-lg border border-line bg-white p-6 shadow-sm lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-4 rounded-lg border border-line bg-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
         <div>
           <SectionTitle title="Angebotsvorlagen" kicker="Texte, Klarstellungen und LV je Firmenprofil" />
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
-            Hier werden vollständige Angebotsvorlagen je Firmenprofil gespeichert. Eine Vorlage enthält Textbausteine für Inhalt und Angebotsklarstellung
-            sowie das passende Leistungsverzeichnis mit Titeln und Positionen.
-          </p>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
-            Speicherort: Angebotsvorlagen liegen im lokalen Arbeitsstand der App und werden beim JSON-Export mitgesichert. Für die Nutzung auf Vercel muss
-            der Arbeitsstand dort einmal als JSON geladen oder später in eine Cloud-Speicherung übernommen werden.
+          <p className="mt-2 max-w-4xl text-sm leading-6 text-muted">
+            Wähle zuerst das Firmenprofil und danach die konkrete Angebotsvorlage. Jede Vorlage enthält Textbausteine und das passende Leistungsverzeichnis.
           </p>
         </div>
         <button type="button" onClick={() => saveCurrentTemplate(activeCompany.id)} className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-slate-700">
@@ -4511,21 +4519,46 @@ function Templates({
         </div>
       </div>
 
+      {activeTemplates.length ? (
+        <div className="rounded-lg border border-line bg-white p-3 shadow-sm">
+          <div className="flex flex-wrap gap-2">
+            {activeTemplates.map((template) => {
+              const active = template.id === activeTemplate?.id;
+              const templateGroups = activeGroups(template.groups);
+              const templatePositions = templateGroups.flatMap((group) => group.positions.filter((position) => position.active));
+              return (
+                <button
+                  key={template.id}
+                  type="button"
+                  onClick={() => setActiveTemplateId(template.id)}
+                  className={`min-w-[220px] flex-1 rounded-md border px-4 py-3 text-left transition md:flex-none ${
+                    active ? "border-blue-200 bg-blue-50 text-blue-800" : "border-line bg-white text-ink hover:border-slate-300"
+                  }`}
+                >
+                  <p className="truncate text-sm font-semibold">{template.name}</p>
+                  <p className={`mt-1 text-xs ${active ? "text-blue-700" : "text-muted"}`}>
+                    {templateGroups.length} Titel · {templatePositions.length} Positionen · {formatCurrency(templateGroups.reduce((sum, group) => sum + groupTotal(group), 0))}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
       <div className="grid gap-4">
-        {activeTemplates.length ? (
-          activeTemplates.map((template) => (
-            <TemplateCard
-              key={template.id}
-              template={template}
-              groups={groups}
-              updateTemplate={updateTemplate}
-              overwriteTemplate={overwriteTemplate}
-              applyTemplate={applyTemplate}
-              duplicateTemplate={duplicateTemplate}
-              deleteTemplate={deleteTemplate}
-              profiles={profiles}
-            />
-          ))
+        {activeTemplate ? (
+          <TemplateCard
+            key={activeTemplate.id}
+            template={activeTemplate}
+            groups={groups}
+            updateTemplate={updateTemplate}
+            overwriteTemplate={overwriteTemplate}
+            applyTemplate={applyTemplate}
+            duplicateTemplate={duplicateTemplate}
+            deleteTemplate={deleteTemplate}
+            profiles={profiles}
+          />
         ) : (
           <div className="rounded-lg border border-dashed border-line bg-white p-8 text-center">
             <p className="font-semibold text-ink">Noch keine Angebotsvorlagen für {activeCompany.name}</p>
