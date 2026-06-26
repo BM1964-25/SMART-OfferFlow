@@ -309,6 +309,30 @@ function upsertSavedOfferSnapshot(
   return existing ? current.map((offer) => (offer.id === project.id ? next : offer)) : [next, ...current];
 }
 
+function slugifyFilePart(value: string, fallback: string) {
+  const slug = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, " und ")
+    .replace(/[^a-z0-9]+/gi, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+  return slug || fallback;
+}
+
+function dateStamp(date = new Date()) {
+  return new Intl.DateTimeFormat("de-DE", { year: "numeric", month: "2-digit", day: "2-digit" }).format(date).split(".").reverse().join("-");
+}
+
+function createAppStateFileName(project: Project, profiles: CompanyProfile[]) {
+  const company = profiles.find((profile) => profile.id === project.companyId);
+  const offerNumber = slugifyFilePart(project.offerNumber, "ohne-angebotsnummer");
+  const companyPart = slugifyFilePart(company?.logoText || company?.name || project.companyId, "firmenprofil");
+  const clientPart = slugifyFilePart(project.client, "ohne-kunde");
+  const projectPart = slugifyFilePart(project.projectName, "ohne-projekt");
+  return `${offerNumber}-${companyPart}-${clientPart}-${projectPart}-${dateStamp()}-smart-offerflow.json`;
+}
+
 function createInitialLibraryPositions() {
   return initialGroups.flatMap((group) =>
     group.positions.map((position) => ({
@@ -1337,7 +1361,7 @@ export default function HomePage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${project.offerNumber}-smart-offerflow.json`;
+    link.download = createAppStateFileName(project, profiles);
     link.click();
     URL.revokeObjectURL(url);
     setLastSavedAt(savedAt);

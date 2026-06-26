@@ -218,6 +218,19 @@ const helpSections: HelpSection[] = [
           „Als JSON sichern“ legt zusätzlich eine Datei auf dem Rechner ab. Diese JSON-Datei kann später wieder geladen, archiviert oder als Vorlage
           für ein anderes Projekt verwendet werden.
         </p>
+        <p>
+          Der Dateiname wird automatisch aus Angebotsnummer, Firmenprofil, Kunde, Projektbezeichnung und Exportdatum gebildet. Beispiel:
+          <br />
+          <code>MREA-2026-001-mrea-haseitl-projektstabilisierung-2026-06-26-smart-offerflow.json</code>
+        </p>
+        <p>
+          Die fortlaufende Nummer im Dateinamen stammt aus der Angebotsnummer. Diese wird beim Anlegen eines neuen Angebots über den Nummernkreis des
+          Firmenprofils vorgeschlagen, kann im Angebotskopf aber weiterhin manuell angepasst werden.
+        </p>
+        <p>
+          Wichtig: Die JSON-Datei ist derzeit keine reine Einzel-Projektdatei, sondern eine Sicherung des vollständigen App-Arbeitsstands einschließlich
+          Firmenprofilen, Kunden, Angebotsliste, Angebotsvorlagen, aktuellem Angebot, LV und Abrechnung.
+        </p>
         <h3>Angebot als Link versenden</h3>
         <p>
           In der Angebotsvorschau speichert der Button „Angebot an Kunden versenden“ den aktuellen Angebotsstand in Supabase und kopiert einen kurzen
