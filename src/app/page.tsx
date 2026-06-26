@@ -74,7 +74,7 @@ type View =
   | "Firmenprofile"
   | "Qualitätsmanagement"
   | "Positionsbibliothek"
-  | "LV-Vorlagen"
+  | "Angebotsvorlagen"
   | "Einstellungen";
 
 const navItems: { label: View; icon: typeof Home }[] = [
@@ -90,11 +90,32 @@ const navItems: { label: View; icon: typeof Home }[] = [
   { label: "Firmenprofile", icon: Building2 },
   { label: "Qualitätsmanagement", icon: ShieldCheck },
   { label: "Positionsbibliothek", icon: Library },
-  { label: "LV-Vorlagen", icon: LayoutTemplate },
+  { label: "Angebotsvorlagen", icon: LayoutTemplate },
   { label: "Einstellungen", icon: Settings }
 ];
 
 const storageKey = "smart-lv-state-v1";
+
+type OfferTemplateTextFields = Partial<
+  Pick<
+    Project,
+    | "offerIntro"
+    | "assignmentReason"
+    | "shortDescription"
+    | "serviceScope"
+    | "contractorRole"
+    | "objective"
+    | "serviceDirectoryIntro"
+    | "serviceExclusion"
+    | "changeTerms"
+    | "contractBasis"
+    | "paymentTerms"
+    | "validityText"
+    | "offerClarification"
+    | "offerNote"
+    | "acceptanceText"
+  >
+>;
 
 type LvTemplate = {
   id: string;
@@ -103,6 +124,7 @@ type LvTemplate = {
   description: string;
   createdAt: string;
   updatedAt: string;
+  textFields?: OfferTemplateTextFields;
   groups: PositionGroup[];
 };
 
@@ -250,6 +272,87 @@ function cloneGroups(groups: PositionGroup[]) {
       positions: group.positions.map((position) => ({ ...position }))
     }))
   );
+}
+
+const offerTemplateTextFieldLabels: { key: keyof OfferTemplateTextFields; label: string }[] = [
+  { key: "offerIntro", label: "Angebotseinleitung" },
+  { key: "assignmentReason", label: "Anlass der Beauftragung" },
+  { key: "shortDescription", label: "Aufgabenstellung" },
+  { key: "objective", label: "Zielsetzung" },
+  { key: "serviceScope", label: "Leistungsrahmen" },
+  { key: "contractorRole", label: "Auftragnehmerrolle" },
+  { key: "serviceDirectoryIntro", label: "Einleitung Leistungsverzeichnis" },
+  { key: "serviceExclusion", label: "Leistungsabgrenzung" },
+  { key: "changeTerms", label: "Leistungsänderungen" },
+  { key: "contractBasis", label: "Vertragsgrundlage" },
+  { key: "paymentTerms", label: "Zahlungsbedingungen" },
+  { key: "validityText", label: "Gültigkeit" },
+  { key: "offerClarification", label: "Angebotsgrundlagen" },
+  { key: "offerNote", label: "Hinweis" },
+  { key: "acceptanceText", label: "Auftragserteilung" }
+];
+
+function offerTemplateTextFromProject(project: Project): OfferTemplateTextFields {
+  return offerTemplateTextFieldLabels.reduce<OfferTemplateTextFields>((fields, field) => {
+    fields[field.key] = project[field.key] as string;
+    return fields;
+  }, {});
+}
+
+function defaultOfferTemplateText(profile: CompanyProfile): OfferTemplateTextFields {
+  const base: OfferTemplateTextFields = {
+    offerIntro: profile.offerText,
+    assignmentReason: defaultAssignmentReason,
+    serviceDirectoryIntro: defaultServiceDirectoryIntro,
+    serviceExclusion: defaultServiceExclusion,
+    changeTerms: defaultChangeTerms,
+    contractBasis: contractBasisForProfile(profile),
+    paymentTerms: "Rechnungen sind innerhalb von 14 Kalendertagen nach Rechnungsstellung ohne Abzug zur Zahlung fällig. Die Rechnungsstellung erfolgt monatlich beziehungsweise nach erbrachter Leistung.",
+    validityText: defaultValidityText,
+    offerClarification: defaultOfferBasis,
+    offerNote: "",
+    acceptanceText: defaultAcceptanceText
+  };
+
+  if (profile.id === "builtsmart-ai") {
+    return {
+      ...base,
+      shortDescription:
+        "Konzeption und Umsetzung einer digitalen Anwendung mit klaren Arbeitsabläufen, verständlicher Bedienoberfläche, strukturierter Datenspeicherung und gezielter KI-Unterstützung.",
+      objective:
+        "Ziel ist eine praxistaugliche, nachvollziehbare und erweiterbare Anwendung, die wiederkehrende Arbeitsschritte vereinfacht, Informationen strukturiert und Nutzer bei der Erstellung, Prüfung oder Bearbeitung von Inhalten unterstützt.",
+      serviceScope:
+        "Die Leistungen umfassen Beratung, Konzeption, Gestaltung, technische Umsetzung, KI-Funktionen, Qualitätssicherung, Bereitstellung und Einführung. Der konkrete Umfang richtet sich nach den abgestimmten Funktionen und Prioritäten.",
+      contractorRole:
+        "Der Auftragnehmer erbringt die Leistungen als unabhängiger Konzeptions-, Entwicklungs- und Umsetzungspartner. Fachliche Freigaben, rechtliche Bewertungen und finale inhaltliche Entscheidungen verbleiben beim Auftraggeber."
+    };
+  }
+
+  if (profile.id === "metzger-real-estate") {
+    return {
+      ...base,
+      shortDescription: "Beratungs- und Unterstützungsleistungen für immobilienbezogene Projekt-, Steuerungs-, Prüf- oder Sachverständigenaufgaben.",
+      objective:
+        "Ziel ist ein belastbares, fachlich klares und prüffähiges Leistungsbild für immobilienbezogene Beratungs-, Steuerungs- und Unterstützungsleistungen.",
+      serviceScope: defaultServiceScope,
+      contractorRole: defaultContractorRole
+    };
+  }
+
+  return {
+    ...base,
+    shortDescription: "Strukturierte Beratungs-, Konzeptions- und Umsetzungsleistungen auf Grundlage der abgestimmten Projektanforderungen.",
+    objective: "Ziel ist eine nachvollziehbare Leistungsstruktur mit klaren Ergebnissen, Zuständigkeiten und prüffähiger Kalkulation.",
+    serviceScope: defaultServiceScope,
+    contractorRole: "Der Auftragnehmer erbringt die Leistungen als unabhängiger Beratungs- und Umsetzungspartner auf Grundlage der abgestimmten Aufgabenstellung."
+  };
+}
+
+function applyTemplateTextToProject(project: Project, template: LvTemplate): Project {
+  return {
+    ...project,
+    ...(template.textFields ?? {})
+  };
 }
 
 function makeBuiltSmartAiPosition(
@@ -599,15 +702,16 @@ function createInitialProfileTemplates(profiles: CompanyProfile[] = companyProfi
   return profiles.map((profile) => ({
     id: `template-${profile.id}-standard`,
     companyId: profile.id,
-    name: `${profile.name} LV-Vorlage`,
+    name: `${profile.name} Angebotsvorlage`,
     description:
       profile.id === "metzger-real-estate"
-        ? "LV-Vorlage für strategische Beratung, Projektsteuerung, Due Diligence, Baurevision, Sachverständigenleistungen, Vergütung, Fahrtkosten und Auslagen."
+        ? "Angebotsvorlage für strategische Beratung, Projektsteuerung, Due Diligence, Baurevision, Sachverständigenleistungen, Vergütung, Fahrtkosten und Auslagen."
         : profile.id === "builtsmart-ai"
-          ? "Optimierte LV-Vorlage für KI-Anwendungen: Strategie, Fachkonzept, UX, Entwicklung, KI-Funktionen, Qualitätssicherung, Deployment und Einführung."
+          ? "Optimierte Angebotsvorlage für KI-Anwendungen: Strategie, Fachkonzept, UX, Entwicklung, KI-Funktionen, Qualitätssicherung, Deployment und Einführung."
         : `Profilgebundene LV-Grundstruktur für ${profile.name} mit eigener Angebotslogik und wiederverwendbaren Leistungsgruppen.`,
     createdAt,
     updatedAt: createdAt,
+    textFields: defaultOfferTemplateText(profile),
     groups:
       profile.id === "metzger-real-estate"
         ? createMetzgerReaStandardGroups()
@@ -641,14 +745,24 @@ function mergeProfileTemplates(savedTemplates: LvTemplate[] | undefined, profile
     const saved = savedById.get(template.id);
     if (!saved) return template;
     if (isLegacyBuiltSmartAiTemplate(saved)) return template;
+    const profile = profiles.find((item) => item.id === saved.companyId);
     return {
       ...saved,
-      name: saved.name.endsWith(" Master-LV") ? saved.name.replace(/ Master-LV$/, " LV-Vorlage") : saved.name,
-      description: saved.description.replace(/^Master-LV/, "LV-Vorlage")
+      name: saved.name.endsWith(" Master-LV") ? saved.name.replace(/ Master-LV$/, " Angebotsvorlage") : saved.name,
+      description: saved.description.replace(/^Master-LV/, "Angebotsvorlage"),
+      textFields: saved.textFields ?? (profile ? defaultOfferTemplateText(profile) : template.textFields)
     };
   });
   const defaultIds = new Set(defaultTemplates.map((template) => template.id));
-  const customTemplates = savedTemplates.filter((template) => !defaultIds.has(template.id) && !isLegacyBuiltSmartAiTemplate(template));
+  const customTemplates = savedTemplates
+    .filter((template) => !defaultIds.has(template.id) && !isLegacyBuiltSmartAiTemplate(template))
+    .map((template) => {
+      const profile = profiles.find((item) => item.id === template.companyId);
+      return {
+        ...template,
+        textFields: template.textFields ?? (profile ? defaultOfferTemplateText(profile) : {})
+      };
+    });
   return [...mergedDefaults, ...customTemplates];
 }
 
@@ -1132,7 +1246,7 @@ export default function HomePage() {
     const template =
       lvTemplates.find((item) => item.companyId === companyId && item.id === `template-${companyId}-standard`) ??
       lvTemplates.find((item) => item.companyId === companyId);
-    const newProject: Project = {
+    const newProjectBase: Project = {
       ...sampleProject,
       id: `offer-${Date.now()}`,
       companyId,
@@ -1146,6 +1260,7 @@ export default function HomePage() {
       offerDate: new Date().toISOString().slice(0, 10),
       status: "Entwurf"
     };
+    const newProject = template ? applyTemplateTextToProject(newProjectBase, template) : newProjectBase;
     const newGroups = template ? cloneGroups(template.groups) : [];
     setProject(newProject);
     setSelectedProfileId(companyId);
@@ -1559,22 +1674,23 @@ export default function HomePage() {
     const template: LvTemplate = {
       id: `template-${Date.now()}`,
       companyId: targetCompanyId,
-      name: `${project.projectName} LV`,
-      description: `Gespeichertes Leistungsverzeichnis für ${companyName}.`,
+      name: `${project.projectName || companyName} Angebotsvorlage`,
+      description: `Gespeicherte Angebotsvorlage für ${companyName} mit Textbausteinen, Klarstellungen und Leistungsverzeichnis.`,
       createdAt: now,
       updatedAt: now,
+      textFields: offerTemplateTextFromProject(project),
       groups: cloneGroups(groups)
     };
     setLvTemplates((current) => [template, ...current]);
     setLastSavedAt(now);
-    setStorageMessage(`LV-Vorlage gespeichert: ${template.name}`);
-    setActiveView("LV-Vorlagen");
+    setStorageMessage(`Angebotsvorlage gespeichert: ${template.name}`);
+    setActiveView("Angebotsvorlagen");
   }
 
   function overwriteLvTemplate(templateId: string) {
     const template = lvTemplates.find((item) => item.id === templateId);
     if (!template) return;
-    if (!window.confirm(`LV-Vorlage "${template.name}" mit dem aktuellen Angebots-LV überschreiben?`)) return;
+    if (!window.confirm(`Angebotsvorlage "${template.name}" mit aktuellen Texten und aktuellem LV überschreiben?`)) return;
     const now = new Date().toISOString();
     setLvTemplates((current) =>
       current.map((item) =>
@@ -1582,6 +1698,7 @@ export default function HomePage() {
           ? {
               ...item,
               companyId: project.companyId,
+              textFields: offerTemplateTextFromProject(project),
               groups: cloneGroups(groups),
               updatedAt: now
             }
@@ -1589,10 +1706,10 @@ export default function HomePage() {
       )
     );
     setLastSavedAt(now);
-    setStorageMessage(`LV-Vorlage aktualisiert: ${template.name}`);
+    setStorageMessage(`Angebotsvorlage aktualisiert: ${template.name}`);
   }
 
-  function updateLvTemplate(templateId: string, changes: Partial<Pick<LvTemplate, "name" | "description" | "companyId">>) {
+  function updateLvTemplate(templateId: string, changes: Partial<Pick<LvTemplate, "name" | "description" | "companyId" | "textFields">>) {
     setLvTemplates((current) =>
       current.map((template) => (template.id === templateId ? { ...template, ...changes, updatedAt: new Date().toISOString() } : template))
     );
@@ -1601,7 +1718,7 @@ export default function HomePage() {
   function applyLvTemplate(templateId: string) {
     const template = lvTemplates.find((item) => item.id === templateId);
     if (!template) return;
-    setProject((current) => ({ ...current, companyId: template.companyId }));
+    setProject((current) => applyTemplateTextToProject({ ...current, companyId: template.companyId }, template));
     setGroups(cloneGroups(template.groups));
     setActiveView("LV bearbeiten");
   }
@@ -1621,7 +1738,8 @@ export default function HomePage() {
   function applyMasterLv() {
     const masterTemplate = findMasterTemplate();
     if (!masterTemplate) return;
-    if (!window.confirm("Aktuelles Angebots-LV durch die LV-Vorlage ersetzen? Bestehende Titel und Positionen im Angebot werden ersetzt.")) return;
+    if (!window.confirm("Aktuelles Angebot durch die Angebotsvorlage ersetzen? Textbausteine, Titel und Positionen werden übernommen.")) return;
+    setProject((current) => applyTemplateTextToProject(current, masterTemplate));
     setGroups(cloneGroups(masterTemplate.groups));
     setActiveView("LV bearbeiten");
   }
@@ -1702,6 +1820,7 @@ export default function HomePage() {
         name: targetCompany ? `${template.name} Kopie für ${targetCompany.name}` : `${template.name} Kopie`,
         createdAt: now,
         updatedAt: now,
+        textFields: { ...(template.textFields ?? {}) },
         groups: cloneGroups(template.groups)
       },
       ...current
@@ -1711,7 +1830,7 @@ export default function HomePage() {
   function deleteLvTemplate(templateId: string) {
     const template = lvTemplates.find((item) => item.id === templateId);
     if (!template) return;
-    if (!window.confirm(`LV-Vorlage "${template.name}" löschen?`)) return;
+    if (!window.confirm(`Angebotsvorlage "${template.name}" löschen?`)) return;
     setLvTemplates((current) => current.filter((item) => item.id !== templateId));
   }
 
@@ -1854,7 +1973,7 @@ export default function HomePage() {
                 <Building2 className="h-4 w-4 text-muted" />
                 {company.name}
               </button>
-              <IconButton icon={Save} label="Aktuelles LV als LV-Vorlage speichern" onClick={saveAsTemplate} />
+              <IconButton icon={Save} label="Aktuelles Angebot als Angebotsvorlage speichern" onClick={saveAsTemplate} />
               <IconButton icon={Copy} label="Angebot duplizieren" onClick={duplicateOffer} />
               <IconButton icon={Download} label="CSV exportieren" onClick={exportCsv} />
               <IconButton icon={Braces} label="JSON exportieren" onClick={exportJson} />
@@ -2027,7 +2146,7 @@ export default function HomePage() {
             />
           ) : null}
 
-          {activeView === "LV-Vorlagen" ? (
+          {activeView === "Angebotsvorlagen" ? (
             <Templates
               project={project}
               groups={groups}
@@ -2220,7 +2339,7 @@ function Dashboard({
             <div>
               <p className="font-semibold text-rose-900">Firmenprofil und Projektdaten passen nicht zusammen</p>
               <p className="mt-2 text-sm leading-6 text-rose-800">
-                Das Angebot nutzt {company.name}, enthält aber noch KI-Demo-Projektdaten. Bitte die passende LV-Vorlage und die Projektdaten bereinigen.
+                Das Angebot nutzt {company.name}, enthält aber noch KI-Demo-Projektdaten. Bitte die passende Angebotsvorlage und die Projektdaten bereinigen.
               </p>
               <p className="mt-2 text-sm leading-6 text-rose-800">
                 Gefunden in: {aiDemoFindings.map((finding) => `${finding.label} (${finding.terms.join(", ")})`).join("; ")}
@@ -2650,9 +2769,9 @@ function NewLvWorkspace({
       <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
         <div className="grid gap-4 xl:grid-cols-[1fr_240px_260px_auto_auto] xl:items-end">
           <div>
-            <SectionTitle title="Neues LV aus LV-Vorlage" kicker={company.name} />
+            <SectionTitle title="Neues LV aus Angebotsvorlage" kicker={company.name} />
             <p className="mt-3 max-w-4xl text-sm leading-6 text-muted">
-              Wähle ein Firmenprofil und danach eine gespeicherte LV-Vorlage. Diese kann komplett übernommen werden; einzelne Titel und Positionen können rechts gezielt in das aktuelle Angebots-LV kopiert werden.
+              Wähle ein Firmenprofil und danach eine gespeicherte Angebotsvorlage. Diese kann komplett übernommen werden; einzelne Titel und Positionen können rechts gezielt in das aktuelle Angebots-LV kopiert werden.
             </p>
           </div>
           <Field label="Firmenprofil">
@@ -2664,7 +2783,7 @@ function NewLvWorkspace({
               ))}
             </Select>
           </Field>
-          <Field label="LV-Vorlage">
+          <Field label="Angebotsvorlage">
             <Select value={selectedTemplate?.id ?? ""} onChange={(event) => setSelectedTemplateId(event.target.value)} disabled={!profileTemplates.length}>
               {profileTemplates.map((template) => (
                 <option key={template.id} value={template.id}>
@@ -2682,7 +2801,7 @@ function NewLvWorkspace({
             disabled={!selectedTemplate}
             className="inline-flex h-10 items-center justify-center rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            LV-Vorlage komplett übernehmen
+            Angebotsvorlage komplett übernehmen
           </button>
         </div>
       </div>
@@ -2721,7 +2840,7 @@ function NewLvWorkspace({
             ) : (
               <div className="rounded-md border border-dashed border-line p-8 text-center">
                 <p className="font-semibold text-ink">Noch kein Angebots-LV angelegt</p>
-                <p className="mt-2 text-sm text-muted">Übernimm rechts einen Titel, eine Position oder die komplette LV-Vorlage.</p>
+                <p className="mt-2 text-sm text-muted">Übernimm rechts einen Titel, eine Position oder die komplette Angebotsvorlage.</p>
               </div>
             )}
           </div>
@@ -2729,7 +2848,7 @@ function NewLvWorkspace({
 
         <div className="rounded-lg border border-line bg-white shadow-sm">
           <div className="border-b border-line p-5">
-            <SectionTitle title="LV-Vorlage" kicker={selectedTemplate ? `${masterGroups.length} Titel · ${masterPositionCount} Positionen` : "Keine Vorlage"} />
+            <SectionTitle title="Angebotsvorlage" kicker={selectedTemplate ? `${masterGroups.length} Titel · ${masterPositionCount} Positionen` : "Keine Vorlage"} />
             {selectedTemplate ? (
               <div className="mt-3 grid gap-2 text-sm leading-6 text-muted">
                 <p>{selectedTemplate.description}</p>
@@ -2771,8 +2890,8 @@ function NewLvWorkspace({
               </div>
             ) : (
               <div className="rounded-md border border-dashed border-line p-8 text-center">
-                <p className="font-semibold text-ink">Keine LV-Vorlage vorhanden</p>
-                <p className="mt-2 text-sm text-muted">Speichere im LV-Editor oder unter LV-Vorlagen ein Leistungsverzeichnis für dieses Firmenprofil.</p>
+                <p className="font-semibold text-ink">Keine Angebotsvorlage vorhanden</p>
+                <p className="mt-2 text-sm text-muted">Speichere im LV-Editor oder unter Angebotsvorlagen ein Leistungsverzeichnis für dieses Firmenprofil.</p>
               </div>
             )}
           </div>
@@ -2884,7 +3003,7 @@ function LvEditor({
                   </button>
                   <p className="rounded-md bg-slate-100 px-3 py-2 text-sm font-semibold text-ink">{formatCurrency(groupTotal(group))}</p>
                   <IconButton icon={Plus} label="Position hinzufügen" onClick={() => addPosition(group.id)} disabled={hasFilters} />
-                  <IconButton icon={Save} label="Titel in die LV-Vorlage übernehmen" onClick={() => copyOfferGroupToMaster(group.id)} disabled={hasFilters} />
+                  <IconButton icon={Save} label="Titel in die Angebotsvorlage übernehmen" onClick={() => copyOfferGroupToMaster(group.id)} disabled={hasFilters} />
                   <IconButton icon={Trash2} label="Titel löschen" onClick={() => deleteGroup(group.id)} disabled={hasFilters} />
                 </div>
               </div>
@@ -2963,7 +3082,7 @@ function LvEditor({
                               </div>
                               <div className="flex gap-2">
                                 <IconButton icon={CheckCircle2} label="Position aktivieren/deaktivieren" active={position.active} onClick={() => updatePosition(position.groupId, position.id, { active: !position.active })} />
-                                <IconButton icon={Save} label="Position in die LV-Vorlage übernehmen" onClick={() => copyOfferPositionToMaster(position.groupId, position.id)} />
+                                <IconButton icon={Save} label="Position in die Angebotsvorlage übernehmen" onClick={() => copyOfferPositionToMaster(position.groupId, position.id)} />
                                 <IconButton icon={Copy} label="Position duplizieren" onClick={() => duplicatePosition(position.groupId, position.id)} />
                                 <IconButton icon={Trash2} label="Position löschen" onClick={() => deletePosition(position.groupId, position.id)} />
                               </div>
@@ -3088,7 +3207,7 @@ function CompanyProfiles({
               <span className="min-w-0">
                 <span className="block truncate text-sm font-semibold">{profile.name}</span>
                 <span className="block text-xs">
-                  {templates.filter((template) => template.companyId === profile.id).length} LV-Vorlagen
+                  {templates.filter((template) => template.companyId === profile.id).length} Angebotsvorlagen
                   {profile.id === activeProjectCompanyId ? " · im Angebot aktiv" : ""}
                 </span>
               </span>
@@ -3222,14 +3341,14 @@ function CompanyProfiles({
           </div>
 
           <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
-            <SectionTitle title="LV-Vorlagen" />
-            <p className="mt-3 text-sm text-muted">{profileTemplates.length} gespeicherte LV-Vorlagen für dieses Firmenprofil.</p>
+            <SectionTitle title="Angebotsvorlagen" />
+            <p className="mt-3 text-sm text-muted">{profileTemplates.length} gespeicherte Angebotsvorlagen für dieses Firmenprofil.</p>
             <button
               type="button"
-              onClick={() => setActiveView("LV-Vorlagen")}
+              onClick={() => setActiveView("Angebotsvorlagen")}
               className="mt-5 inline-flex h-10 items-center justify-center rounded-md border border-line bg-white px-4 text-sm font-semibold text-ink transition hover:border-slate-300"
             >
-              LV-Vorlagen öffnen
+              Angebotsvorlagen öffnen
             </button>
           </div>
         </div>
@@ -3311,7 +3430,7 @@ function QualityManagement({
       severity: "Fehler",
       area: "Profil und Inhalt",
       title: "Metzger-REA enthält noch KI-Demo-Texte",
-      detail: `Im Angebot wurden noch Demo-Begriffe gefunden: ${aiDemoFindings.map((finding) => `${finding.label} (${finding.terms.join(", ")})`).join("; ")}. Für Metzger - Real Estate Advisory sollte die LV-Vorlage mit Beratungs- und Immobilienleistungen verwendet werden.`,
+      detail: `Im Angebot wurden noch Demo-Begriffe gefunden: ${aiDemoFindings.map((finding) => `${finding.label} (${finding.terms.join(", ")})`).join("; ")}. Für Metzger - Real Estate Advisory sollte die Angebotsvorlage mit Beratungs- und Immobilienleistungen verwendet werden.`,
       action: "Profil/LV bereinigen"
     });
   }
@@ -3320,10 +3439,10 @@ function QualityManagement({
     issues.push({
       id: "mrea-master-missing",
       severity: "Fehler",
-      area: "LV-Vorlage",
-      title: "Aktuelles LV passt nicht zum Firmenprofil",
+      area: "Angebotsvorlage",
+      title: "Aktuelles Angebot passt nicht zum Firmenprofil",
       detail: "Das aktive LV nutzt keine Metzger-REA-Titel. Dadurch entstehen falsche Angebotsinhalte und falsche Leistungszuordnungen.",
-      action: "LV-Vorlage übernehmen"
+      action: "Angebotsvorlage übernehmen"
     });
   }
 
@@ -3410,10 +3529,10 @@ function QualityManagement({
     issues.push({
       id: "no-master",
       severity: "Hinweis",
-      area: "LV-Vorlagen",
-      title: "Keine LV-Vorlage für dieses Firmenprofil gefunden",
+      area: "Angebotsvorlagen",
+      title: "Keine Angebotsvorlage für dieses Firmenprofil gefunden",
       detail: "Ein profilgebundenes LV macht neue Angebote schneller und verhindert falsche Titelzuordnungen.",
-      action: "LV-Vorlagen öffnen"
+      action: "Angebotsvorlagen öffnen"
     });
   }
 
@@ -3440,7 +3559,7 @@ function QualityManagement({
     else if (issue.action === "Kunden öffnen") setActiveView("Kunden");
     else if (issue.action === "Firmenprofil öffnen") setActiveView("Firmenprofile");
     else if (issue.action === "LV bearbeiten") setActiveView("LV bearbeiten");
-    else if (issue.action === "LV-Vorlagen öffnen") setActiveView("LV-Vorlagen");
+    else if (issue.action === "Angebotsvorlagen öffnen") setActiveView("Angebotsvorlagen");
   }
 
   return (
@@ -3450,7 +3569,7 @@ function QualityManagement({
           <div>
             <SectionTitle title="Qualitätsmanagement" kicker={company.name} />
             <p className="mt-3 max-w-4xl text-sm leading-6 text-muted">
-              Die Prüfung kontrolliert, ob Firmenprofil, Angebotsdaten, LV-Vorlage, Positionen, Kalkulation, Speicherung und nächster Workflow-Schritt zusammenpassen.
+              Die Prüfung kontrolliert, ob Firmenprofil, Angebotsdaten, Angebotsvorlage, Positionen, Kalkulation, Speicherung und nächster Workflow-Schritt zusammenpassen.
             </p>
           </div>
           <div className="rounded-md border border-line bg-slate-50 px-5 py-4 text-center">
@@ -3517,7 +3636,7 @@ function QualityManagement({
           {[
             ["1", "Firmenprofil", "Profil wählen, Farben und Angebotslogik prüfen."],
             ["2", "Kunde", "Empfänger und Ansprechpartner aus der Kundendatenbank übernehmen."],
-            ["3", "LV-Vorlage", "Passende LV-Vorlage übernehmen oder gezielt Positionen kopieren."],
+            ["3", "Angebotsvorlage", "Passende Angebotsvorlage übernehmen oder gezielt Positionen kopieren."],
             ["4", "QM-Prüfung", "Fehler, Warnungen und Summen vor Versand kontrollieren."],
             ["5", "Vorschau", "HTML/PDF prüfen, anschließend Angebot versenden oder abrechnen."]
           ].map(([step, title, detail]) => (
@@ -3795,7 +3914,7 @@ function Templates({
   groups: PositionGroup[];
   templates: LvTemplate[];
   profiles: CompanyProfile[];
-  updateTemplate: (templateId: string, changes: Partial<Pick<LvTemplate, "name" | "description" | "companyId">>) => void;
+  updateTemplate: (templateId: string, changes: Partial<Pick<LvTemplate, "name" | "description" | "companyId" | "textFields">>) => void;
   overwriteTemplate: (templateId: string) => void;
   applyTemplate: (templateId: string) => void;
   duplicateTemplate: (templateId: string, targetCompanyId?: Project["companyId"]) => void;
@@ -3810,19 +3929,19 @@ function Templates({
     <div className="grid gap-6">
       <div className="flex flex-col gap-4 rounded-lg border border-line bg-white p-6 shadow-sm lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <SectionTitle title="LV-Vorlagen" kicker="Wiederverwendbare Leistungsgerüste je Firmenprofil" />
+          <SectionTitle title="Angebotsvorlagen" kicker="Texte, Klarstellungen und LV je Firmenprofil" />
           <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
-            Hier werden vollständige Leistungsverzeichnisse je Firmenprofil gespeichert. Sie können als Grundlage für neue Angebote geladen, bearbeitet,
-            dupliziert oder mit dem aktuellen LV aktualisiert werden.
+            Hier werden vollständige Angebotsvorlagen je Firmenprofil gespeichert. Eine Vorlage enthält Textbausteine für Inhalt und Angebotsklarstellung
+            sowie das passende Leistungsverzeichnis mit Titeln und Positionen.
           </p>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
-            Speicherort: LV-Vorlagen liegen im lokalen Arbeitsstand der App und werden beim JSON-Export mitgesichert. Für die Nutzung auf Vercel muss
+            Speicherort: Angebotsvorlagen liegen im lokalen Arbeitsstand der App und werden beim JSON-Export mitgesichert. Für die Nutzung auf Vercel muss
             der Arbeitsstand dort einmal als JSON geladen oder später in eine Cloud-Speicherung übernommen werden.
           </p>
         </div>
         <button type="button" onClick={() => saveCurrentTemplate(activeCompany.id)} className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-slate-700">
           <Save className="h-4 w-4" />
-          Aktuelles LV als Vorlage speichern
+          Aktuelle Angebotsvorlage speichern
         </button>
       </div>
 
@@ -3841,7 +3960,7 @@ function Templates({
                 }`}
               >
                 <p className="font-semibold">{profile.name}</p>
-                <p className={`mt-1 text-sm ${active ? "text-blue-700" : "text-muted"}`}>{count} LV-Vorlagen</p>
+                <p className={`mt-1 text-sm ${active ? "text-blue-700" : "text-muted"}`}>{count} Angebotsvorlagen</p>
               </button>
             );
           })}
@@ -3865,8 +3984,8 @@ function Templates({
           ))
         ) : (
           <div className="rounded-lg border border-dashed border-line bg-white p-8 text-center">
-            <p className="font-semibold text-ink">Noch keine LV-Vorlagen für {activeCompany.name}</p>
-            <p className="mt-2 text-sm text-muted">Speichere das aktuelle LV als Vorlage oder kopiere eine bestehende LV-Vorlage in diesen Tab.</p>
+            <p className="font-semibold text-ink">Noch keine Angebotsvorlagen für {activeCompany.name}</p>
+            <p className="mt-2 text-sm text-muted">Speichere das aktuelle Angebot als Vorlage oder kopiere eine bestehende Angebotsvorlage in diesen Tab.</p>
           </div>
         )}
       </div>
@@ -3886,7 +4005,7 @@ function TemplateCard({
 }: {
   template: LvTemplate;
   groups: PositionGroup[];
-  updateTemplate: (templateId: string, changes: Partial<Pick<LvTemplate, "name" | "description" | "companyId">>) => void;
+  updateTemplate: (templateId: string, changes: Partial<Pick<LvTemplate, "name" | "description" | "companyId" | "textFields">>) => void;
   overwriteTemplate: (templateId: string) => void;
   applyTemplate: (templateId: string) => void;
   duplicateTemplate: (templateId: string, targetCompanyId?: Project["companyId"]) => void;
@@ -3904,7 +4023,7 @@ function TemplateCard({
   function moveTemplate() {
     const targetProfile = profiles.find((profile) => profile.id === targetProfileId);
     if (!targetProfile) return;
-    if (!window.confirm(`LV-Vorlage "${template.name}" zu "${targetProfile.name}" verschieben?`)) return;
+    if (!window.confirm(`Angebotsvorlage "${template.name}" zu "${targetProfile.name}" verschieben?`)) return;
     updateTemplate(template.id, { companyId: targetProfile.id });
     setTargetProfileId("");
   }
@@ -3921,7 +4040,7 @@ function TemplateCard({
       <div className="grid gap-4 xl:grid-cols-[1fr_244px]">
         <div className="grid gap-3">
           <div className="grid gap-3 md:grid-cols-[minmax(280px,0.72fr)_minmax(260px,0.28fr)]">
-            <Field label="LV-Name">
+            <Field label="Vorlagenname">
               <TextInput value={template.name} onChange={(event) => updateTemplate(template.id, { name: event.target.value })} />
             </Field>
             <Field label="Zugeordnet zu">
@@ -3943,17 +4062,46 @@ function TemplateCard({
               <p className="text-base font-semibold text-ink">{templatePositions.length}</p>
             </div>
             <div className="flex items-center justify-center gap-2 rounded border border-line bg-white px-3 py-2 text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">LV-Summe</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted">Vorlagensumme</p>
               <p className="text-base font-semibold text-ink">{formatCurrency(templateTotal)}</p>
+            </div>
+          </div>
+          <div className="rounded-md border border-line bg-slate-50 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">Textbausteine</p>
+                <p className="mt-1 text-sm text-muted">Diese Texte werden beim Laden der Angebotsvorlage in „Neues Angebot“ übernommen.</p>
+              </div>
+              <span className="rounded border border-line bg-white px-2 py-1 text-xs font-semibold text-muted">
+                {Object.values(template.textFields ?? {}).filter((value) => `${value ?? ""}`.trim()).length} Felder gepflegt
+              </span>
+            </div>
+            <div className="mt-3 grid gap-3">
+              {offerTemplateTextFieldLabels.map((field) => (
+                <Field key={field.key} label={field.label}>
+                  <TextArea
+                    value={template.textFields?.[field.key] ?? ""}
+                    onChange={(event) =>
+                      updateTemplate(template.id, {
+                        textFields: {
+                          ...(template.textFields ?? {}),
+                          [field.key]: event.target.value
+                        }
+                      })
+                    }
+                    className="min-h-20 bg-white"
+                  />
+                </Field>
+              ))}
             </div>
           </div>
         </div>
         <div className="grid content-start gap-2 rounded-md border border-line bg-slate-50 p-3">
           <button type="button" onClick={() => applyTemplate(template.id)} className="inline-flex h-9 items-center justify-center rounded-md bg-ink px-3 text-sm font-semibold text-white transition hover:bg-slate-700">
-            Zum Bearbeiten laden
+            Angebotsvorlage laden
           </button>
           <button type="button" onClick={() => overwriteTemplate(template.id)} className="inline-flex h-9 items-center justify-center rounded-md border border-line bg-white px-3 text-sm font-semibold text-ink transition hover:border-slate-300">
-            Mit aktuellem LV aktualisieren
+            Mit aktuellem Angebot aktualisieren
           </button>
           <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={() => duplicateTemplate(template.id)} className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-line bg-white px-3 text-sm font-semibold text-ink transition hover:border-slate-300">
@@ -3996,7 +4144,7 @@ function TemplateCard({
           ) : null}
           <div className="divide-y divide-line border-t border-line pt-1 text-sm">
             <div className="flex items-center justify-between py-1.5">
-              <span className="text-muted">Aktuelles LV</span>
+              <span className="text-muted">Aktuelles Angebot</span>
               <span className="font-semibold text-ink">{formatCurrency(currentTotal)}</span>
             </div>
             <div className="flex items-center justify-between py-1.5">
