@@ -77,22 +77,54 @@ type View =
   | "Angebotsvorlagen"
   | "Einstellungen";
 
-const navItems: { label: View; icon: typeof Home }[] = [
+const viewLabels: Record<View, string> = {
+  Dashboard: "Dashboard",
+  Projekte: "Angebote",
+  "Neues Angebot": "Neues Angebot",
+  "Neues LV": "Vorlage wählen",
+  "LV bearbeiten": "Leistungen bearbeiten",
+  Angebotsvorschau: "Prüfen & versenden",
+  "Auftrag & Abrechnung": "Auftrag & Abrechnung",
+  "KI-Assistenz": "KI-Assistenz",
+  Kunden: "Kunden",
+  Firmenprofile: "Firmenprofile",
+  Qualitätsmanagement: "Prüfung",
+  Positionsbibliothek: "Positionen",
+  Angebotsvorlagen: "Vorlagen verwalten",
+  Einstellungen: "Einstellungen"
+};
+
+const navItems: { label: View; icon: typeof Home; group?: "process" | "data" | "admin" | "expert" }[] = [
   { label: "Dashboard", icon: Home },
-  { label: "Projekte", icon: Archive },
-  { label: "Neues Angebot", icon: Plus },
-  { label: "Neues LV", icon: LayoutTemplate },
-  { label: "LV bearbeiten", icon: FileText },
-  { label: "Angebotsvorschau", icon: Eye },
-  { label: "Auftrag & Abrechnung", icon: ReceiptText },
-  { label: "KI-Assistenz", icon: Bot },
-  { label: "Kunden", icon: Contact },
-  { label: "Firmenprofile", icon: Building2 },
-  { label: "Qualitätsmanagement", icon: ShieldCheck },
-  { label: "Positionsbibliothek", icon: Library },
-  { label: "Angebotsvorlagen", icon: LayoutTemplate },
-  { label: "Einstellungen", icon: Settings }
+  { label: "Neues Angebot", icon: Plus, group: "process" },
+  { label: "Neues LV", icon: LayoutTemplate, group: "process" },
+  { label: "LV bearbeiten", icon: FileText, group: "process" },
+  { label: "Angebotsvorschau", icon: Eye, group: "process" },
+  { label: "Projekte", icon: Archive, group: "process" },
+  { label: "Auftrag & Abrechnung", icon: ReceiptText, group: "process" },
+  { label: "Kunden", icon: Contact, group: "data" },
+  { label: "Firmenprofile", icon: Building2, group: "data" },
+  { label: "Qualitätsmanagement", icon: ShieldCheck, group: "data" },
+  { label: "Angebotsvorlagen", icon: LayoutTemplate, group: "admin" },
+  { label: "KI-Assistenz", icon: Bot, group: "expert" },
+  { label: "Positionsbibliothek", icon: Library, group: "expert" },
+  { label: "Einstellungen", icon: Settings, group: "admin" }
 ];
+
+const processSteps: { label: string; view: View; hint: string }[] = [
+  { label: "1 Neues Angebot", view: "Neues Angebot", hint: "Firma, Kunde und Projektdaten erfassen" },
+  { label: "2 Vorlage wählen", view: "Neues LV", hint: "Passende Angebotsvorlage übernehmen" },
+  { label: "3 Leistungen bearbeiten", view: "LV bearbeiten", hint: "Titel, Positionen und Preise prüfen" },
+  { label: "4 Prüfen & versenden", view: "Angebotsvorschau", hint: "Speichern, PDF oder Kundenlink erstellen" },
+  { label: "5 Auftrag & Abrechnung", view: "Auftrag & Abrechnung", hint: "Nach Beauftragung weiterführen" }
+];
+
+const navGroupLabels: Record<NonNullable<(typeof navItems)[number]["group"]>, string> = {
+  process: "Angebotsprozess",
+  data: "Stammdaten & Prüfung",
+  admin: "Verwaltung",
+  expert: "Expertenfunktionen"
+};
 
 const storageKey = "smart-lv-state-v1";
 
@@ -1200,7 +1232,7 @@ export default function HomePage() {
 
   const company = profiles.find((profile) => profile.id === project.companyId) ?? profiles[0];
   const selectedProfile = profiles.find((profile) => profile.id === selectedProfileId) ?? company;
-  const workspaceTitle = activeView === "Dashboard" ? "Projektzentrale" : activeView;
+  const workspaceTitle = activeView === "Dashboard" ? "Projektzentrale" : viewLabels[activeView];
   const workspaceContext =
     activeView === "Firmenprofile"
       ? `Bearbeitet: ${selectedProfile.name} · Angebot aktiv: ${company.name}`
@@ -1985,20 +2017,27 @@ export default function HomePage() {
           </button>
         </div>
         <nav className="mt-8 grid gap-1">
-          {navItems.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              title={item.label}
-              onClick={() => setActiveView(item.label)}
-              className={`flex h-11 items-center gap-3 rounded-md px-3 text-left text-sm font-medium transition ${sidebarCollapsed ? "justify-center" : ""} ${
-                activeView === item.label ? "bg-slate-100 text-ink" : "text-muted hover:bg-slate-50 hover:text-ink"
-              }`}
-            >
-              <item.icon className="h-4 w-4" />
-              <span className={sidebarCollapsed ? "hidden" : ""}>{item.label}</span>
-            </button>
-          ))}
+          {navItems.map((item, index) => {
+            const previousGroup = navItems[index - 1]?.group;
+            const groupLabel = item.group ? navGroupLabels[item.group] : null;
+            const showGroup = groupLabel && item.group !== previousGroup && !sidebarCollapsed;
+            return (
+              <div key={item.label} className="grid gap-1">
+                {showGroup ? <p className="mt-3 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">{groupLabel}</p> : null}
+                <button
+                  type="button"
+                  title={viewLabels[item.label]}
+                  onClick={() => setActiveView(item.label)}
+                  className={`flex h-11 items-center gap-3 rounded-md px-3 text-left text-sm font-medium transition ${sidebarCollapsed ? "justify-center" : ""} ${
+                    activeView === item.label ? "bg-slate-100 text-ink" : "text-muted hover:bg-slate-50 hover:text-ink"
+                  }`}
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span className={sidebarCollapsed ? "hidden" : ""}>{viewLabels[item.label]}</span>
+                </button>
+              </div>
+            );
+          })}
         </nav>
         <div className={`mt-6 border-t border-line pt-4 ${sidebarCollapsed ? "grid justify-center gap-2" : "grid gap-3"}`}>
           <input ref={fileInputRef} type="file" accept="application/json,.json" onChange={handleJsonFile} className="hidden" />
@@ -2056,13 +2095,15 @@ export default function HomePage() {
                   activeView === item.label ? "border-blue-200 bg-blue-50 text-blue-700" : "border-line bg-white text-muted"
                 }`}
               >
-                {item.label}
+                {viewLabels[item.label]}
               </button>
             ))}
           </div>
         </header>
 
         <div className="px-4 py-6 md:px-8">
+          <ProcessGuide activeView={activeView} setActiveView={setActiveView} />
+
           {activeView === "Dashboard" ? (
             <Dashboard
               project={project}
@@ -2225,6 +2266,44 @@ export default function HomePage() {
       </section>
       <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
     </main>
+  );
+}
+
+function ProcessGuide({ activeView, setActiveView }: { activeView: View; setActiveView: (view: View) => void }) {
+  const activeIndex = processSteps.findIndex((step) => step.view === activeView);
+
+  return (
+    <div className="no-print mb-6 rounded-lg border border-line bg-white p-4 shadow-sm">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-ink">Geführter Angebotsprozess</p>
+          <p className="mt-1 text-xs text-muted">Von der Erfassung bis zum Versand in fünf Schritten.</p>
+        </div>
+        <div className="grid gap-2 md:grid-cols-5 xl:min-w-[820px]">
+          {processSteps.map((step, index) => {
+            const active = step.view === activeView;
+            const done = activeIndex > index;
+            return (
+              <button
+                key={step.view}
+                type="button"
+                onClick={() => setActiveView(step.view)}
+                className={`rounded-md border px-3 py-3 text-left transition ${
+                  active
+                    ? "border-blue-200 bg-blue-50 text-blue-800"
+                    : done
+                      ? "border-emerald-100 bg-emerald-50 text-emerald-900"
+                      : "border-line bg-white text-ink hover:border-slate-300"
+                }`}
+              >
+                <span className="block text-xs font-semibold uppercase tracking-[0.12em]">{step.label}</span>
+                <span className={`mt-1 block text-[11px] leading-4 ${active ? "text-blue-700" : done ? "text-emerald-800" : "text-muted"}`}>{step.hint}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -2828,7 +2907,7 @@ function NewLvWorkspace({
       <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
         <div className="grid gap-4 xl:grid-cols-[1fr_240px_260px_auto_auto] xl:items-end">
           <div>
-            <SectionTitle title="Neues LV aus Angebotsvorlage" kicker={company.name} />
+            <SectionTitle title="Vorlage wählen" kicker={company.name} />
             <p className="mt-3 max-w-4xl text-sm leading-6 text-muted">
               Wähle ein Firmenprofil und danach eine gespeicherte Angebotsvorlage. Diese kann komplett übernommen werden; einzelne Titel und Positionen können rechts gezielt in das aktuelle Angebots-LV kopiert werden.
             </p>
@@ -3508,8 +3587,8 @@ function QualityManagement({
       area: "Angebotsdatenbank",
       title: "Aktives Angebot fehlt in der Angebotsliste",
       detail:
-        "Das aktuell geöffnete Angebot war nicht als eigener Datensatz in der Projektliste verknüpft. Die App synchronisiert dies künftig automatisch; öffne Projekte zur Kontrolle.",
-      action: "Projekte öffnen"
+        "Das aktuell geöffnete Angebot war nicht als eigener Datensatz in der Angebotsliste verknüpft. Die App synchronisiert dies künftig automatisch; öffne Angebote zur Kontrolle.",
+      action: "Angebote öffnen"
     });
   } else {
     const savedNet = calculateSummary(activeSavedOffer.groups, activeSavedOffer.project).net;
@@ -3525,10 +3604,10 @@ function QualityManagement({
         id: "offer-database-stale",
         severity: "Warnung",
         area: "Angebotsdatenbank",
-        title: "Projektliste war nicht synchron mit dem aktiven Angebot",
+        title: "Angebotsliste war nicht synchron mit dem aktiven Angebot",
         detail:
-          "Die gespeicherte Angebotsliste enthält abweichende Projekt-, Firmenprofil-, LV- oder Summendaten. Die App synchronisiert aktive Angebote künftig automatisch mit der Projektliste.",
-        action: "Projekte öffnen"
+          "Die gespeicherte Angebotsliste enthält abweichende Projekt-, Firmenprofil-, LV- oder Summendaten. Die App synchronisiert aktive Angebote künftig automatisch mit der Angebotsliste.",
+        action: "Angebote öffnen"
       });
     }
   }
@@ -3698,7 +3777,7 @@ function QualityManagement({
     if (issue.id === "mrea-ai-copy") repairCompanyLvAlignment();
     else if (issue.id === "mrea-master-missing") applyMasterLv();
     else if (issue.action === "Angebotsdaten öffnen") setActiveView("Neues Angebot");
-    else if (issue.action === "Projekte öffnen") setActiveView("Projekte");
+    else if (issue.action === "Angebote öffnen") setActiveView("Projekte");
     else if (issue.action === "Kunden öffnen") setActiveView("Kunden");
     else if (issue.action === "Firmenprofil öffnen") setActiveView("Firmenprofile");
     else if (issue.action === "LV bearbeiten") setActiveView("LV bearbeiten");
@@ -3710,7 +3789,7 @@ function QualityManagement({
       <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
         <div className="grid gap-5 xl:grid-cols-[1fr_260px] xl:items-center">
           <div>
-            <SectionTitle title="Qualitätsmanagement" kicker={company.name} />
+            <SectionTitle title="Prüfung" kicker={company.name} />
             <p className="mt-3 max-w-4xl text-sm leading-6 text-muted">
               Die Prüfung kontrolliert, ob Firmenprofil, Angebotsdaten, Angebotsvorlage, Positionen, Kalkulation, Speicherung und nächster Workflow-Schritt zusammenpassen.
             </p>
@@ -3923,7 +4002,7 @@ function PositionLibrary({
   return (
     <div className="grid gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-white p-6 shadow-sm">
-        <SectionTitle title="Positionsbibliothek" />
+        <SectionTitle title="Positionen" />
         <button type="button" onClick={addLibraryPosition} className="inline-flex h-10 items-center gap-2 rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-slate-700">
           <Plus className="h-4 w-4" />
           Neue Position

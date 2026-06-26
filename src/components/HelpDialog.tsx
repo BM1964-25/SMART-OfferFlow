@@ -112,11 +112,16 @@ const helpSections: HelpSection[] = [
     body: (
       <>
         <p>
-          Links befindet sich die Sidebar mit den Arbeitsbereichen. Oben im Header sehen Sie das aktive Firmenprofil, Speicher- und Exportaktionen,
-          den Druckbutton sowie diese Hilfe.
+          Links befindet sich die Sidebar mit den Arbeitsbereichen. Die Reihenfolge folgt dem Angebotsprozess: Neues Angebot, Vorlage wählen,
+          Leistungen bearbeiten, prüfen und versenden, danach Auftrag und Abrechnung.
         </p>
         <p>
-          Die Sidebar kann eingeklappt werden. Über die unteren Symbole speichern oder laden Sie den aktuellen App-Stand als JSON-Datei.
+          Stammdaten wie Kunden und Firmenprofile sowie Prüfung, Verwaltung und Expertenfunktionen sind darunter getrennt angeordnet. Über die unteren
+          Symbole speichern oder laden Sie den aktuellen App-Stand als JSON-Datei.
+        </p>
+        <p>
+          Oberhalb des Arbeitsbereichs zeigt die Prozessleiste die fünf wichtigsten Schritte bis zum versendbaren Angebot. Jeder Schritt kann direkt
+          angeklickt werden.
         </p>
       </>
     )
@@ -135,7 +140,7 @@ const helpSections: HelpSection[] = [
           <li>Angebotsvorschau, Summen, Netto, Umsatzsteuer und Brutto prüfen.</li>
           <li>Angebot als teilbaren Link vorbereiten, kopieren und per E-Mail an Kunden versenden.</li>
           <li>Auftrag, Nachträge, Leistungsnachweise, Rechnungsplan und offenen Rest verfolgen.</li>
-          <li>Qualitätsmanagement für Plausibilität, Profilzuordnung und Datenstand nutzen.</li>
+          <li>Prüfung für Plausibilität, Profilzuordnung und Datenstand nutzen.</li>
         </ul>
         <h3>Optionale KI-Unterstützung</h3>
         <ul>
@@ -153,14 +158,11 @@ const helpSections: HelpSection[] = [
     body: (
       <>
         <ol>
-          <li>Firmenprofil prüfen oder auswählen.</li>
-          <li>Kunde anlegen oder bestehenden Kunden übernehmen.</li>
-          <li>Neues Angebot mit Projektangaben, Einleitung, Anlass, Zielsetzung und Konditionen erstellen.</li>
-          <li>Passende Angebotsvorlage übernehmen oder ein leeres LV starten.</li>
-          <li>Titel und Positionen anpassen, löschen oder ergänzen.</li>
-          <li>Fertiges LV als Angebotsvorlage speichern, damit es für spätere Projekte desselben Firmenprofils wiederverwendet werden kann.</li>
-          <li>Vorschau prüfen, Summen kontrollieren und PDF erstellen oder Angebot als Link versenden.</li>
-          <li>Nach Beauftragung Auftrag, Abrechnung, Nachträge und Leistungsnachweise fortführen.</li>
+          <li>Neues Angebot: Firmenprofil, Kunde, Projektdaten, Angebotsnummer und Textbausteine erfassen.</li>
+          <li>Vorlage wählen: passende Angebotsvorlage für Firmenprofil und Thema übernehmen.</li>
+          <li>Leistungen bearbeiten: Titel, Positionen, Mengen, Einheiten, Preise und Texte anpassen.</li>
+          <li>Prüfen & versenden: Angebotsvorschau kontrollieren, Angebot speichern, PDF erstellen oder Kundenlink versenden.</li>
+          <li>Auftrag & Abrechnung: nach Beauftragung Nachträge, Leistungsnachweise, Rechnungsplan und offenen Rest fortführen.</li>
         </ol>
       </>
     )
@@ -285,7 +287,7 @@ const helpSections: HelpSection[] = [
             <strong>API-Key wird nicht akzeptiert:</strong> Key ohne Leerzeichen, Zeilenumbrüche oder zusätzliche Zeichen eintragen und erneut prüfen.
           </li>
           <li>
-            <strong>Falsche Projektdaten im Firmenprofil:</strong> Dashboard oder Qualitätsmanagement öffnen und Profil-/LV-Zuordnung bereinigen.
+            <strong>Falsche Projektdaten im Firmenprofil:</strong> Dashboard oder Prüfung öffnen und Profil-/LV-Zuordnung bereinigen.
           </li>
           <li>
             <strong>Druck/PDF sieht anders aus:</strong> Browser-Druckvorschau prüfen und Skalierung auf Standard beziehungsweise 100 % stellen.
