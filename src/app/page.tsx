@@ -2406,8 +2406,8 @@ export default function HomePage() {
 
   if (publicOfferMode) {
     return (
-      <main className="min-h-screen bg-canvas px-4 py-6 md:px-8">
-        <div className="mx-auto max-w-6xl">
+      <main className="min-h-screen bg-canvas">
+        <div className="mx-auto max-w-6xl px-4 py-6 md:px-8">
           {publicOfferLoading ? (
             <div className="rounded-lg border border-line bg-white p-8 text-center shadow-sm">
               <p className="text-lg font-semibold text-ink">Angebot wird geladen</p>
@@ -2422,6 +2422,7 @@ export default function HomePage() {
             <OfferPreview project={project} groups={groups} profiles={profiles} publicView />
           )}
         </div>
+        <AppFooter />
       </main>
     );
   }
@@ -2753,8 +2754,52 @@ export default function HomePage() {
           {activeView === "Einstellungen" ? <SettingsPanel project={project} updateProject={updateProject} /> : null}
         </div>
       </section>
+      <AppFooter />
       <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
     </main>
+  );
+}
+
+function AppFooter() {
+  const legalLinks = [
+    { label: "Impressum", href: "https://www.built-smart-hub.com/impressum" },
+    { label: "Datenschutz", href: "https://www.built-smart-hub.com/datenschutz" },
+    { label: "AGB", href: "https://www.built-smart-hub.com/agb" },
+    { label: "Widerrufbelehrung", href: "https://www.built-smart-hub.com/widerrufbelehrung" }
+  ];
+
+  return (
+    <footer className="no-print relative z-40 border-t border-line bg-canvas px-4 py-10 md:px-8">
+      <div className="flex flex-col items-center justify-between gap-8 text-center lg:flex-row lg:text-left">
+        <div className="flex flex-col items-center gap-4 sm:flex-row sm:text-left">
+          <div className="h-14 w-14 shrink-0">
+            <div
+              role="img"
+              aria-label="SMART OfferFlow"
+              className="h-full w-full bg-contain bg-center bg-no-repeat"
+              style={{ backgroundImage: "url('/smart-offerflow-logo.png')" }}
+            />
+          </div>
+          <div>
+            <p className="text-lg font-semibold leading-tight text-ink">SMART OfferFlow</p>
+            <p className="mt-1 max-w-xl text-sm leading-6 text-muted">Angebote, Aufträge und Abrechnung strukturiert erstellen, prüfen und weiterführen.</p>
+          </div>
+        </div>
+        <div className="grid gap-2 text-sm text-muted lg:justify-items-end">
+          <p>© 2026 SmartBuilt-AI · Powered by BuiltSmart Hub - Bernhard Metzger</p>
+          <nav aria-label="Rechtliche Links" className="flex flex-wrap justify-center gap-x-2 gap-y-1 lg:justify-end">
+            {legalLinks.map((link, index) => (
+              <span key={link.href} className="inline-flex items-center gap-2">
+                {index > 0 ? <span className="text-slate-300">|</span> : null}
+                <a href={link.href} target="_blank" rel="noreferrer" className="text-muted underline-offset-4 transition hover:text-ink hover:underline">
+                  {link.label}
+                </a>
+              </span>
+            ))}
+          </nav>
+        </div>
+      </div>
+    </footer>
   );
 }
 
