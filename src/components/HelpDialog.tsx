@@ -10,6 +10,54 @@ type HelpSection = {
   body: React.ReactNode;
 };
 
+function HelpWorkflow({ steps }: { steps: Array<{ title: string; text: string }> }) {
+  return (
+    <div className="help-workflow">
+      {steps.map((step, index) => (
+        <div key={step.title} className="help-workflow-step">
+          <span className="help-step-number">{index + 1}</span>
+          <div>
+            <p className="help-step-title">{step.title}</p>
+            <p className="help-step-text">{step.text}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HelpCards({ items }: { items: Array<{ title: string; text: string }> }) {
+  return (
+    <div className="help-card-grid">
+      {items.map((item) => (
+        <div key={item.title} className="help-card">
+          <p className="help-card-title">{item.title}</p>
+          <p className="help-card-text">{item.text}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HelpChecklist({ items }: { items: string[] }) {
+  return (
+    <ul className="help-checklist">
+      {items.map((item) => (
+        <li key={item}>{item}</li>
+      ))}
+    </ul>
+  );
+}
+
+function HelpNote({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="help-note">
+      <p className="help-note-title">{title}</p>
+      <div className="help-note-body">{children}</div>
+    </div>
+  );
+}
+
 const helpSections: HelpSection[] = [
   {
     id: "overview",
@@ -20,10 +68,17 @@ const helpSections: HelpSection[] = [
           SMART OfferFlow unterstützt die Erstellung von Angeboten, Leistungsverzeichnissen, Auftragsständen und Abrechnungsgrundlagen in einem
           durchgängigen Prozess. Die App verbindet Firmenprofile, Kunden, Projektangaben, Angebotsvorlagen, LV-Positionen, Nachträge und Leistungsnachweise.
         </p>
-        <p>
-          Die Kernfunktionen sind ohne KI nutzbar. KI-Funktionen ergänzen den Prozess optional, zum Beispiel beim Formulieren, Strukturieren oder
-          Generieren von LV-Vorschlägen.
-        </p>
+        <HelpCards
+          items={[
+            { title: "Angebote", text: "Angebotskopf, Projektangaben, Textbausteine, Leistungsverzeichnis und Summen in einer prüffähigen Vorschau." },
+            { title: "Vorlagen", text: "Firmenbezogene LV-Vorlagen für wiederkehrende Themen wie Baurevision, Projektsteuerung oder Beratung." },
+            { title: "Abrechnung", text: "Auftragsstand, Nachträge, Leistungsnachweise, Rechnungsplan und offener Rest bleiben im selben Vorgang." },
+            { title: "KI optional", text: "KI unterstützt beim Formulieren, Strukturieren und Erstellen von LV-Vorschlägen, bleibt aber ergänzend." }
+          ]}
+        />
+        <HelpNote title="Grundprinzip">
+          <p>Die App führt von der ersten Angebotsanlage bis zur späteren Abrechnung. Leere optionale Felder werden in der Vorschau nicht ausgegeben.</p>
+        </HelpNote>
       </>
     )
   },
@@ -52,14 +107,14 @@ const helpSections: HelpSection[] = [
           </p>
         </div>
         <h3>API-Key erstellen</h3>
-        <ol>
-          <li>Anthropic Console öffnen.</li>
-          <li>Konto erstellen oder einloggen.</li>
-          <li>Bereich „API Keys“ öffnen.</li>
-          <li>Neuen API-Key erstellen.</li>
-          <li>API-Key kopieren.</li>
-          <li>API-Key in SMART OfferFlow unter „KI-Assistenz“ eintragen.</li>
-        </ol>
+        <HelpWorkflow
+          steps={[
+            { title: "Anthropic Console öffnen", text: "Mit dem eigenen Anthropic-Konto anmelden." },
+            { title: "API Keys öffnen", text: "Im Bereich API Keys einen neuen Schlüssel erstellen." },
+            { title: "Key kopieren", text: "Den API-Key sofort sicher speichern, weil er oft nur einmal vollständig angezeigt wird." },
+            { title: "In SMART OfferFlow eintragen", text: "Unter KI-Assistenz speichern und prüfen." }
+          ]}
+        />
         <p>
           Hinweis: Ein API-Key wird häufig nur einmal vollständig angezeigt. Speichern Sie ihn deshalb sicher, bevor Sie das Fenster schließen.
         </p>
@@ -90,15 +145,25 @@ const helpSections: HelpSection[] = [
     title: "Schnellstart",
     body: (
       <>
-        <ol>
-          <li>Lizenzschlüssel aktivieren, falls Ihre Version eine Lizenzprüfung verwendet.</li>
-          <li>Optional den Anthropic API-Key unter „KI-Assistenz“ eintragen und prüfen.</li>
-          <li>Unter „Neues Angebot“ Firmenprofil, Kunde, Projektdaten, Angebotsnummer und Textbausteine erfassen.</li>
-          <li>Unter „Vorlage wählen“ die passende Angebotsvorlage für Firmenprofil und Thema übernehmen.</li>
-          <li>Unter „Leistungen bearbeiten“ Titel, Positionen, Mengen, Einheiten und Preise anpassen.</li>
-          <li>Unter „Prüfen & versenden“ das Angebot kontrollieren, speichern, als PDF ausgeben oder als Kundenlink versenden.</li>
-          <li>Nach Beauftragung unter „Auftrag & Abrechnung“ Nachträge, Leistungsnachweise und Abrechnungsstand weiterführen.</li>
-        </ol>
+        <HelpWorkflow
+          steps={[
+            { title: "Neues Angebot", text: "Firmenprofil, Kunde, Projektdaten, Angebotsnummer und Textbausteine erfassen." },
+            { title: "Vorlage wählen", text: "Passende LV-Vorlage zum Firmenprofil und Thema übernehmen." },
+            { title: "Leistungen bearbeiten", text: "Titel, Positionen, Mengen, Einheiten, Preise und Hinweise prüfen." },
+            { title: "Prüfen & versenden", text: "Angebot speichern, PDF erstellen, Einzelangebot sichern oder Kundenlink erzeugen." },
+            { title: "Auftrag & Abrechnung", text: "Nach Beauftragung Nachträge, Leistungsnachweise, Rechnungsplan und offenen Rest fortführen." }
+          ]}
+        />
+        <h3>Vor dem Versand prüfen</h3>
+        <HelpChecklist
+          items={[
+            "Richtiges Firmenprofil gewählt",
+            "Empfänger und Ansprechpartner korrekt",
+            "Angebotsnummer und Datum plausibel",
+            "LV-Positionen, Mengen, Einheiten und Preise geprüft",
+            "Zahlungsbedingungen, AGB-Link und Footer vollständig"
+          ]}
+        />
         <p>
           Die Einrichtung von Lizenzschlüssel und API-Key ist im Kapitel „Einrichtung & Zugang“ beschrieben. Ohne API-Key bleiben alle nicht
           KI-basierten Arbeitsbereiche nutzbar.
@@ -111,18 +176,19 @@ const helpSections: HelpSection[] = [
     title: "Bedienoberfläche",
     body: (
       <>
-        <p>
-          Links befindet sich die Sidebar mit den Arbeitsbereichen. Die Reihenfolge folgt dem Angebotsprozess: Neues Angebot, Vorlage wählen,
-          Leistungen bearbeiten, prüfen und versenden, danach Auftrag und Abrechnung.
-        </p>
-        <p>
-          Stammdaten wie Kunden und Firmenprofile sowie Prüfung, Verwaltung und Expertenfunktionen sind darunter getrennt angeordnet. Über die unteren
-          Symbole speichern oder laden Sie den kompletten App-Stand als JSON-Datei oder laden ein einzelnes Angebot als Projektdatei.
-        </p>
-        <p>
-          Oberhalb des Arbeitsbereichs zeigt die Prozessleiste die fünf wichtigsten Schritte bis zum versendbaren Angebot. Jeder Schritt kann direkt
-          angeklickt werden.
-        </p>
+        <HelpCards
+          items={[
+            { title: "Sidebar", text: "Links stehen die Arbeitsbereiche in Prozessreihenfolge: Angebot, Vorlage, Leistungen, Prüfung, Abrechnung." },
+            { title: "Prozessleiste", text: "Oben im Arbeitsbereich führen fünf Schritte direkt zum versendbaren Angebot." },
+            { title: "Start-Assistent", text: "Zeigt fehlende Punkte wie Kunde, LV oder Prüfung und führt direkt in den passenden Bereich." },
+            { title: "Kopfbereich", text: "Dort stehen aktives Firmenprofil, Speichern, Exportieren, Drucken und Hilfe." },
+            { title: "Stammdaten", text: "Kunden und Firmenprofile werden getrennt gepflegt und danach in Angebote übernommen." },
+            { title: "Dateien", text: "Unten in der Sidebar können kompletter App-Stand oder einzelne Angebote geladen werden." }
+          ]}
+        />
+        <HelpNote title="Orientierung">
+          <p>Beginnen Sie für ein neues Angebot immer mit „Neues Angebot“. Danach Vorlage wählen, Leistungen bearbeiten und zuletzt prüfen.</p>
+        </HelpNote>
       </>
     )
   },
@@ -131,24 +197,25 @@ const helpSections: HelpSection[] = [
     title: "Wichtige Funktionen",
     body: (
       <>
-        <ul>
-          <li>Firmenprofile mit Kontaktdaten, Farben, Footer, AGB-Link und Terminbuchung pflegen.</li>
-          <li>Kunden speichern und in Angebote übernehmen.</li>
-          <li>Angebotskopf, Projektinformationen, Textbausteine und Konditionen erfassen.</li>
-          <li>Leistungsverzeichnisse aus „Vorlagen verwalten“ übernehmen, bearbeiten und wieder als Angebotsvorlage speichern.</li>
-          <li>Positionen und Titel löschen, duplizieren, bearbeiten und neu nummerieren.</li>
-          <li>Unter „Prüfen & versenden“ Angebotsaufbau, Summen, Netto, Umsatzsteuer und Brutto prüfen.</li>
-          <li>Angebot als teilbaren Link vorbereiten, kopieren und per E-Mail an Kunden versenden.</li>
-          <li>Auftrag, Nachträge, Leistungsnachweise, Rechnungsplan und offenen Rest verfolgen.</li>
-          <li>Prüfung für Plausibilität, Profilzuordnung und Datenstand nutzen.</li>
-        </ul>
+        <HelpCards
+          items={[
+            { title: "Firmenprofile", text: "Kontaktdaten, Farben, Footer, AGB-Link, Terminbuchung und eigene Vorlagen pflegen." },
+            { title: "Kunden", text: "Kundendaten speichern und mit Bestätigung in das aktuelle Angebot übernehmen." },
+            { title: "Textbausteine", text: "Einleitung, Anlass, Zielsetzung, Leistungsrahmen und rechtliche Abschnitte projektbezogen steuern." },
+            { title: "LV bearbeiten", text: "Titel und Positionen löschen, duplizieren, ändern, neu nummerieren und zurück in Vorlagen übernehmen." },
+            { title: "Angebotsliste", text: "Gespeicherte Angebote filtern, wieder öffnen, exportieren, archivieren oder duplizieren." },
+            { title: "Abrechnung", text: "Nachträge, Leistungsnachweise, Rechnungsplan und offenen Rest im Auftrag weiterführen." }
+          ]}
+        />
         <h3>Optionale KI-Unterstützung</h3>
-        <ul>
-          <li>LV-Vorschläge aus Projektdaten generieren.</li>
-          <li>Textvorschläge für Angebots- und Leistungsbausteine vorbereiten.</li>
-          <li>Positionen strukturieren und fachlich ergänzen.</li>
-          <li>Formulierungen für professionelle Angebotsunterlagen beschleunigen.</li>
-        </ul>
+        <HelpChecklist
+          items={[
+            "LV-Vorschläge aus Projektdaten generieren",
+            "Textvorschläge für Angebots- und Leistungsbausteine vorbereiten",
+            "Positionen verständlicher formulieren und fachlich ergänzen",
+            "Rohtexte in professionelle Angebotsformulierungen überführen"
+          ]}
+        />
       </>
     )
   },
@@ -157,13 +224,20 @@ const helpSections: HelpSection[] = [
     title: "Typischer Workflow",
     body: (
       <>
-        <ol>
-          <li>Neues Angebot: Firmenprofil, Kunde, Projektdaten, Angebotsnummer und Textbausteine erfassen.</li>
-          <li>Vorlage wählen: passende Angebotsvorlage für Firmenprofil und Thema übernehmen.</li>
-          <li>Leistungen bearbeiten: Titel, Positionen, Mengen, Einheiten, Preise und Texte anpassen.</li>
-          <li>Prüfen & versenden: Angebotsvorschau kontrollieren, Angebot speichern, PDF erstellen oder Kundenlink versenden.</li>
-          <li>Auftrag & Abrechnung: nach Beauftragung Nachträge, Leistungsnachweise, Rechnungsplan und offenen Rest fortführen.</li>
-        </ol>
+        <HelpWorkflow
+          steps={[
+            { title: "Vorbereiten", text: "Firmenprofil, Kunde und Angebotsnummer auswählen oder neu anlegen." },
+            { title: "Inhalt festlegen", text: "Projektbeschreibung, Aufgabenstellung, Zielsetzung, Leistungsrahmen und Hinweise erfassen." },
+            { title: "LV übernehmen", text: "Eine passende Vorlage laden oder ein leeres LV aufbauen." },
+            { title: "Kalkulieren", text: "Mengen, Einheiten, Einzelpreise, Pauschalen und optionale Positionen prüfen." },
+            { title: "Prüfen", text: "Vorschau kontrollieren, Plausibilitätsprüfung nutzen und Angebot speichern." },
+            { title: "Versenden", text: "PDF erzeugen, Einzelangebot sichern oder Kundenlink erstellen." },
+            { title: "Weiterführen", text: "Bei Beauftragung Nachträge, Leistungsnachweise und Abrechnung dokumentieren." }
+          ]}
+        />
+        <HelpNote title="Praktische Reihenfolge">
+          <p>Wenn eine Vorlage bereits passt, zuerst Vorlage laden und danach Texte und Preise individualisieren. Das spart am meisten Zeit.</p>
+        </HelpNote>
       </>
     )
   },
@@ -176,6 +250,14 @@ const helpSections: HelpSection[] = [
           SMART OfferFlow speichert den Arbeitsstand lokal im Browser und kann zusätzlich JSON-Dateien exportieren und wieder laden. Dadurch lassen
           sich Firmenprofile, Angebote, Kunden, Angebotsvorlagen, LV-Positionen und Abrechnungsdaten sichern.
         </p>
+        <HelpCards
+          items={[
+            { title: "Lokal speichern", text: "Der Browser hält den aktuellen Arbeitsstand für diese Domain vor." },
+            { title: "JSON sichern", text: "Speichert den kompletten App-Stand als Datei: Profile, Kunden, Angebote, Vorlagen und Abrechnung." },
+            { title: "Einzelangebot sichern", text: "Speichert nur ein konkretes Angebot mit Projekt, LV, Texten und Abrechnung." },
+            { title: "Kundenlink", text: "Speichert das Angebot für den Empfänger als kurzen Link, wenn Supabase eingerichtet ist." }
+          ]}
+        />
         <h3>Angebotsdatenbank</h3>
         <p>
           Unter „Angebote“ werden gespeicherte Angebote mit Firmenprofil, Status, Version, Angebotswert und Änderungsdatum angezeigt. Die Liste kann
@@ -203,6 +285,14 @@ const helpSections: HelpSection[] = [
           Prüfen Sie vor dem Versand eines Angebots insbesondere Firmenprofil, Empfänger, Projektdaten, Leistungsumfang, Preise, Umsatzsteuer,
           Zahlungsbedingungen, AGB-Link und Footer.
         </p>
+        <HelpChecklist
+          items={[
+            "Angebot speichern: aktuelles Angebot in der Angebotsliste aktualisieren",
+            "Als JSON sichern: gesamten App-Stand auf dem Rechner speichern",
+            "Einzelangebot sichern: nur ein Angebot als Datei weitergeben",
+            "Einzelangebot laden: importiert ein Angebot ohne den ganzen App-Stand zu ersetzen"
+          ]}
+        />
         <h3>Leere Textfelder</h3>
         <p>
           Optionale Textfelder werden nur dann unter „Prüfen & versenden“ ausgegeben, wenn dort Inhalt eingetragen ist. Wenn Sie ein Textfeld
