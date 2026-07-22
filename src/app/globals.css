@@ -340,11 +340,13 @@ input[type="number"]::-webkit-outer-spin-button {
   }
 
   .offer-footer {
-    display: none !important;
+    display: block !important;
+    margin-top: 18mm !important;
+    padding-top: 5mm !important;
   }
 
   .offer-footer-full {
-    display: none !important;
+    display: block !important;
   }
 
   .offer-footer-date {

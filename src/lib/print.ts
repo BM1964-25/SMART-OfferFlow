@@ -119,10 +119,12 @@ export function printElement(selector: string, title: string) {
         display: none !important;
       }
       .offer-footer {
-        display: none !important;
+        display: block !important;
+        margin-top: 18mm !important;
+        padding-top: 5mm !important;
       }
       .offer-footer-full {
-        display: none !important;
+        display: block !important;
       }
       .offer-footer-date {
         display: none !important;
