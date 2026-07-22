@@ -212,7 +212,15 @@ export function OfferPreview({
       hasText(section.body) ||
       (section.bullets ?? []).some(hasText) ||
       hasText(section.afterBulletsText) ||
-      (section.tableRows ?? []).some((row) => hasText(row.label) || hasText(row.value))
+      (section.tableRows ?? []).some((row) => hasText(row.label) || hasText(row.value)) ||
+      (section.subsections ?? []).some(
+        (subsection) =>
+          hasText(subsection.title) ||
+          hasText(subsection.body) ||
+          (subsection.bullets ?? []).some(hasText) ||
+          hasText(subsection.afterBulletsText) ||
+          (subsection.tableRows ?? []).some((row) => hasText(row.label) || hasText(row.value))
+      )
   );
   const projectTextCards = [
     { key: "shortDescription" as const, title: "Aufgabenstellung", body: project.shortDescription },
@@ -420,9 +428,14 @@ export function OfferPreview({
         <section className="print-section border-t border-line py-8">
           <div className="grid gap-6">
             {structuredSections.map((section, index) => {
-              const bullets = (section.bullets ?? []).filter(hasText);
-              const subtitles = [section.subtitle, ...(section.subtitles ?? [])].filter(hasText);
-              const tableRows = (section.tableRows ?? []).filter((row) => hasText(row.label) || hasText(row.value));
+              const sectionSubsections = (section.subsections ?? []).filter(
+                (subsection) =>
+                  hasText(subsection.title) ||
+                  hasText(subsection.body) ||
+                  (subsection.bullets ?? []).some(hasText) ||
+                  hasText(subsection.afterBulletsText) ||
+                  (subsection.tableRows ?? []).some((row) => hasText(row.label) || hasText(row.value))
+              );
               return (
                 <div key={section.id} className="break-inside-avoid">
                   {hasText(section.title) ? (
@@ -430,32 +443,42 @@ export function OfferPreview({
                       {index + 1}. {section.title}
                     </h2>
                   ) : null}
-                  {subtitles.length > 0 ? (
-                    <div className={hasText(section.title) ? "mt-3 grid gap-2" : "grid gap-2"}>
-                      {subtitles.map((subtitle, subtitleIndex) => (
-                        <h3 key={`${section.id}-${subtitleIndex}`} className="text-base font-semibold text-black">
-                          {index + 1}.{subtitleIndex + 1} {subtitle}
-                        </h3>
-                      ))}
-                    </div>
-                  ) : null}
-                  {hasText(section.body) ? <TextBlock text={section.body} className={`${hasText(section.title) || subtitles.length > 0 ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} /> : null}
-                  {bullets.length > 0 ? (
-                    <ul className="mt-3 list-disc space-y-1 pl-6 leading-7 text-black">
-                      {bullets.map((bullet) => (
-                        <li key={bullet}>{bullet}</li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  {hasText(section.afterBulletsText) ? <TextBlock text={section.afterBulletsText} className="mt-3 whitespace-pre-line leading-7 text-black" /> : null}
-                  {tableRows.length > 0 ? (
-                    <div className="mt-4 overflow-hidden rounded-md border border-[#D9DEE5]">
-                      {tableRows.map((row) => (
-                        <div key={row.id} className="grid gap-3 border-b border-[#D9DEE5] px-4 py-3 text-sm last:border-b-0 md:grid-cols-[1fr_220px]">
-                          <p className="font-medium text-black">{row.label}</p>
-                          <p className="font-semibold text-black md:text-right">{row.value}</p>
-                        </div>
-                      ))}
+                  {sectionSubsections.length > 0 ? (
+                    <div className={hasText(section.title) ? "mt-4 grid gap-5" : "grid gap-5"}>
+                      {sectionSubsections.map((subsection, subsectionIndex) => {
+                        const bullets = (subsection.bullets ?? []).filter(hasText);
+                        const tableRows = (subsection.tableRows ?? []).filter((row) => hasText(row.label) || hasText(row.value));
+                        return (
+                          <div key={subsection.id} className="break-inside-avoid">
+                            {hasText(subsection.title) ? (
+                              <h3 className="text-base font-semibold text-black">
+                                {index + 1}.{subsectionIndex + 1} {subsection.title}
+                              </h3>
+                            ) : null}
+                            {hasText(subsection.body) ? (
+                              <TextBlock text={subsection.body} className={`${hasText(subsection.title) ? "mt-2 " : ""}whitespace-pre-line leading-7 text-black`} />
+                            ) : null}
+                            {bullets.length > 0 ? (
+                              <ul className="mt-3 list-disc space-y-1 pl-6 leading-7 text-black">
+                                {bullets.map((bullet) => (
+                                  <li key={bullet}>{bullet}</li>
+                                ))}
+                              </ul>
+                            ) : null}
+                            {hasText(subsection.afterBulletsText) ? <TextBlock text={subsection.afterBulletsText} className="mt-3 whitespace-pre-line leading-7 text-black" /> : null}
+                            {tableRows.length > 0 ? (
+                              <div className="mt-4 overflow-hidden rounded-md border border-[#D9DEE5]">
+                                {tableRows.map((row) => (
+                                  <div key={row.id} className="grid gap-3 border-b border-[#D9DEE5] px-4 py-3 text-sm last:border-b-0 md:grid-cols-[1fr_220px]">
+                                    <p className="font-medium text-black">{row.label}</p>
+                                    <p className="font-semibold text-black md:text-right">{row.value}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : null}
                 </div>

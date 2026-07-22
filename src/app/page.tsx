@@ -65,7 +65,7 @@ import {
 } from "@/lib/data";
 import { printElement } from "@/lib/print";
 import { readOfferSharePayloadFromLocation, readOfferTokenFromLocation } from "@/lib/share";
-import { ChangeOrder, CompanyProfile, InvoicePlanItem, OfferSectionKey, OfferStatus, OrderBilling, Position, PositionGroup, Project, StructuredOfferSection, WorkLogItem } from "@/lib/types";
+import { ChangeOrder, CompanyProfile, InvoicePlanItem, OfferSectionKey, OfferStatus, OrderBilling, Position, PositionGroup, Project, StructuredOfferSection, StructuredOfferSubsection, WorkLogItem } from "@/lib/types";
 
 type View =
   | "Dashboard"
@@ -464,14 +464,65 @@ function makeId(prefix: string) {
 }
 
 function cloneStructuredSections(sections: StructuredOfferSection[] = defaultStructuredOfferSections) {
-  return sections.map((section) => ({
+  return sections.map((section, index) => ({
     ...section,
     subtitle: section.subtitle ?? "",
     subtitles: [...(section.subtitles ?? [])],
     bullets: [...(section.bullets ?? [])],
     afterBulletsText: section.afterBulletsText ?? "",
-    tableRows: (section.tableRows ?? []).map((row) => ({ ...row }))
+    tableRows: (section.tableRows ?? []).map((row) => ({ ...row })),
+    subsections: normalizeStructuredSubsections(section, index)
   }));
+}
+
+function normalizeStructuredSubsections(section: StructuredOfferSection, sectionIndex: number): StructuredOfferSubsection[] {
+  if (Array.isArray(section.subsections) && section.subsections.length > 0) {
+    return section.subsections.map((subsection, subsectionIndex) => ({
+      id: subsection.id || makeId(`structured-subsection-${sectionIndex + 1}-${subsectionIndex + 1}`),
+      title: subsection.title ?? "",
+      body: subsection.body ?? "",
+      bullets: Array.isArray(subsection.bullets) ? subsection.bullets : [],
+      afterBulletsText: subsection.afterBulletsText ?? "",
+      tableRows: Array.isArray(subsection.tableRows)
+        ? subsection.tableRows.map((row, rowIndex) => ({
+            id: row.id || makeId(`structured-subsection-row-${sectionIndex + 1}-${subsectionIndex + 1}-${rowIndex + 1}`),
+            label: row.label ?? "",
+            value: row.value ?? ""
+          }))
+        : []
+    }));
+  }
+  const titles = [section.subtitle, ...(Array.isArray(section.subtitles) ? section.subtitles : [])].filter((title) => `${title ?? ""}`.trim());
+  const firstTitle = titles[0] ?? "";
+  const firstSubsectionHasContent =
+    firstTitle ||
+    `${section.body ?? ""}`.trim() ||
+    (section.bullets ?? []).some((bullet) => `${bullet ?? ""}`.trim()) ||
+    `${section.afterBulletsText ?? ""}`.trim() ||
+    (section.tableRows ?? []).some((row) => `${row.label ?? ""}`.trim() || `${row.value ?? ""}`.trim());
+  const subsections: StructuredOfferSubsection[] = firstSubsectionHasContent
+    ? [
+        {
+          id: makeId(`structured-subsection-${sectionIndex + 1}-1`),
+          title: firstTitle,
+          body: section.body ?? "",
+          bullets: Array.isArray(section.bullets) ? section.bullets : [],
+          afterBulletsText: section.afterBulletsText ?? "",
+          tableRows: Array.isArray(section.tableRows) ? section.tableRows.map((row) => ({ ...row })) : []
+        }
+      ]
+    : [];
+  titles.slice(1).forEach((title, subtitleIndex) => {
+    subsections.push({
+      id: makeId(`structured-subsection-${sectionIndex + 1}-${subtitleIndex + 2}`),
+      title,
+      body: "",
+      bullets: [],
+      afterBulletsText: "",
+      tableRows: []
+    });
+  });
+  return subsections;
 }
 
 function normalizeStructuredSections(sections?: StructuredOfferSection[]) {
@@ -490,7 +541,8 @@ function normalizeStructuredSections(sections?: StructuredOfferSection[]) {
           label: row.label ?? "",
           value: row.value ?? ""
         }))
-      : []
+      : [],
+    subsections: normalizeStructuredSubsections(section, index)
   }));
 }
 
@@ -500,6 +552,18 @@ function createBlankStructuredSection(): StructuredOfferSection {
     title: "Neuer Abschnitt",
     subtitle: "",
     subtitles: [],
+    body: "",
+    bullets: [],
+    afterBulletsText: "",
+    tableRows: [],
+    subsections: []
+  };
+}
+
+function createBlankStructuredSubsection(): StructuredOfferSubsection {
+  return {
+    id: makeId("structured-subsection"),
+    title: "Neuer Untertitel",
     body: "",
     bullets: [],
     afterBulletsText: "",
@@ -3090,7 +3154,15 @@ function StartAssistant({
       section.title.trim() ||
       section.body.trim() ||
       (section.bullets ?? []).some((bullet) => bullet.trim()) ||
-      (section.tableRows ?? []).some((row) => row.label.trim() || row.value.trim())
+      (section.tableRows ?? []).some((row) => row.label.trim() || row.value.trim()) ||
+      (section.subsections ?? []).some(
+        (subsection) =>
+          subsection.title.trim() ||
+          subsection.body.trim() ||
+          (subsection.bullets ?? []).some((bullet) => bullet.trim()) ||
+          subsection.afterBulletsText.trim() ||
+          (subsection.tableRows ?? []).some((row) => row.label.trim() || row.value.trim())
+      )
   ).length;
   const positionCount = activeGroups(groups).reduce((sum, group) => sum + group.positions.filter((position) => position.active).length, 0);
   const steps = [
@@ -3643,6 +3715,62 @@ function ProjectWorkspace({
     );
   }
 
+  function updateStructuredSubsection(sectionId: string, subsectionId: string, changes: Partial<StructuredOfferSubsection>) {
+    updateProject(
+      "structuredSections",
+      project.structuredSections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              subsections: section.subsections.map((subsection) => (subsection.id === subsectionId ? { ...subsection, ...changes } : subsection))
+            }
+          : section
+      )
+    );
+  }
+
+  function addStructuredSubsection(sectionId: string) {
+    updateProject(
+      "structuredSections",
+      project.structuredSections.map((section) =>
+        section.id === sectionId ? { ...section, subsections: [...section.subsections, createBlankStructuredSubsection()] } : section
+      )
+    );
+  }
+
+  function duplicateStructuredSubsection(sectionId: string, subsectionId: string) {
+    updateProject(
+      "structuredSections",
+      project.structuredSections.map((section) => {
+        if (section.id !== sectionId) return section;
+        const source = section.subsections.find((subsection) => subsection.id === subsectionId);
+        if (!source) return section;
+        return {
+          ...section,
+          subsections: [
+            ...section.subsections,
+            {
+              ...source,
+              id: makeId("structured-subsection-copy"),
+              title: `${source.title} Kopie`,
+              bullets: [...source.bullets],
+              tableRows: source.tableRows.map((row) => ({ ...row, id: makeId("structured-subsection-row-copy") }))
+            }
+          ]
+        };
+      })
+    );
+  }
+
+  function deleteStructuredSubsection(sectionId: string, subsectionId: string) {
+    updateProject(
+      "structuredSections",
+      project.structuredSections.map((section) =>
+        section.id === sectionId ? { ...section, subsections: section.subsections.filter((subsection) => subsection.id !== subsectionId) } : section
+      )
+    );
+  }
+
   function addStructuredSection() {
     updateProject("structuredSections", [...project.structuredSections, createBlankStructuredSection()]);
   }
@@ -3657,7 +3785,13 @@ function ProjectWorkspace({
         id: makeId("structured-section-copy"),
         title: `${source.title} Kopie`,
         bullets: [...source.bullets],
-        tableRows: source.tableRows.map((row) => ({ ...row, id: makeId("structured-row-copy") }))
+        tableRows: source.tableRows.map((row) => ({ ...row, id: makeId("structured-row-copy") })),
+        subsections: source.subsections.map((subsection) => ({
+          ...subsection,
+          id: makeId("structured-subsection-copy"),
+          bullets: [...subsection.bullets],
+          tableRows: subsection.tableRows.map((row) => ({ ...row, id: makeId("structured-subsection-row-copy") }))
+        }))
       }
     ]);
   }
@@ -4005,69 +4139,115 @@ function ProjectWorkspace({
                       <Field label="Titel">
                         <TextInput value={section.title} onChange={(event) => updateStructuredSection(section.id, { title: event.target.value })} />
                       </Field>
-                      <Field label="Untertitel">
-                        <TextArea
-                          value={[section.subtitle, ...(section.subtitles ?? [])].filter(Boolean).join("\n")}
-                          placeholder={`${index + 1}.1 Erster Untertitel\n${index + 1}.2 Weiterer Untertitel`}
-                          onChange={(event) => {
-                            const subtitles = event.target.value
-                              .split("\n")
-                              .map((line) => line.trim())
-                              .filter(Boolean);
-                            updateStructuredSection(section.id, { subtitle: subtitles[0] ?? "", subtitles: subtitles.slice(1) });
-                          }}
-                          className="min-h-20"
-                        />
-                      </Field>
-                      <Field label="Text">
-                        <TextArea value={section.body} onChange={(event) => updateStructuredSection(section.id, { body: event.target.value })} className="min-h-28" />
-                      </Field>
-                      <Field label="Aufzählungspunkte">
-                        <TextArea
-                          value={section.bullets.join("\n")}
-                          placeholder="Jeder Punkt in eine eigene Zeile"
-                          onChange={(event) =>
-                            updateStructuredSection(section.id, {
-                              bullets: event.target.value
-                                .split("\n")
-                                .map((line) => line.trim())
-                                .filter(Boolean)
-                            })
-                          }
-                          className="min-h-28"
-                        />
-                      </Field>
-                      <Field label="Ergänzung nach Aufzählung">
-                        <TextArea
-                          value={section.afterBulletsText}
-                          placeholder="Optionaler Text nach den Aufzählungspunkten"
-                          onChange={(event) => updateStructuredSection(section.id, { afterBulletsText: event.target.value })}
-                          className="min-h-24"
-                        />
-                      </Field>
-                      <Field label="Optionale Tabelle">
-                        <TextArea
-                          value={section.tableRows.map((row) => `${row.label} | ${row.value}`).join("\n")}
-                          placeholder="Leistung | Vergütung"
-                          onChange={(event) =>
-                            updateStructuredSection(section.id, {
-                              tableRows: event.target.value
-                                .split("\n")
-                                .map((line) => line.trim())
-                                .filter(Boolean)
-                                .map((line, rowIndex) => {
-                                  const [label, ...valueParts] = line.split("|");
-                                  return {
-                                    id: section.tableRows[rowIndex]?.id ?? makeId(`structured-row-${index + 1}-${rowIndex + 1}`),
-                                    label: label?.trim() ?? "",
-                                    value: valueParts.join("|").trim()
-                                  };
-                                })
-                            })
-                          }
-                          className="min-h-24"
-                        />
-                      </Field>
+                      <div className="rounded-md border border-line bg-white p-3">
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-ink">Unterabschnitte</p>
+                            <p className="mt-1 text-xs leading-5 text-muted">
+                              Jeder Unterabschnitt erhält eigenen Text, eigene Aufzählungen, eine Ergänzung und optional eine Tabelle.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => addStructuredSubsection(section.id)}
+                            className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-line bg-white px-3 text-xs font-semibold text-ink transition hover:border-slate-300"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                            Unterabschnitt hinzufügen
+                          </button>
+                        </div>
+                        <div className="mt-3 grid gap-3">
+                          {section.subsections.map((subsection, subsectionIndex) => (
+                            <div key={subsection.id} className="rounded-md border border-line bg-slate-50 p-3">
+                              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted">
+                                  {index + 1}.{subsectionIndex + 1} Unterabschnitt
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => duplicateStructuredSubsection(section.id, subsection.id)}
+                                    className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-xs font-semibold text-ink transition hover:border-slate-300"
+                                  >
+                                    <Copy className="h-3.5 w-3.5" />
+                                    Duplizieren
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => deleteStructuredSubsection(section.id, subsection.id)}
+                                    className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-xs font-semibold text-ink transition hover:border-red-200 hover:text-red-700"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                    Löschen
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="mt-3 grid gap-3">
+                                <Field label="Untertitel">
+                                  <TextInput
+                                    value={subsection.title}
+                                    placeholder={`${index + 1}.${subsectionIndex + 1} Untertitel`}
+                                    onChange={(event) => updateStructuredSubsection(section.id, subsection.id, { title: event.target.value })}
+                                  />
+                                </Field>
+                                <Field label="Text">
+                                  <TextArea
+                                    value={subsection.body}
+                                    onChange={(event) => updateStructuredSubsection(section.id, subsection.id, { body: event.target.value })}
+                                    className="min-h-28"
+                                  />
+                                </Field>
+                                <Field label="Aufzählungspunkte">
+                                  <TextArea
+                                    value={subsection.bullets.join("\n")}
+                                    placeholder="Jeder Punkt in eine eigene Zeile"
+                                    onChange={(event) =>
+                                      updateStructuredSubsection(section.id, subsection.id, {
+                                        bullets: event.target.value
+                                          .split("\n")
+                                          .map((line) => line.trim())
+                                          .filter(Boolean)
+                                      })
+                                    }
+                                    className="min-h-24"
+                                  />
+                                </Field>
+                                <Field label="Ergänzung nach Aufzählung">
+                                  <TextArea
+                                    value={subsection.afterBulletsText}
+                                    placeholder="Optionaler Text nach den Aufzählungspunkten"
+                                    onChange={(event) => updateStructuredSubsection(section.id, subsection.id, { afterBulletsText: event.target.value })}
+                                    className="min-h-20"
+                                  />
+                                </Field>
+                                <Field label="Optionale Tabelle">
+                                  <TextArea
+                                    value={subsection.tableRows.map((row) => `${row.label} | ${row.value}`).join("\n")}
+                                    placeholder="Leistung | Vergütung"
+                                    onChange={(event) =>
+                                      updateStructuredSubsection(section.id, subsection.id, {
+                                        tableRows: event.target.value
+                                          .split("\n")
+                                          .map((line) => line.trim())
+                                          .filter(Boolean)
+                                          .map((line, rowIndex) => {
+                                            const [label, ...valueParts] = line.split("|");
+                                            return {
+                                              id: subsection.tableRows[rowIndex]?.id ?? makeId(`structured-subsection-row-${index + 1}-${subsectionIndex + 1}-${rowIndex + 1}`),
+                                              label: label?.trim() ?? "",
+                                              value: valueParts.join("|").trim()
+                                            };
+                                          })
+                                      })
+                                    }
+                                    className="min-h-20"
+                                  />
+                                </Field>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}

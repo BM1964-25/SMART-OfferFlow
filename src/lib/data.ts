@@ -107,7 +107,17 @@ export const defaultStructuredOfferSections: StructuredOfferSection[] = [
     body: "Gegenstand der Beauftragung ist die fachliche Prüfung der abgestimmten Unterlagen, Abläufe und Sachverhalte auf Grundlage der vom Auftraggeber bereitgestellten Informationen.",
     bullets: ["Prüfung der relevanten Unterlagen", "Bewertung fachlicher und wirtschaftlicher Auffälligkeiten", "Ableitung konkreter Feststellungen und Empfehlungen"],
     afterBulletsText: "",
-    tableRows: []
+    tableRows: [],
+    subsections: [
+      {
+        id: "structured-subject-1",
+        title: "Auftragsinhalt und Prüfansatz",
+        body: "Gegenstand der Beauftragung ist die fachliche Prüfung der abgestimmten Unterlagen, Abläufe und Sachverhalte auf Grundlage der vom Auftraggeber bereitgestellten Informationen.",
+        bullets: ["Prüfung der relevanten Unterlagen", "Bewertung fachlicher und wirtschaftlicher Auffälligkeiten", "Ableitung konkreter Feststellungen und Empfehlungen"],
+        afterBulletsText: "",
+        tableRows: []
+      }
+    ]
   },
   {
     id: "structured-services",
@@ -117,7 +127,17 @@ export const defaultStructuredOfferSections: StructuredOfferSection[] = [
     body: "Die Prüfungsleistungen werden strukturiert, nachvollziehbar und mit Blick auf die vereinbarte Zielsetzung erbracht.",
     bullets: ["Sichtung und Bewertung der bereitgestellten Unterlagen", "Plausibilisierung von Angeboten, Kostenansätzen und Nachweisen", "Dokumentation wesentlicher Feststellungen"],
     afterBulletsText: "",
-    tableRows: []
+    tableRows: [],
+    subsections: [
+      {
+        id: "structured-services-1",
+        title: "Leistungsumfang der fachlichen Prüfung",
+        body: "Die Prüfungsleistungen werden strukturiert, nachvollziehbar und mit Blick auf die vereinbarte Zielsetzung erbracht.",
+        bullets: ["Sichtung und Bewertung der bereitgestellten Unterlagen", "Plausibilisierung von Angeboten, Kostenansätzen und Nachweisen", "Dokumentation wesentlicher Feststellungen"],
+        afterBulletsText: "",
+        tableRows: []
+      }
+    ]
   },
   {
     id: "structured-method",
@@ -127,7 +147,25 @@ export const defaultStructuredOfferSections: StructuredOfferSection[] = [
     body: "Zur Sicherstellung einer vergleichbaren Bewertung wird ein einheitliches Prüfraster verwendet.",
     bullets: ["Ausgangssituation", "Unterlagenlage", "fachliche Plausibilität", "wirtschaftliche Bewertung", "Risiken und Handlungsempfehlungen"],
     afterBulletsText: "Die Ergebnisse werden zusätzlich fallübergreifend ausgewertet, um wiederkehrende Muster, strukturelle Schwächen und Verbesserungspotenziale zu identifizieren.",
-    tableRows: []
+    tableRows: [],
+    subsections: [
+      {
+        id: "structured-method-1",
+        title: "Einheitliches Prüfraster",
+        body: "Zur Sicherstellung einer vergleichbaren Bewertung wird ein einheitliches Prüfraster verwendet.",
+        bullets: ["Ausgangssituation", "Unterlagenlage", "fachliche Plausibilität", "wirtschaftliche Bewertung", "Risiken und Handlungsempfehlungen"],
+        afterBulletsText: "",
+        tableRows: []
+      },
+      {
+        id: "structured-method-2",
+        title: "Fallübergreifende Auswertung",
+        body: "",
+        bullets: [],
+        afterBulletsText: "Die Ergebnisse werden zusätzlich fallübergreifend ausgewertet, um wiederkehrende Muster, strukturelle Schwächen und Verbesserungspotenziale zu identifizieren.",
+        tableRows: []
+      }
+    ]
   },
   {
     id: "structured-results",
@@ -137,7 +175,17 @@ export const defaultStructuredOfferSections: StructuredOfferSection[] = [
     body: "Als Ergebnis werden prüffähige Unterlagen und eine zusammenfassende Bewertung erstellt.",
     bullets: ["strukturierte Prüfung", "fall- oder themenbezogene Feststellungen", "Management Summary", "priorisierte Handlungsempfehlungen"],
     afterBulletsText: "",
-    tableRows: []
+    tableRows: [],
+    subsections: [
+      {
+        id: "structured-results-1",
+        title: "Dokumentation und Ergebnisdarstellung",
+        body: "Als Ergebnis werden prüffähige Unterlagen und eine zusammenfassende Bewertung erstellt.",
+        bullets: ["strukturierte Prüfung", "fall- oder themenbezogene Feststellungen", "Management Summary", "priorisierte Handlungsempfehlungen"],
+        afterBulletsText: "",
+        tableRows: []
+      }
+    ]
   },
   {
     id: "structured-fee",
@@ -151,6 +199,20 @@ export const defaultStructuredOfferSections: StructuredOfferSection[] = [
       { id: "structured-fee-rate", label: "Tagessatz je Prüfertag", value: "1.600,00 Euro netto" },
       { id: "structured-fee-days", label: "Voraussichtlicher Aufwand", value: "15 bis 18 Prüfertage" },
       { id: "structured-fee-total", label: "Voraussichtliches Gesamthonorar", value: "24.000,00 bis 28.800,00 Euro netto" }
+    ],
+    subsections: [
+      {
+        id: "structured-fee-1",
+        title: "Vergütung und Abrechnungsgrundlage",
+        body: "Für die beschriebenen Leistungen wird folgendes Honorar angeboten. Die Abrechnung erfolgt nach dem tatsächlich angefallenen und nachgewiesenen Aufwand.",
+        bullets: [],
+        afterBulletsText: "",
+        tableRows: [
+          { id: "structured-fee-sub-rate", label: "Tagessatz je Prüfertag", value: "1.600,00 Euro netto" },
+          { id: "structured-fee-sub-days", label: "Voraussichtlicher Aufwand", value: "15 bis 18 Prüfertage" },
+          { id: "structured-fee-sub-total", label: "Voraussichtliches Gesamthonorar", value: "24.000,00 bis 28.800,00 Euro netto" }
+        ]
+      }
     ]
   }
 ];

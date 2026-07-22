@@ -75,6 +75,15 @@ export type StructuredOfferTableRow = {
   value: string;
 };
 
+export type StructuredOfferSubsection = {
+  id: string;
+  title: string;
+  body: string;
+  bullets: string[];
+  afterBulletsText: string;
+  tableRows: StructuredOfferTableRow[];
+};
+
 export type StructuredOfferSection = {
   id: string;
   title: string;
@@ -84,6 +93,7 @@ export type StructuredOfferSection = {
   bullets: string[];
   afterBulletsText: string;
   tableRows: StructuredOfferTableRow[];
+  subsections: StructuredOfferSubsection[];
 };
 
 export type Project = {
