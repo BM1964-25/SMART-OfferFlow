@@ -485,7 +485,7 @@ export function OfferPreview({
                             {tableRows.length > 0 ? (
                               <div className="mt-4 overflow-hidden rounded-md border border-[#D9DEE5]">
                                 {tableRows.map((row) => (
-                                  <div key={row.id} className="grid gap-3 border-b border-[#D9DEE5] px-4 py-3 text-sm last:border-b-0 md:grid-cols-[1fr_220px]">
+                                  <div key={row.id} className="grid gap-4 border-b border-[#D9DEE5] px-4 py-3 text-sm last:border-b-0 md:grid-cols-2">
                                     <p className="font-medium text-black">{row.label}</p>
                                     <p className="font-semibold text-black md:text-right">{row.value}</p>
                                   </div>
