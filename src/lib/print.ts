@@ -24,13 +24,14 @@ export function printElement(selector: string, title: string) {
     <title>${escapeHtml(title)}</title>
     ${styleNodes}
     <style>
-      @page { size: A4; margin: 14mm 12mm; }
+      @page { size: A4; margin: 14mm 12mm 16mm; }
       html, body {
         height: auto !important;
         min-height: 0 !important;
         overflow: visible !important;
         background: #fff !important;
         color: #172033;
+        font-size: 11.5pt !important;
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
       }
@@ -42,9 +43,27 @@ export function printElement(selector: string, title: string) {
         width: 100% !important;
         max-width: none !important;
         padding: 0 !important;
+        font-size: 11.5pt !important;
         border: none !important;
         border-radius: 0 !important;
         box-shadow: none !important;
+      }
+      .print-area h1 {
+        font-size: 24px !important;
+        line-height: 1.2 !important;
+      }
+      .print-area h2 {
+        font-size: 14px !important;
+        line-height: 1.35 !important;
+      }
+      .print-area h3 {
+        font-size: 12px !important;
+        line-height: 1.35 !important;
+      }
+      .print-area p,
+      .print-area span,
+      .print-area div {
+        line-height: 1.45;
       }
       .print-section {
         padding-top: 14px !important;
@@ -56,6 +75,7 @@ export function printElement(selector: string, title: string) {
         break-before: always !important;
         page-break-before: always !important;
         -webkit-column-break-before: always !important;
+        margin-top: 0 !important;
       }
       .print-page-break-before.border-t {
         border-top: 0 !important;
@@ -78,6 +98,16 @@ export function printElement(selector: string, title: string) {
       }
       .no-print {
         display: none !important;
+      }
+      .offer-footer {
+        margin-top: 18mm !important;
+        padding-top: 5mm !important;
+      }
+      .offer-footer-full {
+        display: none !important;
+      }
+      .offer-footer-date {
+        display: block !important;
       }
       @media print {
         html, body {

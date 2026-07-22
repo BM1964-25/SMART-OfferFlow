@@ -408,7 +408,7 @@ export function OfferPreview({
         {sectionEnabled(project, "offerIntro") && hasText(project.offerIntro) ? (
           <div className="mt-12 max-w-4xl">
             {sectionTitleEnabled(project, "offerIntro") ? <h3 className="text-base font-semibold text-black">Angebotseinleitung</h3> : null}
-            <TextBlock text={project.offerIntro} className={`${sectionTitleEnabled(project, "offerIntro") ? "mt-2 " : ""}whitespace-pre-line text-lg leading-8 text-black`} />
+            <TextBlock text={project.offerIntro} className={`${sectionTitleEnabled(project, "offerIntro") ? "mt-2 " : ""}whitespace-pre-line text-base leading-7 text-black`} />
           </div>
         ) : null}
       </section>
@@ -682,31 +682,34 @@ export function OfferPreview({
         </section>
       ) : null}
 
-      <footer className="print-keep mt-16 border-t border-line pt-6 text-base leading-7 text-black">
-        <p className="text-lg font-semibold text-slate-700">{company.name}</p>
-        {hasFooterIntro ? <FooterTextBlock text={footerIntro} bookingUrl={bookingUrl} /> : null}
-        {hasFooterContact || hasFooterLegal || hasFooterBank ? (
-          <div className="mt-5 grid gap-6 md:grid-cols-3">
-            {hasFooterContact ? (
-              <div className="break-words">
-                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Kontakt</p>
-                <FooterTextBlock text={footerContact} bookingUrl={bookingUrl} className="mt-2" />
-              </div>
-            ) : null}
-            {hasFooterLegal ? (
-              <div className="break-words">
-                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Rechtliches & Links</p>
-                <FooterTextBlock text={footerLegal} bookingUrl={bookingUrl} className="mt-2" />
-              </div>
-            ) : null}
-            {hasFooterBank ? (
-              <div className="break-words">
-                <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Bankverbindung</p>
-                <FooterTextBlock text={footerBank} bookingUrl={bookingUrl} className="mt-2" />
-              </div>
-            ) : null}
-          </div>
-        ) : null}
+      <footer className="offer-footer print-keep mt-16 border-t border-line pt-6 text-base leading-7 text-black">
+        <div className="offer-footer-full">
+          <p className="text-lg font-semibold text-slate-700">{company.name}</p>
+          {hasFooterIntro ? <FooterTextBlock text={footerIntro} bookingUrl={bookingUrl} /> : null}
+          {hasFooterContact || hasFooterLegal || hasFooterBank ? (
+            <div className="mt-5 grid gap-6 md:grid-cols-3">
+              {hasFooterContact ? (
+                <div className="break-words">
+                  <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Kontakt</p>
+                  <FooterTextBlock text={footerContact} bookingUrl={bookingUrl} className="mt-2" />
+                </div>
+              ) : null}
+              {hasFooterLegal ? (
+                <div className="break-words">
+                  <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Rechtliches & Links</p>
+                  <FooterTextBlock text={footerLegal} bookingUrl={bookingUrl} className="mt-2" />
+                </div>
+              ) : null}
+              {hasFooterBank ? (
+                <div className="break-words">
+                  <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Bankverbindung</p>
+                  <FooterTextBlock text={footerBank} bookingUrl={bookingUrl} className="mt-2" />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+        <p className="offer-footer-date hidden text-right text-sm text-black">{offerDate}</p>
       </footer>
     </article>
     </>
