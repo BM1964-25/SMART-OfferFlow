@@ -95,7 +95,14 @@ export const structuredOfferSectionVisibility: Record<OfferSectionKey, boolean> 
   serviceScope: false,
   contractorRole: false,
   serviceDirectoryIntro: false,
-  serviceExclusion: false
+  serviceExclusion: false,
+  changeTerms: false,
+  contractBasis: false,
+  paymentTerms: false,
+  validityText: false,
+  offerClarification: false,
+  offerNote: false,
+  acceptanceText: false
 };
 
 export const defaultStructuredOfferSections: StructuredOfferSection[] = [

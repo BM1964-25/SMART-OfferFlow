@@ -433,23 +433,25 @@ const offerTemplateTextFieldLabels: { key: keyof OfferTemplateTextFields; label:
   { key: "signatureText", label: "Unterschrift" }
 ];
 
+const nonStructuredOfferTypes: Project["offerType"][] = ["Mit Leistungsverzeichnis", "Anschreiben ohne LV"];
+
 const offerSectionControlLabels: { key: OfferSectionKey; label: string; offerTypes?: Project["offerType"][] }[] = [
   { key: "offerIntro", label: "Angebotseinleitung" },
-  { key: "assignmentReason", label: "Anlass der Beauftragung" },
+  { key: "assignmentReason", label: "Anlass der Beauftragung", offerTypes: nonStructuredOfferTypes },
   { key: "coverLetterText", label: "Allgemeiner Angebotstext", offerTypes: ["Anschreiben ohne LV"] },
-  { key: "shortDescription", label: "Aufgabenstellung" },
-  { key: "objective", label: "Zielsetzung" },
-  { key: "serviceScope", label: "Leistungsrahmen" },
-  { key: "contractorRole", label: "Auftragnehmerrolle" },
+  { key: "shortDescription", label: "Aufgabenstellung", offerTypes: nonStructuredOfferTypes },
+  { key: "objective", label: "Zielsetzung", offerTypes: nonStructuredOfferTypes },
+  { key: "serviceScope", label: "Leistungsrahmen", offerTypes: nonStructuredOfferTypes },
+  { key: "contractorRole", label: "Auftragnehmerrolle", offerTypes: nonStructuredOfferTypes },
   { key: "serviceDirectoryIntro", label: "Einleitung Leistungsverzeichnis", offerTypes: ["Mit Leistungsverzeichnis"] },
   { key: "serviceExclusion", label: "Leistungsabgrenzung", offerTypes: ["Mit Leistungsverzeichnis"] },
-  { key: "changeTerms", label: "Leistungsänderungen" },
-  { key: "contractBasis", label: "Vertragsgrundlage" },
-  { key: "paymentTerms", label: "Zahlungsbedingungen" },
-  { key: "validityText", label: "Gültigkeit" },
-  { key: "offerClarification", label: "Angebotsgrundlagen" },
-  { key: "offerNote", label: "Hinweis" },
-  { key: "acceptanceText", label: "Auftragserteilung" },
+  { key: "changeTerms", label: "Leistungsänderungen", offerTypes: nonStructuredOfferTypes },
+  { key: "contractBasis", label: "Vertragsgrundlage", offerTypes: nonStructuredOfferTypes },
+  { key: "paymentTerms", label: "Zahlungsbedingungen", offerTypes: nonStructuredOfferTypes },
+  { key: "validityText", label: "Gültigkeit", offerTypes: nonStructuredOfferTypes },
+  { key: "offerClarification", label: "Angebotsgrundlagen", offerTypes: nonStructuredOfferTypes },
+  { key: "offerNote", label: "Hinweis", offerTypes: nonStructuredOfferTypes },
+  { key: "acceptanceText", label: "Auftragserteilung", offerTypes: nonStructuredOfferTypes },
   { key: "signatureText", label: "Unterschrift" }
 ];
 
@@ -3666,6 +3668,7 @@ function ProjectWorkspace({
   const [newOfferCompanyId, setNewOfferCompanyId] = useState<Project["companyId"]>(project.companyId);
   const selectedNewOfferProfile = profiles.find((profile) => profile.id === newOfferCompanyId);
   const visibleSectionControls = offerSectionControlLabels.filter((section) => !section.offerTypes || section.offerTypes.includes(project.offerType));
+  const isStructuredOffer = project.offerType === "Strukturierte Leistungsbeschreibung";
 
   function isSectionVisible(sectionKey: OfferSectionKey) {
     return (project.sectionVisibility ?? {})[sectionKey] ?? defaultSectionVisibilityForOfferType(project.offerType)[sectionKey];
@@ -4005,75 +4008,79 @@ function ProjectWorkspace({
                   <TextArea value={project.offerIntro} onChange={(event) => updateProject("offerIntro", event.target.value)} className="min-h-28" />
                 </Field>
               </OfferSectionField>
-              <OfferSectionField active={isSectionVisible("assignmentReason")}>
-                <Field label="Anlass der Beauftragung">
-                  <TextArea
-                    value={project.assignmentReason}
-                    onChange={(event) => updateProject("assignmentReason", event.target.value)}
-                    className="min-h-28"
-                  />
-                </Field>
-              </OfferSectionField>
-              {project.offerType === "Anschreiben ohne LV" ? (
-                <OfferSectionField active={isSectionVisible("coverLetterText")}>
-                  <Field label="Allgemeiner Angebotstext">
-                    <TextArea value={project.coverLetterText} onChange={(event) => updateProject("coverLetterText", event.target.value)} className="min-h-40" />
-                  </Field>
-                </OfferSectionField>
-              ) : null}
-              <OfferSectionField active={isSectionVisible("shortDescription")}>
-                <Field label="Aufgabenstellung">
-                  <TextArea value={project.shortDescription} onChange={(event) => updateProject("shortDescription", event.target.value)} className="min-h-28" />
-                </Field>
-              </OfferSectionField>
-              <OfferSectionField active={isSectionVisible("serviceScope")}>
-                <Field label="Leistungsrahmen">
-                  <TextArea value={project.serviceScope} onChange={(event) => updateProject("serviceScope", event.target.value)} className="min-h-28" />
-                </Field>
-              </OfferSectionField>
-              <OfferSectionField active={isSectionVisible("contractorRole")}>
-                <Field label="Auftragnehmerrolle">
-                  <TextArea value={project.contractorRole} onChange={(event) => updateProject("contractorRole", event.target.value)} className="min-h-28" />
-                </Field>
-              </OfferSectionField>
-              <OfferSectionField active={isSectionVisible("objective")}>
-                <Field label="Zielsetzung">
-                  <TextArea value={project.objective} onChange={(event) => updateProject("objective", event.target.value)} className="min-h-28" />
-                </Field>
-              </OfferSectionField>
-              {project.offerType === "Mit Leistungsverzeichnis" ? (
+              {!isStructuredOffer ? (
                 <>
-                  <OfferSectionField active={isSectionVisible("serviceDirectoryIntro")}>
-                    <Field label="Einleitung Leistungsverzeichnis">
+                  <OfferSectionField active={isSectionVisible("assignmentReason")}>
+                    <Field label="Anlass der Beauftragung">
                       <TextArea
-                        value={project.serviceDirectoryIntro}
-                        onChange={(event) => updateProject("serviceDirectoryIntro", event.target.value)}
+                        value={project.assignmentReason}
+                        onChange={(event) => updateProject("assignmentReason", event.target.value)}
                         className="min-h-28"
                       />
                     </Field>
                   </OfferSectionField>
-                  <OfferSectionField active={isSectionVisible("serviceExclusion")}>
-                    <Field label="Leistungsabgrenzung">
-                      <TextArea value={project.serviceExclusion} onChange={(event) => updateProject("serviceExclusion", event.target.value)} className="min-h-28" />
+                  {project.offerType === "Anschreiben ohne LV" ? (
+                    <OfferSectionField active={isSectionVisible("coverLetterText")}>
+                      <Field label="Allgemeiner Angebotstext">
+                        <TextArea value={project.coverLetterText} onChange={(event) => updateProject("coverLetterText", event.target.value)} className="min-h-40" />
+                      </Field>
+                    </OfferSectionField>
+                  ) : null}
+                  <OfferSectionField active={isSectionVisible("shortDescription")}>
+                    <Field label="Aufgabenstellung">
+                      <TextArea value={project.shortDescription} onChange={(event) => updateProject("shortDescription", event.target.value)} className="min-h-28" />
+                    </Field>
+                  </OfferSectionField>
+                  <OfferSectionField active={isSectionVisible("serviceScope")}>
+                    <Field label="Leistungsrahmen">
+                      <TextArea value={project.serviceScope} onChange={(event) => updateProject("serviceScope", event.target.value)} className="min-h-28" />
+                    </Field>
+                  </OfferSectionField>
+                  <OfferSectionField active={isSectionVisible("contractorRole")}>
+                    <Field label="Auftragnehmerrolle">
+                      <TextArea value={project.contractorRole} onChange={(event) => updateProject("contractorRole", event.target.value)} className="min-h-28" />
+                    </Field>
+                  </OfferSectionField>
+                  <OfferSectionField active={isSectionVisible("objective")}>
+                    <Field label="Zielsetzung">
+                      <TextArea value={project.objective} onChange={(event) => updateProject("objective", event.target.value)} className="min-h-28" />
+                    </Field>
+                  </OfferSectionField>
+                  {project.offerType === "Mit Leistungsverzeichnis" ? (
+                    <>
+                      <OfferSectionField active={isSectionVisible("serviceDirectoryIntro")}>
+                        <Field label="Einleitung Leistungsverzeichnis">
+                          <TextArea
+                            value={project.serviceDirectoryIntro}
+                            onChange={(event) => updateProject("serviceDirectoryIntro", event.target.value)}
+                            className="min-h-28"
+                          />
+                        </Field>
+                      </OfferSectionField>
+                      <OfferSectionField active={isSectionVisible("serviceExclusion")}>
+                        <Field label="Leistungsabgrenzung">
+                          <TextArea value={project.serviceExclusion} onChange={(event) => updateProject("serviceExclusion", event.target.value)} className="min-h-28" />
+                        </Field>
+                      </OfferSectionField>
+                    </>
+                  ) : null}
+                  <OfferSectionField active={isSectionVisible("changeTerms")}>
+                    <Field label="Leistungsänderungen">
+                      <TextArea value={project.changeTerms} onChange={(event) => updateProject("changeTerms", event.target.value)} className="min-h-28" />
+                    </Field>
+                  </OfferSectionField>
+                  <OfferSectionField active={isSectionVisible("offerClarification")}>
+                    <Field label="Angebotsgrundlagen">
+                      <TextArea value={project.offerClarification} onChange={(event) => updateProject("offerClarification", event.target.value)} className="min-h-28" />
+                    </Field>
+                  </OfferSectionField>
+                  <OfferSectionField active={isSectionVisible("offerNote")}>
+                    <Field label="Hinweis">
+                      <TextArea value={project.offerNote} onChange={(event) => updateProject("offerNote", event.target.value)} className="min-h-28" />
                     </Field>
                   </OfferSectionField>
                 </>
               ) : null}
-              <OfferSectionField active={isSectionVisible("changeTerms")}>
-                <Field label="Leistungsänderungen">
-                  <TextArea value={project.changeTerms} onChange={(event) => updateProject("changeTerms", event.target.value)} className="min-h-28" />
-                </Field>
-              </OfferSectionField>
-              <OfferSectionField active={isSectionVisible("offerClarification")}>
-                <Field label="Angebotsgrundlagen">
-                  <TextArea value={project.offerClarification} onChange={(event) => updateProject("offerClarification", event.target.value)} className="min-h-28" />
-                </Field>
-              </OfferSectionField>
-              <OfferSectionField active={isSectionVisible("offerNote")}>
-                <Field label="Hinweis">
-                  <TextArea value={project.offerNote} onChange={(event) => updateProject("offerNote", event.target.value)} className="min-h-28" />
-                </Field>
-              </OfferSectionField>
             </div>
           </section>
 
@@ -4265,9 +4272,11 @@ function ProjectWorkspace({
                   <option>Hybrid</option>
                 </Select>
               </Field>
-              <Field label="Gültigkeitsdauer Kurzform">
-                <TextInput value={project.validUntil} onChange={(event) => updateProject("validUntil", event.target.value)} />
-              </Field>
+              {!isStructuredOffer ? (
+                <Field label="Gültigkeitsdauer Kurzform">
+                  <TextInput value={project.validUntil} onChange={(event) => updateProject("validUntil", event.target.value)} />
+                </Field>
+              ) : null}
               <Field label="Umsatzsteuer in %">
                 <TextInput type="number" value={project.vatRate} onChange={(event) => updateProject("vatRate", Number(event.target.value))} />
               </Field>
@@ -4288,34 +4297,38 @@ function ProjectWorkspace({
               <Field label="Skontofrist in Tagen">
                 <TextInput type="number" value={project.skontoDays} onChange={(event) => updateProject("skontoDays", Number(event.target.value))} />
               </Field>
-              <div className="xl:col-span-4">
-                <OfferSectionField active={isSectionVisible("paymentTerms")}>
-                  <Field label="Zahlungsbedingungen">
-                    <TextArea value={project.paymentTerms} onChange={(event) => updateProject("paymentTerms", event.target.value)} className="min-h-20" />
-                  </Field>
-                </OfferSectionField>
-              </div>
-              <div className="xl:col-span-4">
-                <OfferSectionField active={isSectionVisible("validityText")}>
-                  <Field label="Gültigkeit">
-                    <TextArea value={project.validityText} onChange={(event) => updateProject("validityText", event.target.value)} className="min-h-20" />
-                  </Field>
-                </OfferSectionField>
-              </div>
-              <div className="xl:col-span-4">
-                <OfferSectionField active={isSectionVisible("contractBasis")}>
-                  <Field label="Vertragsgrundlage">
-                    <TextArea value={project.contractBasis} onChange={(event) => updateProject("contractBasis", event.target.value)} className="min-h-20" />
-                  </Field>
-                </OfferSectionField>
-              </div>
-              <div className="xl:col-span-4">
-                <OfferSectionField active={isSectionVisible("acceptanceText")}>
-                  <Field label="Auftragserteilung">
-                    <TextArea value={project.acceptanceText} onChange={(event) => updateProject("acceptanceText", event.target.value)} className="min-h-20" />
-                  </Field>
-                </OfferSectionField>
-              </div>
+              {!isStructuredOffer ? (
+                <>
+                  <div className="xl:col-span-4">
+                    <OfferSectionField active={isSectionVisible("paymentTerms")}>
+                      <Field label="Zahlungsbedingungen">
+                        <TextArea value={project.paymentTerms} onChange={(event) => updateProject("paymentTerms", event.target.value)} className="min-h-20" />
+                      </Field>
+                    </OfferSectionField>
+                  </div>
+                  <div className="xl:col-span-4">
+                    <OfferSectionField active={isSectionVisible("validityText")}>
+                      <Field label="Gültigkeit">
+                        <TextArea value={project.validityText} onChange={(event) => updateProject("validityText", event.target.value)} className="min-h-20" />
+                      </Field>
+                    </OfferSectionField>
+                  </div>
+                  <div className="xl:col-span-4">
+                    <OfferSectionField active={isSectionVisible("contractBasis")}>
+                      <Field label="Vertragsgrundlage">
+                        <TextArea value={project.contractBasis} onChange={(event) => updateProject("contractBasis", event.target.value)} className="min-h-20" />
+                      </Field>
+                    </OfferSectionField>
+                  </div>
+                  <div className="xl:col-span-4">
+                    <OfferSectionField active={isSectionVisible("acceptanceText")}>
+                      <Field label="Auftragserteilung">
+                        <TextArea value={project.acceptanceText} onChange={(event) => updateProject("acceptanceText", event.target.value)} className="min-h-20" />
+                      </Field>
+                    </OfferSectionField>
+                  </div>
+                </>
+              ) : null}
               <div className="xl:col-span-4">
                 <OfferSectionField active={isSectionVisible("signatureText")}>
                   <Field label="Unterschrift">

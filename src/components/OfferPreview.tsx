@@ -140,7 +140,23 @@ function formatRecipientAddress(project: Project) {
   return `${client}\n${address}`;
 }
 
+const structuredOfferHiddenSections: OfferSectionKey[] = [
+  "assignmentReason",
+  "shortDescription",
+  "objective",
+  "serviceScope",
+  "contractorRole",
+  "changeTerms",
+  "contractBasis",
+  "paymentTerms",
+  "validityText",
+  "offerClarification",
+  "offerNote",
+  "acceptanceText"
+];
+
 function sectionEnabled(project: Project, key: OfferSectionKey) {
+  if (project.offerType === "Strukturierte Leistungsbeschreibung" && structuredOfferHiddenSections.includes(key)) return false;
   const defaults =
     project.offerType === "Anschreiben ohne LV"
       ? coverLetterOfferSectionVisibility
