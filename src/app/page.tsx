@@ -1970,6 +1970,57 @@ export default function HomePage() {
     }));
   }
 
+  function saveProjectRecipientAsCustomer() {
+    const companyName = project.client.trim();
+    const contactPerson = project.contactPerson.trim();
+    if (!companyName) {
+      setStorageMessage("Bitte zuerst einen Empfänger im Angebot eintragen.");
+      return;
+    }
+
+    const existingCustomer =
+      customers.find((customer) => customer.id === project.customerId) ??
+      customers.find((customer) => customer.companyName.trim().toLowerCase() === companyName.toLowerCase() && customer.contactPerson.trim().toLowerCase() === contactPerson.toLowerCase());
+
+    if (existingCustomer) {
+      setCustomers((current) =>
+        current.map((customer) =>
+          customer.id === existingCustomer.id
+            ? {
+                ...customer,
+                companyName,
+                contactPerson
+              }
+            : customer
+        )
+      );
+      setProject((current) => ({ ...current, customerId: existingCustomer.id, client: companyName, contactPerson }));
+      setStorageMessage(`Kunde aktualisiert: ${companyName}`);
+      return;
+    }
+
+    const id = `customer-${Date.now()}`;
+    const customerNumber = `KD-${new Date().getFullYear()}-${String(customers.length + 1).padStart(3, "0")}`;
+    setCustomers((current) => [
+      ...current,
+      {
+        id,
+        companyName,
+        contactPerson,
+        address: "",
+        email: "",
+        phone: "",
+        mobile: "",
+        website: "",
+        customerNumber,
+        industry: "",
+        notes: `Aus Angebot ${project.offerNumber} angelegt.`
+      }
+    ]);
+    setProject((current) => ({ ...current, customerId: id, client: companyName, contactPerson }));
+    setStorageMessage(`Kunde gespeichert: ${companyName}`);
+  }
+
   function updatePosition(groupId: string, positionId: string, changes: Partial<Position>) {
     setGroups((current) =>
       current.map((group) =>
@@ -2683,6 +2734,7 @@ export default function HomePage() {
               createNewOffer={createNewOffer}
               updateProject={updateProject}
               applyCustomerToProject={applyCustomerToProject}
+              saveProjectRecipientAsCustomer={saveProjectRecipientAsCustomer}
               setActiveView={setActiveView}
             />
           ) : null}
@@ -2756,6 +2808,7 @@ export default function HomePage() {
               addCustomer={addCustomer}
               deleteCustomer={deleteCustomer}
               applyCustomerToProject={applyCustomerToProject}
+              setActiveView={setActiveView}
             />
           ) : null}
 
@@ -3400,6 +3453,7 @@ function ProjectWorkspace({
   createNewOffer,
   updateProject,
   applyCustomerToProject,
+  saveProjectRecipientAsCustomer,
   setActiveView
 }: {
   project: Project;
@@ -3408,6 +3462,7 @@ function ProjectWorkspace({
   createNewOffer: (companyId: Project["companyId"]) => void;
   updateProject: <K extends keyof Project>(key: K, value: Project[K]) => void;
   applyCustomerToProject: (customerId: string) => void;
+  saveProjectRecipientAsCustomer: () => void;
   setActiveView: (view: View) => void;
 }) {
   const selectedCustomer =
@@ -3470,7 +3525,7 @@ function ProjectWorkspace({
           </section>
           <section className="rounded-md border border-line bg-slate-50 p-4">
             <h3 className="font-semibold text-ink">1 Empfänger und Ansprechpartner</h3>
-            <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_auto]">
+            <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_auto_auto]">
               <Field label="Kunde auswählen">
                 <Select value={selectedCustomer?.id ?? ""} onChange={(event) => event.target.value && applyCustomerToProject(event.target.value)}>
                   <option value="">Manuelle Eingabe</option>
@@ -3483,6 +3538,13 @@ function ProjectWorkspace({
               </Field>
               <button type="button" onClick={() => setActiveView("Kunden")} className="h-10 self-end rounded-md border border-line bg-white px-3 text-sm font-semibold text-ink transition hover:border-slate-300">
                 Kunden öffnen
+              </button>
+              <button
+                type="button"
+                onClick={saveProjectRecipientAsCustomer}
+                className="h-10 self-end rounded-md border border-line bg-white px-3 text-sm font-semibold text-ink transition hover:border-slate-300"
+              >
+                Empfänger speichern
               </button>
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -4688,7 +4750,8 @@ function Customers({
   updateCustomer,
   addCustomer,
   deleteCustomer,
-  applyCustomerToProject
+  applyCustomerToProject,
+  setActiveView
 }: {
   customers: Customer[];
   activeProjectCustomerId: string;
@@ -4696,6 +4759,7 @@ function Customers({
   addCustomer: () => void;
   deleteCustomer: (customerId: string) => void;
   applyCustomerToProject: (customerId: string) => void;
+  setActiveView: (view: View) => void;
 }) {
   const [appliedCustomerId, setAppliedCustomerId] = useState<string | null>(null);
   const effectiveAppliedCustomerId = appliedCustomerId ?? activeProjectCustomerId;
@@ -4703,6 +4767,7 @@ function Customers({
   function handleApplyCustomer(customerId: string) {
     applyCustomerToProject(customerId);
     setAppliedCustomerId(customerId);
+    setActiveView("Neues Angebot");
   }
 
   return (
