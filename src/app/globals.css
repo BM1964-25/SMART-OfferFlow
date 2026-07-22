@@ -183,6 +183,19 @@ input[type="number"]::-webkit-outer-spin-button {
   display: none;
 }
 
+.print-area {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.print-area p,
+.print-area li,
+.print-area a,
+.print-area span {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
 @media print {
   @page {
     size: A4;
@@ -227,6 +240,7 @@ input[type="number"]::-webkit-outer-spin-button {
     width: 100% !important;
     max-width: none !important;
     padding: 0 !important;
+    overflow-x: hidden !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
@@ -367,14 +381,14 @@ input[type="number"]::-webkit-outer-spin-button {
 
   .offer-footer-col {
     min-width: 0 !important;
-    overflow-wrap: normal !important;
+    overflow-wrap: break-word !important;
     word-break: normal !important;
     hyphens: none !important;
   }
 
   .offer-footer-col p,
   .offer-footer-col a {
-    overflow-wrap: normal !important;
+    overflow-wrap: break-word !important;
     word-break: normal !important;
     hyphens: none !important;
   }

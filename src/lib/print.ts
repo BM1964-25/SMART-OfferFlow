@@ -43,10 +43,18 @@ export function printElement(selector: string, title: string) {
         width: 100% !important;
         max-width: none !important;
         padding: 0 !important;
+        overflow-x: hidden !important;
         font-size: 11.5pt !important;
         border: none !important;
         border-radius: 0 !important;
         box-shadow: none !important;
+      }
+      .print-area p,
+      .print-area li,
+      .print-area a,
+      .print-area span {
+        overflow-wrap: break-word;
+        word-break: normal;
       }
       .print-area h1 {
         font-size: 24px !important;
@@ -141,13 +149,13 @@ export function printElement(selector: string, title: string) {
       }
       .offer-footer-col {
         min-width: 0 !important;
-        overflow-wrap: normal !important;
+        overflow-wrap: break-word !important;
         word-break: normal !important;
         hyphens: none !important;
       }
       .offer-footer-col p,
       .offer-footer-col a {
-        overflow-wrap: normal !important;
+        overflow-wrap: break-word !important;
         word-break: normal !important;
         hyphens: none !important;
       }
