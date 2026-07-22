@@ -120,11 +120,41 @@ export function printElement(selector: string, title: string) {
       }
       .offer-footer {
         display: block !important;
-        margin-top: 18mm !important;
+        margin-top: 24mm !important;
         padding-top: 5mm !important;
+        font-size: 9.5px !important;
+        line-height: 1.35 !important;
       }
       .offer-footer-full {
         display: block !important;
+      }
+      .offer-footer-company {
+        font-size: 11px !important;
+        line-height: 1.3 !important;
+      }
+      .offer-footer-intro {
+        margin-top: 2px !important;
+      }
+      .offer-footer-columns {
+        grid-template-columns: 1.08fr 1fr 1.25fr !important;
+        gap: 8mm !important;
+      }
+      .offer-footer-col {
+        min-width: 0 !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        hyphens: none !important;
+      }
+      .offer-footer-col p,
+      .offer-footer-col a {
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        hyphens: none !important;
+      }
+      .offer-footer-heading {
+        font-size: 8.5px !important;
+        letter-spacing: 0.18em !important;
+        line-height: 1.2 !important;
       }
       .offer-footer-date {
         display: none !important;

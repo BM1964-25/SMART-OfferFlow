@@ -683,25 +683,25 @@ export function OfferPreview({
 
       <footer className="offer-footer print-keep mt-16 pt-6 text-base leading-7 text-black">
         <div className="offer-footer-full">
-          <p className="text-lg font-semibold text-slate-700">{company.name}</p>
-          {hasFooterIntro ? <FooterTextBlock text={footerIntro} bookingUrl={bookingUrl} /> : null}
+          <p className="offer-footer-company text-lg font-semibold text-slate-700">{company.name}</p>
+          {hasFooterIntro ? <FooterTextBlock text={footerIntro} bookingUrl={bookingUrl} className="offer-footer-intro" /> : null}
           {hasFooterContact || hasFooterLegal || hasFooterBank ? (
-            <div className="mt-5 grid gap-6 md:grid-cols-3">
+            <div className="offer-footer-columns mt-5 grid gap-6 md:grid-cols-[1.08fr_1fr_1.2fr]">
               {hasFooterContact ? (
-                <div className="break-words">
-                  <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Kontakt</p>
+                <div className="offer-footer-col">
+                  <p className="offer-footer-heading text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Kontakt</p>
                   <FooterTextBlock text={footerContact} bookingUrl={bookingUrl} className="mt-2" />
                 </div>
               ) : null}
               {hasFooterLegal ? (
-                <div className="break-words">
-                  <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Rechtliches & Links</p>
+                <div className="offer-footer-col">
+                  <p className="offer-footer-heading text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Rechtliches & Links</p>
                   <FooterTextBlock text={footerLegal} bookingUrl={bookingUrl} className="mt-2" />
                 </div>
               ) : null}
               {hasFooterBank ? (
-                <div className="break-words">
-                  <p className="text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Bankverbindung</p>
+                <div className="offer-footer-col">
+                  <p className="offer-footer-heading text-sm font-semibold uppercase tracking-[0.12em] text-slate-700">Bankverbindung</p>
                   <FooterTextBlock text={footerBank} bookingUrl={bookingUrl} className="mt-2" />
                 </div>
               ) : null}
