@@ -174,6 +174,7 @@ export const companyProfiles: CompanyProfile[] = [
 export const sampleProject: Project = {
   id: "offer-ki-2026-001",
   companyId: "builtsmart-ai",
+  customerId: "",
   client: "Musterbau Immobilien GmbH",
   contactPerson: "Dr. Julia Hartmann",
   projectLocation: "",

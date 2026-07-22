@@ -51,6 +51,7 @@ export type RateCard = Record<RateKey, number>;
 export type Project = {
   id: string;
   companyId: CompanyId;
+  customerId: string;
   client: string;
   contactPerson: string;
   projectLocation: string;

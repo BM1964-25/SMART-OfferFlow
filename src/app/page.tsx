@@ -327,6 +327,7 @@ function savedOfferSnapshotChanged(existing: SavedOffer | undefined, next: Saved
     existing.project.contactPerson !== next.project.contactPerson ||
     existing.project.offerNumber !== next.project.offerNumber ||
     existing.project.companyId !== next.project.companyId ||
+    existing.project.customerId !== next.project.customerId ||
     existing.project.offerType !== next.project.offerType ||
     existing.project.coverLetterText !== next.project.coverLetterText ||
     existing.groups.length !== next.groups.length ||
@@ -1342,6 +1343,7 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
   const oldContractBasis = "Die Leistungserbringung erfolgt auf Grundlage dieses Angebots sowie der Allgemeinen Geschäftsbedingungen von Metzger - Real Estate Advisory. Mit Auftragserteilung erkennt der Auftraggeber diese als Vertragsbestandteil an.";
   return {
     ...project,
+    customerId: project.customerId ?? "",
     projectLocation: project.projectLocation ?? "",
     projectVolume: project.projectVolume ?? "",
     servicePeriod: project.servicePeriod ?? sampleProject.servicePeriod,
@@ -1380,6 +1382,7 @@ function metzgerAlignedProject(project: Project): Project {
   return {
     ...project,
     companyId: "metzger-real-estate",
+    customerId: "",
     client: project.client === sampleProject.client ? "" : project.client,
     contactPerson: project.contactPerson === sampleProject.contactPerson ? "" : project.contactPerson,
     projectName: hasAiDemoText(project.projectName) ? "Beratungs- und Unterstützungsleistungen" : cleanProjectName,
@@ -1735,6 +1738,7 @@ export default function HomePage() {
       ...sampleProject,
       id: `offer-${Date.now()}`,
       companyId,
+      customerId: "",
       client: "",
       contactPerson: "",
       projectName: "",
@@ -1885,6 +1889,14 @@ export default function HomePage() {
 
   function updateCustomer(customerId: string, changes: Partial<Customer>) {
     setCustomers((current) => current.map((customer) => (customer.id === customerId ? { ...customer, ...changes } : customer)));
+    setProject((current) => {
+      if (current.customerId !== customerId) return current;
+      return {
+        ...current,
+        client: changes.companyName ?? current.client,
+        contactPerson: changes.contactPerson ?? current.contactPerson
+      };
+    });
   }
 
   function addCustomer() {
@@ -1912,6 +1924,7 @@ export default function HomePage() {
     if (!customer) return;
     if (!window.confirm(`Kunde "${customer.companyName}" löschen?`)) return;
     setCustomers((current) => current.filter((item) => item.id !== customerId));
+    setProject((current) => (current.customerId === customerId ? { ...current, customerId: "", client: "", contactPerson: "" } : current));
   }
 
   function applyCustomerToProject(customerId: string) {
@@ -1919,6 +1932,7 @@ export default function HomePage() {
     if (!customer) return;
     setProject((current) => ({
       ...current,
+      customerId: customer.id,
       client: customer.companyName,
       contactPerson: customer.contactPerson
     }));
@@ -2702,7 +2716,16 @@ export default function HomePage() {
 
           {activeView === "KI-Assistenz" ? <AiAssistant project={project} groups={groups} updatePosition={updatePosition} replaceGroupsFromAi={replaceGroupsFromAi} setActiveView={setActiveView} /> : null}
 
-          {activeView === "Kunden" ? <Customers customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} deleteCustomer={deleteCustomer} applyCustomerToProject={applyCustomerToProject} /> : null}
+          {activeView === "Kunden" ? (
+            <Customers
+              customers={customers}
+              activeProjectCustomerId={project.customerId}
+              updateCustomer={updateCustomer}
+              addCustomer={addCustomer}
+              deleteCustomer={deleteCustomer}
+              applyCustomerToProject={applyCustomerToProject}
+            />
+          ) : null}
 
           {activeView === "Firmenprofile" ? (
             <CompanyProfiles
@@ -3355,7 +3378,9 @@ function ProjectWorkspace({
   applyCustomerToProject: (customerId: string) => void;
   setActiveView: (view: View) => void;
 }) {
-  const selectedCustomer = customers.find((customer) => customer.companyName === project.client && customer.contactPerson === project.contactPerson);
+  const selectedCustomer =
+    customers.find((customer) => customer.id === project.customerId) ??
+    customers.find((customer) => customer.companyName === project.client && customer.contactPerson === project.contactPerson);
   const [newOfferCompanyId, setNewOfferCompanyId] = useState<Project["companyId"]>(project.companyId);
   const selectedNewOfferProfile = profiles.find((profile) => profile.id === newOfferCompanyId);
 
@@ -4589,18 +4614,21 @@ function QualityManagement({
 
 function Customers({
   customers,
+  activeProjectCustomerId,
   updateCustomer,
   addCustomer,
   deleteCustomer,
   applyCustomerToProject
 }: {
   customers: Customer[];
+  activeProjectCustomerId: string;
   updateCustomer: (customerId: string, changes: Partial<Customer>) => void;
   addCustomer: () => void;
   deleteCustomer: (customerId: string) => void;
   applyCustomerToProject: (customerId: string) => void;
 }) {
   const [appliedCustomerId, setAppliedCustomerId] = useState<string | null>(null);
+  const effectiveAppliedCustomerId = appliedCustomerId ?? activeProjectCustomerId;
 
   function handleApplyCustomer(customerId: string) {
     applyCustomerToProject(customerId);
@@ -4669,11 +4697,11 @@ function Customers({
                   type="button"
                   onClick={() => handleApplyCustomer(customer.id)}
                   className={`inline-flex h-10 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold transition ${
-                    appliedCustomerId === customer.id ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-ink text-white hover:bg-slate-700"
+                    effectiveAppliedCustomerId === customer.id ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-ink text-white hover:bg-slate-700"
                   }`}
                 >
-                  {appliedCustomerId === customer.id ? <CheckCircle2 className="h-4 w-4" /> : null}
-                  {appliedCustomerId === customer.id ? "Übernommen" : "In Angebot übernehmen"}
+                  {effectiveAppliedCustomerId === customer.id ? <CheckCircle2 className="h-4 w-4" /> : null}
+                  {effectiveAppliedCustomerId === customer.id ? "Übernommen" : "In Angebot übernehmen"}
                 </button>
                 <button type="button" onClick={() => deleteCustomer(customer.id)} className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-line bg-white px-4 text-sm font-semibold text-ink transition hover:border-slate-300">
                   <Trash2 className="h-4 w-4" />
