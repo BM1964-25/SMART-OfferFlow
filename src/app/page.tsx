@@ -2538,9 +2538,16 @@ export default function HomePage() {
     }));
   }
 
+  const normalizedProjectClient = project.client.trim().toLowerCase();
+  const normalizedProjectContact = project.contactPerson.trim().toLowerCase();
   const projectCustomer =
     customers.find((customer) => customer.id === project.customerId) ??
-    customers.find((customer) => customer.companyName === project.client && customer.contactPerson === project.contactPerson);
+    customers.find(
+      (customer) =>
+        customer.companyName.trim().toLowerCase() === normalizedProjectClient &&
+        customer.contactPerson.trim().toLowerCase() === normalizedProjectContact
+    ) ??
+    customers.find((customer) => customer.companyName.trim().toLowerCase() === normalizedProjectClient);
   const offerPreviewProject: Project = {
     ...project,
     clientAddress: project.clientAddress || projectCustomer?.address || ""

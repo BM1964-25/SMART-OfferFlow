@@ -340,11 +340,11 @@ export function OfferPreview({
               </div>
             )}
             {hasText(recipientAddress) ? (
-              <div className="mb-16 max-w-md text-base font-medium leading-7 text-black">
+              <div className="mb-24 max-w-md text-base font-medium leading-7 text-black">
                 <TextBlock text={recipientAddress} className="whitespace-pre-line" />
               </div>
             ) : null}
-            <p className="text-lg font-bold uppercase tracking-[0.16em] text-black">Angebot</p>
+            <p className="text-3xl font-bold uppercase tracking-[0.18em] text-black">Angebot</p>
             <h1 className="mt-3 max-w-2xl text-4xl font-semibold tracking-normal text-black">{project.projectName}</h1>
             {sectionEnabled(project, "offerIntro") && hasText(project.offerIntro) ? <TextBlock text={project.offerIntro} className="mt-5 max-w-3xl whitespace-pre-line text-lg leading-8 text-black" /> : null}
           </div>
