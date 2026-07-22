@@ -51,7 +51,8 @@ export const defaultOfferSectionVisibility: Record<OfferSectionKey, boolean> = {
   validityText: true,
   offerClarification: true,
   offerNote: true,
-  acceptanceText: true
+  acceptanceText: true,
+  signatureText: false
 };
 
 export const coverLetterOfferSectionVisibility: Record<OfferSectionKey, boolean> = {
@@ -230,6 +231,7 @@ export const sampleProject: Project = {
   offerClarification: defaultOfferBasis,
   offerNote: "",
   acceptanceText: defaultAcceptanceText,
+  signatureText: "Mit freundlichen Grüßen\nBernhard Metzger",
   objective:
     "Ziel ist eine leistungsfähige, anwenderfreundliche und zukunftsfähige Lösung, die wiederkehrende Arbeitsabläufe beschleunigt, Informationen konsolidiert und fundierte Entscheidungen unterstützt.",
   technicalContext:

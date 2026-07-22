@@ -64,7 +64,8 @@ export type OfferSectionKey =
   | "validityText"
   | "offerClarification"
   | "offerNote"
-  | "acceptanceText";
+  | "acceptanceText"
+  | "signatureText";
 
 export type Project = {
   id: string;
@@ -95,6 +96,7 @@ export type Project = {
   offerClarification: string;
   offerNote: string;
   acceptanceText: string;
+  signatureText: string;
   objective: string;
   technicalContext: string;
   modules: string[];

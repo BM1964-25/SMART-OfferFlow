@@ -150,6 +150,7 @@ type OfferTemplateTextFields = Partial<
     | "offerClarification"
     | "offerNote"
     | "acceptanceText"
+    | "signatureText"
   >
 >;
 
@@ -334,6 +335,7 @@ function savedOfferSnapshotChanged(existing: SavedOffer | undefined, next: Saved
     existing.project.offerType !== next.project.offerType ||
     JSON.stringify(existing.project.sectionVisibility ?? {}) !== JSON.stringify(next.project.sectionVisibility ?? {}) ||
     existing.project.coverLetterText !== next.project.coverLetterText ||
+    existing.project.signatureText !== next.project.signatureText ||
     existing.groups.length !== next.groups.length ||
     existingPositionCount !== nextPositionCount ||
     existing.orderBilling.invoicePlan.length !== next.orderBilling.invoicePlan.length ||
@@ -421,7 +423,8 @@ const offerTemplateTextFieldLabels: { key: keyof OfferTemplateTextFields; label:
   { key: "validityText", label: "Gültigkeit" },
   { key: "offerClarification", label: "Angebotsgrundlagen" },
   { key: "offerNote", label: "Hinweis" },
-  { key: "acceptanceText", label: "Auftragserteilung" }
+  { key: "acceptanceText", label: "Auftragserteilung" },
+  { key: "signatureText", label: "Unterschrift" }
 ];
 
 const offerSectionControlLabels: { key: OfferSectionKey; label: string; offerTypes?: Project["offerType"][] }[] = [
@@ -440,7 +443,8 @@ const offerSectionControlLabels: { key: OfferSectionKey; label: string; offerTyp
   { key: "validityText", label: "Gültigkeit" },
   { key: "offerClarification", label: "Angebotsgrundlagen" },
   { key: "offerNote", label: "Hinweis" },
-  { key: "acceptanceText", label: "Auftragserteilung" }
+  { key: "acceptanceText", label: "Auftragserteilung" },
+  { key: "signatureText", label: "Unterschrift" }
 ];
 
 function defaultSectionVisibilityForOfferType(offerType: Project["offerType"]) {
@@ -466,7 +470,8 @@ function defaultOfferTemplateText(profile: CompanyProfile): OfferTemplateTextFie
     validityText: defaultValidityText,
     offerClarification: defaultOfferBasis,
     offerNote: "",
-    acceptanceText: defaultAcceptanceText
+    acceptanceText: defaultAcceptanceText,
+    signatureText: "Mit freundlichen Grüßen\nBernhard Metzger"
   };
 
   if (profile.id === "builtsmart-ai") {
@@ -1398,6 +1403,7 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
     offerClarification: !project.offerClarification || oldOfferClarifications.has(project.offerClarification) ? defaultOfferBasis : project.offerClarification,
     offerNote: project.offerNote ?? "",
     acceptanceText: project.acceptanceText ?? defaultAcceptanceText,
+    signatureText: project.signatureText ?? "Mit freundlichen Grüßen\nBernhard Metzger",
     offerDate: project.offerDate ?? sampleProject.offerDate,
     paymentTerms: !project.paymentTerms || project.paymentTerms === oldSoftwarePaymentTerms || project.paymentTerms === oldSimplePaymentTerms ? sampleProject.paymentTerms : project.paymentTerms,
     skontoPercent: project.skontoPercent ?? 0,
@@ -3746,6 +3752,11 @@ function ProjectWorkspace({
               <div className="xl:col-span-4">
                 <Field label="Auftragserteilung">
                   <TextArea value={project.acceptanceText} onChange={(event) => updateProject("acceptanceText", event.target.value)} className="min-h-20" />
+                </Field>
+              </div>
+              <div className="xl:col-span-4">
+                <Field label="Unterschrift">
+                  <TextArea value={project.signatureText} onChange={(event) => updateProject("signatureText", event.target.value)} className="min-h-20" />
                 </Field>
               </div>
             </div>

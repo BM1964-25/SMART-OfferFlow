@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Download, Printer, Save, Send } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import { activeGroups, calculateSummary, formatCurrency, groupNumber, groupTotal, positionNumber, positionTotal } from "@/lib/calculations";
 import { coverLetterOfferSectionVisibility, defaultOfferSectionVisibility } from "@/lib/data";
@@ -552,6 +553,20 @@ export function OfferPreview({
               </div>
             ))}
           </div>
+        </section>
+      ) : null}
+
+      {sectionEnabled(project, "signatureText") && hasText(project.signatureText) ? (
+        <section className="print-section print-compact print-keep border-t border-line py-8">
+          <h2 className="text-lg font-semibold text-ink">Unterschrift</h2>
+          <TextBlock text={project.signatureText} className="mt-3 whitespace-pre-line leading-7 text-black" />
+          <Image
+            src="/bernhard-metzger-signature.png"
+            alt="Unterschrift Bernhard Metzger"
+            width={300}
+            height={200}
+            className="mt-4 h-auto w-56 object-contain"
+          />
         </section>
       ) : null}
 
