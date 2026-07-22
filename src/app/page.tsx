@@ -467,6 +467,7 @@ function cloneStructuredSections(sections: StructuredOfferSection[] = defaultStr
   return sections.map((section) => ({
     ...section,
     subtitle: section.subtitle ?? "",
+    subtitles: [...(section.subtitles ?? [])],
     bullets: [...(section.bullets ?? [])],
     afterBulletsText: section.afterBulletsText ?? "",
     tableRows: (section.tableRows ?? []).map((row) => ({ ...row }))
@@ -479,6 +480,7 @@ function normalizeStructuredSections(sections?: StructuredOfferSection[]) {
     id: section.id || makeId(`structured-${index + 1}`),
     title: section.title ?? "",
     subtitle: section.subtitle ?? "",
+    subtitles: Array.isArray(section.subtitles) ? section.subtitles : [],
     body: section.body ?? "",
     bullets: Array.isArray(section.bullets) ? section.bullets : [],
     afterBulletsText: section.afterBulletsText ?? "",
@@ -497,6 +499,7 @@ function createBlankStructuredSection(): StructuredOfferSection {
     id: makeId("structured-section"),
     title: "Neuer Abschnitt",
     subtitle: "",
+    subtitles: [],
     body: "",
     bullets: [],
     afterBulletsText: "",
@@ -3991,10 +3994,17 @@ function ProjectWorkspace({
                         <TextInput value={section.title} onChange={(event) => updateStructuredSection(section.id, { title: event.target.value })} />
                       </Field>
                       <Field label="Untertitel">
-                        <TextInput
-                          value={section.subtitle}
-                          placeholder={`${index + 1}.1 Untertitel zum Abschnitt`}
-                          onChange={(event) => updateStructuredSection(section.id, { subtitle: event.target.value })}
+                        <TextArea
+                          value={[section.subtitle, ...(section.subtitles ?? [])].filter(Boolean).join("\n")}
+                          placeholder={`${index + 1}.1 Erster Untertitel\n${index + 1}.2 Weiterer Untertitel`}
+                          onChange={(event) => {
+                            const subtitles = event.target.value
+                              .split("\n")
+                              .map((line) => line.trim())
+                              .filter(Boolean);
+                            updateStructuredSection(section.id, { subtitle: subtitles[0] ?? "", subtitles: subtitles.slice(1) });
+                          }}
+                          className="min-h-20"
                         />
                       </Field>
                       <Field label="Text">

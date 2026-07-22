@@ -79,6 +79,7 @@ export type StructuredOfferSection = {
   id: string;
   title: string;
   subtitle: string;
+  subtitles: string[];
   body: string;
   bullets: string[];
   afterBulletsText: string;

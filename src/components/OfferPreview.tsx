@@ -208,6 +208,7 @@ export function OfferPreview({
     (section) =>
       hasText(section.title) ||
       hasText(section.subtitle) ||
+      (section.subtitles ?? []).some(hasText) ||
       hasText(section.body) ||
       (section.bullets ?? []).some(hasText) ||
       hasText(section.afterBulletsText) ||
@@ -420,6 +421,7 @@ export function OfferPreview({
           <div className="grid gap-6">
             {structuredSections.map((section, index) => {
               const bullets = (section.bullets ?? []).filter(hasText);
+              const subtitles = [section.subtitle, ...(section.subtitles ?? [])].filter(hasText);
               const tableRows = (section.tableRows ?? []).filter((row) => hasText(row.label) || hasText(row.value));
               return (
                 <div key={section.id} className="break-inside-avoid">
@@ -428,12 +430,16 @@ export function OfferPreview({
                       {index + 1}. {section.title}
                     </h2>
                   ) : null}
-                  {hasText(section.subtitle) ? (
-                    <h3 className={`${hasText(section.title) ? "mt-3 " : ""}text-base font-semibold text-black`}>
-                      {index + 1}.1 {section.subtitle}
-                    </h3>
+                  {subtitles.length > 0 ? (
+                    <div className={hasText(section.title) ? "mt-3 grid gap-2" : "grid gap-2"}>
+                      {subtitles.map((subtitle, subtitleIndex) => (
+                        <h3 key={`${section.id}-${subtitleIndex}`} className="text-base font-semibold text-black">
+                          {index + 1}.{subtitleIndex + 1} {subtitle}
+                        </h3>
+                      ))}
+                    </div>
                   ) : null}
-                  {hasText(section.body) ? <TextBlock text={section.body} className={`${hasText(section.title) || hasText(section.subtitle) ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} /> : null}
+                  {hasText(section.body) ? <TextBlock text={section.body} className={`${hasText(section.title) || subtitles.length > 0 ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} /> : null}
                   {bullets.length > 0 ? (
                     <ul className="mt-3 list-disc space-y-1 pl-6 leading-7 text-black">
                       {bullets.map((bullet) => (
