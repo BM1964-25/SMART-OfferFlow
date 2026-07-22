@@ -405,9 +405,9 @@ export function OfferPreview({
           <PreviewMeta label="Datum" value={offerDate} />
         </div>
         {sectionEnabled(project, "offerIntro") && hasText(project.offerIntro) ? (
-          <div className="mt-12 max-w-4xl">
+          <div className="mt-12 max-w-none overflow-x-auto">
             {sectionTitleEnabled(project, "offerIntro") ? <h3 className="text-base font-semibold text-black">Angebotseinleitung</h3> : null}
-            <TextBlock text={project.offerIntro} className={`${sectionTitleEnabled(project, "offerIntro") ? "mt-2 " : ""}whitespace-pre-line text-base leading-7 text-black`} />
+            <TextBlock text={project.offerIntro} className={`${sectionTitleEnabled(project, "offerIntro") ? "mt-2 " : ""}whitespace-nowrap text-base leading-7 text-black`} />
           </div>
         ) : null}
       </section>
