@@ -345,6 +345,9 @@ export function OfferPreview({
               </div>
             ) : null}
             <p className="text-3xl font-bold uppercase tracking-[0.18em] text-black">Angebot</p>
+            {hasText(project.offerSubject) ? (
+              <p className="mt-6 max-w-3xl text-xl font-semibold leading-8 text-black">Betreff: {project.offerSubject}</p>
+            ) : null}
             <h1 className="mt-3 max-w-2xl text-4xl font-semibold tracking-normal text-black">{project.projectName}</h1>
             {sectionEnabled(project, "offerIntro") && hasText(project.offerIntro) ? <TextBlock text={project.offerIntro} className="mt-5 max-w-3xl whitespace-pre-line text-lg leading-8 text-black" /> : null}
           </div>

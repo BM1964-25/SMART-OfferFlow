@@ -327,6 +327,7 @@ function savedOfferSnapshotChanged(existing: SavedOffer | undefined, next: Saved
   const nextPositionCount = activeGroups(next.groups).reduce((sum, group) => sum + group.positions.filter((position) => position.active).length, 0);
   return (
     existing.project.projectName !== next.project.projectName ||
+    existing.project.offerSubject !== next.project.offerSubject ||
     existing.project.client !== next.project.client ||
     existing.project.contactPerson !== next.project.contactPerson ||
     existing.project.clientAddress !== next.project.clientAddress ||
@@ -1393,6 +1394,7 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
     servicePeriod: project.servicePeriod ?? sampleProject.servicePeriod,
     plannedProjectStart: project.plannedProjectStart ?? "",
     projectName: stripCompanyNameFromProjectName(project.projectName ?? sampleProject.projectName, profiles),
+    offerSubject: project.offerSubject ?? "",
     offerType,
     sectionVisibility: {
       ...defaultSectionVisibilityForOfferType(offerType),
@@ -1797,6 +1799,7 @@ export default function HomePage() {
       contactPerson: "",
       clientAddress: "",
       projectName: "",
+      offerSubject: "",
       offerType: "Mit Leistungsverzeichnis",
       sectionVisibility: { ...defaultOfferSectionVisibility },
       sectionTitleVisibility: { ...defaultOfferSectionTitleVisibility },
@@ -3642,6 +3645,15 @@ function ProjectWorkspace({
 
           <section className="rounded-md border border-line p-4">
             <h3 className="font-semibold text-ink">2 Angebotskopf</h3>
+            <div className="mt-4">
+              <Field label="Betreff">
+                <TextInput
+                  value={project.offerSubject}
+                  placeholder="Angebot zur fachbezogenen Sonderrevision der Großschadenregulierung"
+                  onChange={(event) => updateProject("offerSubject", event.target.value)}
+                />
+              </Field>
+            </div>
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               <Field label="Angebotsnummer">
                 <TextInput value={project.offerNumber} onChange={(event) => updateProject("offerNumber", event.target.value)} />

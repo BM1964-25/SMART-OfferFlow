@@ -234,6 +234,7 @@ export const sampleProject: Project = {
   servicePeriod: "Die Leistungserbringung erfolgt nach Abruf durch den Auftraggeber im vereinbarten Projektzeitraum.",
   plannedProjectStart: "",
   projectName: "KI-gestützte Angebotsplattform",
+  offerSubject: "",
   offerType: "Mit Leistungsverzeichnis",
   sectionVisibility: { ...defaultOfferSectionVisibility },
   sectionTitleVisibility: { ...defaultOfferSectionTitleVisibility },
