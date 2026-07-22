@@ -365,6 +365,12 @@ export function OfferPreview({
           <PreviewMeta label="Angebotsnummer" value={project.offerNumber} />
           <PreviewMeta label="Datum" value={offerDate} />
         </div>
+        {sectionEnabled(project, "offerIntro") && hasText(project.offerIntro) ? (
+          <div className="mt-12 max-w-4xl">
+            {sectionTitleEnabled(project, "offerIntro") ? <h3 className="text-base font-semibold text-black">Angebotseinleitung</h3> : null}
+            <TextBlock text={project.offerIntro} className={`${sectionTitleEnabled(project, "offerIntro") ? "mt-2 " : ""}whitespace-pre-line text-lg leading-8 text-black`} />
+          </div>
+        ) : null}
       </section>
 
       {(sectionEnabled(project, "assignmentReason") && hasText(project.assignmentReason)) || projectTextCards.length > 0 || (!hasServiceDirectory && sectionEnabled(project, "coverLetterText") && hasText(project.coverLetterText)) ? (
