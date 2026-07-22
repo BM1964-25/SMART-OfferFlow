@@ -198,12 +198,6 @@ export function OfferPreview({
   const visibleGroups = activeGroups(groups).filter((group) => group.positions.some((position) => position.active));
   const hasServiceDirectory = project.offerType !== "Anschreiben ohne LV";
   const subtotal = summary.net + summary.discount;
-  const projectMetaItems = [
-    { label: "Mandat", value: project.projectName },
-    { label: "Standort", value: project.projectLocation },
-    { label: "Projektvolumen", value: project.projectVolume },
-    { label: "Leistungszeitraum", value: project.plannedProjectStart }
-  ].filter((item) => hasText(item.value));
   const projectTextCards = [
     { key: "shortDescription" as const, title: "Aufgabenstellung", body: project.shortDescription },
     { key: "objective" as const, title: "Zielsetzung", body: project.objective },
@@ -349,7 +343,6 @@ export function OfferPreview({
               <p className="mt-6 max-w-3xl text-xl font-semibold leading-8 text-black">Betreff: {project.offerSubject}</p>
             ) : null}
             <h1 className="mt-3 max-w-2xl text-4xl font-semibold tracking-normal text-black">{project.projectName}</h1>
-            {sectionEnabled(project, "offerIntro") && hasText(project.offerIntro) ? <TextBlock text={project.offerIntro} className="mt-5 max-w-3xl whitespace-pre-line text-lg leading-8 text-black" /> : null}
           </div>
           <div className="min-w-64 rounded-lg border border-line p-4 text-base text-black">
             <p className="text-lg font-semibold leading-6 text-black">{company.name}</p>
@@ -374,15 +367,8 @@ export function OfferPreview({
         </div>
       </section>
 
-      {projectMetaItems.length > 0 || (sectionEnabled(project, "assignmentReason") && hasText(project.assignmentReason)) || projectTextCards.length > 0 || (!hasServiceDirectory && sectionEnabled(project, "coverLetterText") && hasText(project.coverLetterText)) ? (
+      {(sectionEnabled(project, "assignmentReason") && hasText(project.assignmentReason)) || projectTextCards.length > 0 || (!hasServiceDirectory && sectionEnabled(project, "coverLetterText") && hasText(project.coverLetterText)) ? (
         <section className="print-section pb-8 pt-4">
-          {projectMetaItems.length > 0 ? (
-          <div className="mb-16 grid gap-4 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
-            {projectMetaItems.map((item) => (
-              <PreviewMeta key={item.label} label={item.label} value={item.value} />
-            ))}
-          </div>
-        ) : null}
         {sectionEnabled(project, "assignmentReason") && hasText(project.assignmentReason) ? (
           <div className="mt-6">
             {sectionTitleEnabled(project, "assignmentReason") ? <h3 className="text-base font-semibold text-black">Anlass der Beauftragung</h3> : null}
