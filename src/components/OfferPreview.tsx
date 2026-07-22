@@ -190,6 +190,7 @@ export function OfferPreview({
   onOfferSent?: (link: string) => void;
 }) {
   const [shareStatus, setShareStatus] = useState<"idle" | "saving" | "copied" | "error">("idle");
+  const [pdfStatus, setPdfStatus] = useState<"idle" | "creating" | "error">("idle");
   const [shareMessage, setShareMessage] = useState("");
   const [localSaveStatus, setLocalSaveStatus] = useState<"idle" | "saved">("idle");
   const company = profiles.find((profile) => profile.id === project.companyId) ?? profiles[0];
@@ -253,6 +254,55 @@ export function OfferPreview({
     (sectionEnabled(project, "offerNote") && hasText(project.offerNote));
   const printOffer = () => {
     printElement(".print-area", `${project.offerNumber} ${project.projectName}`.trim());
+  };
+  const createProfessionalPdf = async () => {
+    const element = document.querySelector(".print-area");
+    if (!element) {
+      printOffer();
+      return;
+    }
+
+    try {
+      setPdfStatus("creating");
+      setShareMessage("Professionelles PDF wird erstellt.");
+      const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+        .map((node) => node.outerHTML)
+        .join("\n");
+      const title = `${project.offerNumber || "Angebot"} ${project.projectName || project.client || ""}`.trim();
+      const response = await fetch("/api/pdf", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          html: element.outerHTML,
+          styles,
+          title,
+          baseUrl: window.location.origin
+        })
+      });
+
+      if (!response.ok) {
+        const result = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(result?.error || "PDF konnte nicht erstellt werden.");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${title.replace(/[^\w\s.-]/g, "").replace(/\s+/g, "-") || "angebot"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setShareMessage("Professionelles PDF wurde erstellt.");
+      setPdfStatus("idle");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "PDF konnte nicht erstellt werden.";
+      setPdfStatus("error");
+      setShareMessage(`${message} Es wird der normale Druckdialog geöffnet.`);
+      printOffer();
+      window.setTimeout(() => setPdfStatus("idle"), 4500);
+    }
   };
   const saveOffer = () => {
     onSaveOffer?.();
@@ -341,11 +391,12 @@ export function OfferPreview({
           </button>
           <button
             type="button"
-            onClick={printOffer}
+            onClick={createProfessionalPdf}
+            disabled={pdfStatus === "creating"}
             className="inline-flex h-10 items-center gap-2 rounded-md bg-ink px-4 text-sm font-semibold text-white transition hover:bg-slate-700"
           >
             <Printer className="h-4 w-4" />
-            PDF erstellen
+            {pdfStatus === "creating" ? "PDF wird erstellt ..." : "PDF erstellen"}
           </button>
           </div>
         </div>
