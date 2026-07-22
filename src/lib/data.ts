@@ -1,4 +1,4 @@
-import { CompanyProfile, OrderBilling, PositionGroup, Project, RateCard } from "./types";
+import { CompanyProfile, OfferSectionKey, OrderBilling, PositionGroup, Project, RateCard } from "./types";
 
 export const standardRates: RateCard = {
   strategy: 250,
@@ -34,6 +34,36 @@ export const defaultServiceDirectoryIntro =
 
 export const defaultCoverLetterText =
   "Gerne unterbreiten wir Ihnen auf Grundlage der geführten Gespräche und der derzeit bekannten Anforderungen ein Angebot für die beschriebenen Beratungs- und Unterstützungsleistungen.\n\nDer Leistungsumfang wird im Rahmen dieses Anschreibens allgemein beschrieben. Eine gesonderte positionsweise Aufstellung ist nicht Bestandteil dieses Angebots.";
+
+export const defaultOfferSectionVisibility: Record<OfferSectionKey, boolean> = {
+  offerIntro: true,
+  assignmentReason: true,
+  coverLetterText: true,
+  shortDescription: true,
+  objective: true,
+  serviceScope: true,
+  contractorRole: true,
+  serviceDirectoryIntro: true,
+  serviceExclusion: true,
+  changeTerms: true,
+  contractBasis: true,
+  paymentTerms: true,
+  validityText: true,
+  offerClarification: true,
+  offerNote: true,
+  acceptanceText: true
+};
+
+export const coverLetterOfferSectionVisibility: Record<OfferSectionKey, boolean> = {
+  ...defaultOfferSectionVisibility,
+  assignmentReason: false,
+  shortDescription: false,
+  objective: false,
+  serviceScope: false,
+  contractorRole: false,
+  serviceDirectoryIntro: false,
+  serviceExclusion: false
+};
 
 export const defaultServiceScope =
   "Die Leistungen werden als unabhängige Beratungs-, Steuerungs-, Analyse- und Unterstützungsleistungen erbracht. Der konkrete Umfang richtet sich nach den Anforderungen des Projekts und den jeweils abgestimmten Leistungsabrufen.";
@@ -183,6 +213,7 @@ export const sampleProject: Project = {
   plannedProjectStart: "",
   projectName: "KI-gestützte Angebotsplattform",
   offerType: "Mit Leistungsverzeichnis",
+  sectionVisibility: { ...defaultOfferSectionVisibility },
   shortDescription: "Konzeption und Entwicklung einer KI-Anwendung zur strukturierten Auswertung, Angebotserstellung und Angebotsvorbereitung.",
   offerIntro: "Die Lösung wird auf robuste KI-Workflows, transparente Wissensquellen und eine anwenderfreundliche Oberfläche ausgerichtet.",
   assignmentReason: defaultAssignmentReason,

@@ -3,8 +3,9 @@
 import { Check, Download, Printer, Save, Send } from "lucide-react";
 import { useState } from "react";
 import { activeGroups, calculateSummary, formatCurrency, groupNumber, groupTotal, positionNumber, positionTotal } from "@/lib/calculations";
+import { coverLetterOfferSectionVisibility, defaultOfferSectionVisibility } from "@/lib/data";
 import { printElement } from "@/lib/print";
-import { CompanyProfile, PositionGroup, Project } from "@/lib/types";
+import { CompanyProfile, OfferSectionKey, PositionGroup, Project } from "@/lib/types";
 
 function readableTextColor(background: string) {
   const hex = background.replace("#", "");
@@ -128,6 +129,11 @@ function hasText(value?: string | null) {
   return Boolean(value?.trim());
 }
 
+function sectionEnabled(project: Project, key: OfferSectionKey) {
+  const defaults = project.offerType === "Anschreiben ohne LV" ? coverLetterOfferSectionVisibility : defaultOfferSectionVisibility;
+  return (project.sectionVisibility ?? {})[key] ?? defaults[key];
+}
+
 export function OfferPreview({
   project,
   groups,
@@ -183,18 +189,18 @@ export function OfferPreview({
     { label: "Leistungszeitraum", value: project.plannedProjectStart }
   ].filter((item) => hasText(item.value));
   const projectTextCards = [
-    { title: "Aufgabenstellung", body: project.shortDescription },
-    { title: "Zielsetzung", body: project.objective },
-    { title: "Leistungsrahmen", body: project.serviceScope },
-    { title: "Auftragnehmerrolle", body: project.contractorRole }
-  ].filter((item) => hasText(item.body));
+    { key: "shortDescription" as const, title: "Aufgabenstellung", body: project.shortDescription },
+    { key: "objective" as const, title: "Zielsetzung", body: project.objective },
+    { key: "serviceScope" as const, title: "Leistungsrahmen", body: project.serviceScope },
+    { key: "contractorRole" as const, title: "Auftragnehmerrolle", body: project.contractorRole }
+  ].filter((item) => sectionEnabled(project, item.key) && hasText(item.body));
   const hasLegalContent =
-    hasText(project.paymentTerms) ||
+    (sectionEnabled(project, "paymentTerms") && hasText(project.paymentTerms)) ||
     project.skontoPercent > 0 ||
-    hasText(project.contractBasis) ||
-    hasText(project.validityText) ||
-    hasText(project.offerClarification) ||
-    hasText(project.offerNote);
+    (sectionEnabled(project, "contractBasis") && hasText(project.contractBasis)) ||
+    (sectionEnabled(project, "validityText") && hasText(project.validityText)) ||
+    (sectionEnabled(project, "offerClarification") && hasText(project.offerClarification)) ||
+    (sectionEnabled(project, "offerNote") && hasText(project.offerNote));
   const printOffer = () => {
     printElement(".print-area", `${project.offerNumber} ${project.projectName}`.trim());
   };
@@ -319,7 +325,7 @@ export function OfferPreview({
             )}
             <p className="text-lg font-bold uppercase tracking-[0.16em] text-black">Angebot</p>
             <h1 className="mt-3 max-w-2xl text-4xl font-semibold tracking-normal text-black">{project.projectName}</h1>
-            {hasText(project.offerIntro) ? <TextBlock text={project.offerIntro} className="mt-5 max-w-3xl whitespace-pre-line text-lg leading-8 text-black" /> : null}
+            {sectionEnabled(project, "offerIntro") && hasText(project.offerIntro) ? <TextBlock text={project.offerIntro} className="mt-5 max-w-3xl whitespace-pre-line text-lg leading-8 text-black" /> : null}
           </div>
           <div className="min-w-64 rounded-lg border border-line p-4 text-base text-black">
             <p className="text-lg font-semibold leading-6 text-black">{company.name}</p>
@@ -344,7 +350,7 @@ export function OfferPreview({
         </div>
       </section>
 
-      {projectMetaItems.length > 0 || hasText(project.assignmentReason) || projectTextCards.length > 0 ? (
+      {projectMetaItems.length > 0 || (sectionEnabled(project, "assignmentReason") && hasText(project.assignmentReason)) || projectTextCards.length > 0 || (!hasServiceDirectory && sectionEnabled(project, "coverLetterText") && hasText(project.coverLetterText)) ? (
         <section className="print-section pb-8 pt-4">
           {projectMetaItems.length > 0 ? (
           <div className="mb-16 grid gap-4 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
@@ -353,7 +359,7 @@ export function OfferPreview({
             ))}
           </div>
         ) : null}
-        {hasText(project.assignmentReason) ? (
+        {sectionEnabled(project, "assignmentReason") && hasText(project.assignmentReason) ? (
           <div className="mt-6">
             <h3 className="text-base font-semibold text-black">Anlass der Beauftragung</h3>
             <TextBlock text={project.assignmentReason} className="mt-2 whitespace-pre-line leading-7 text-black" />
@@ -369,7 +375,7 @@ export function OfferPreview({
             ))}
           </div>
         ) : null}
-        {!hasServiceDirectory && hasText(project.coverLetterText) ? (
+        {!hasServiceDirectory && sectionEnabled(project, "coverLetterText") && hasText(project.coverLetterText) ? (
           <div className="mt-6 rounded-md border border-[#D9DEE5] bg-white p-5">
             <h3 className="text-base font-semibold text-black">Allgemeiner Angebotstext</h3>
             <TextBlock text={project.coverLetterText} className="mt-3 whitespace-pre-line leading-7 text-black" />
@@ -382,7 +388,7 @@ export function OfferPreview({
       <>
       <section className="print-section print-page-break-before screen-page-break-before border-t border-line py-8">
         <h2 className="text-lg font-semibold text-ink">Leistungsverzeichnis</h2>
-        {project.serviceDirectoryIntro ? <TextBlock text={project.serviceDirectoryIntro} className="mt-2 max-w-4xl whitespace-pre-line text-base leading-7 text-black" /> : null}
+        {sectionEnabled(project, "serviceDirectoryIntro") && project.serviceDirectoryIntro ? <TextBlock text={project.serviceDirectoryIntro} className="mt-2 max-w-4xl whitespace-pre-line text-base leading-7 text-black" /> : null}
         <div className="print-table mt-5 overflow-hidden rounded-lg border border-[#D9DEE5]">
           {visibleGroups.map((group) => {
             const activePositions = group.positions.filter((position) => position.active);
@@ -466,7 +472,7 @@ export function OfferPreview({
         </div>
       </section>
 
-      {hasText(project.serviceExclusion) ? (
+      {sectionEnabled(project, "serviceExclusion") && hasText(project.serviceExclusion) ? (
         <section className="print-section print-compact border-t border-line py-6">
           <h2 className="text-lg font-semibold text-ink">Leistungsabgrenzung</h2>
           <TextBlock text={project.serviceExclusion} className="mt-3 whitespace-pre-line leading-7 text-black" />
@@ -475,7 +481,7 @@ export function OfferPreview({
       </>
       ) : null}
 
-      {hasText(project.changeTerms) ? (
+      {sectionEnabled(project, "changeTerms") && hasText(project.changeTerms) ? (
         <section className="print-section print-compact border-t border-line py-6">
           <h2 className="text-lg font-semibold text-ink">Leistungsänderungen</h2>
           <TextBlock text={project.changeTerms} className="mt-3 whitespace-pre-line leading-7 text-black" />
@@ -485,13 +491,13 @@ export function OfferPreview({
       {hasLegalContent ? (
         <section className="print-section print-compact border-t border-line py-6">
         <div>
-          {hasText(project.contractBasis) ? (
+          {sectionEnabled(project, "contractBasis") && hasText(project.contractBasis) ? (
             <>
               <h2 className="text-lg font-semibold text-ink">Vertragsgrundlage</h2>
               <TextBlock text={project.contractBasis} linkedAgbUrl={company.agbUrl} className="mt-3 whitespace-pre-line leading-7 text-black" />
             </>
           ) : null}
-          {hasText(project.paymentTerms) ? (
+          {sectionEnabled(project, "paymentTerms") && hasText(project.paymentTerms) ? (
             <>
               <h2 className="mt-6 text-lg font-semibold text-ink">Zahlungsbedingungen</h2>
               <TextBlock text={project.paymentTerms} className="mt-3 whitespace-pre-line leading-7 text-black" />
@@ -503,19 +509,19 @@ export function OfferPreview({
               netto zahlbaren Rechnungsbetrag gewährt.
             </p>
           ) : null}
-          {hasText(project.validityText) ? (
+          {sectionEnabled(project, "validityText") && hasText(project.validityText) ? (
             <>
               <h2 className="mt-6 text-lg font-semibold text-ink">Gültigkeit</h2>
               <TextBlock text={project.validityText} className="mt-3 whitespace-pre-line leading-7 text-black" />
             </>
           ) : null}
-          {hasText(project.offerClarification) ? (
+          {sectionEnabled(project, "offerClarification") && hasText(project.offerClarification) ? (
             <>
               <h2 className="mt-6 text-lg font-semibold text-ink">Angebotsgrundlagen</h2>
               <TextBlock text={project.offerClarification} className="mt-3 whitespace-pre-line leading-7 text-black" />
             </>
           ) : null}
-          {hasText(project.offerNote) ? (
+          {sectionEnabled(project, "offerNote") && hasText(project.offerNote) ? (
             <>
               <h2 className="mt-6 text-lg font-semibold text-ink">Hinweis</h2>
               <TextBlock text={project.offerNote} className="mt-3 whitespace-pre-line leading-7 text-black" />
@@ -525,7 +531,7 @@ export function OfferPreview({
         </section>
       ) : null}
 
-      {hasText(project.acceptanceText) ? (
+      {sectionEnabled(project, "acceptanceText") && hasText(project.acceptanceText) ? (
         <section className="print-section print-compact print-keep border-t border-line py-6">
           <h2 className="text-lg font-semibold text-ink">Auftragserteilung</h2>
           <TextBlock text={project.acceptanceText} className="mt-3 whitespace-pre-line leading-7 text-black" />

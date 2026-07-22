@@ -41,6 +41,7 @@ import { Field, IconButton, SectionTitle, Select, StatCard, TextArea, TextInput 
 import { activeGroups, calculateSummary, formatCurrency, groupNumber, groupTotal, positionNumber, positionTotal, renumberGroups } from "@/lib/calculations";
 import {
   companyProfiles,
+  coverLetterOfferSectionVisibility,
   defaultCoverLetterText,
   defaultAcceptanceText,
   defaultAssignmentReason,
@@ -49,6 +50,7 @@ import {
   defaultContractorRole,
   defaultMeetingBillingNote,
   defaultOfferBasis,
+  defaultOfferSectionVisibility,
   defaultServiceDirectoryIntro,
   defaultServiceExclusion,
   defaultServiceScope,
@@ -60,7 +62,7 @@ import {
 } from "@/lib/data";
 import { printElement } from "@/lib/print";
 import { readOfferSharePayloadFromLocation, readOfferTokenFromLocation } from "@/lib/share";
-import { ChangeOrder, CompanyProfile, InvoicePlanItem, OfferStatus, OrderBilling, Position, PositionGroup, Project, WorkLogItem } from "@/lib/types";
+import { ChangeOrder, CompanyProfile, InvoicePlanItem, OfferSectionKey, OfferStatus, OrderBilling, Position, PositionGroup, Project, WorkLogItem } from "@/lib/types";
 
 type View =
   | "Dashboard"
@@ -329,6 +331,7 @@ function savedOfferSnapshotChanged(existing: SavedOffer | undefined, next: Saved
     existing.project.companyId !== next.project.companyId ||
     existing.project.customerId !== next.project.customerId ||
     existing.project.offerType !== next.project.offerType ||
+    JSON.stringify(existing.project.sectionVisibility ?? {}) !== JSON.stringify(next.project.sectionVisibility ?? {}) ||
     existing.project.coverLetterText !== next.project.coverLetterText ||
     existing.groups.length !== next.groups.length ||
     existingPositionCount !== nextPositionCount ||
@@ -419,6 +422,29 @@ const offerTemplateTextFieldLabels: { key: keyof OfferTemplateTextFields; label:
   { key: "offerNote", label: "Hinweis" },
   { key: "acceptanceText", label: "Auftragserteilung" }
 ];
+
+const offerSectionControlLabels: { key: OfferSectionKey; label: string; offerTypes?: Project["offerType"][] }[] = [
+  { key: "offerIntro", label: "Angebotseinleitung" },
+  { key: "assignmentReason", label: "Anlass der Beauftragung" },
+  { key: "coverLetterText", label: "Allgemeiner Angebotstext", offerTypes: ["Anschreiben ohne LV"] },
+  { key: "shortDescription", label: "Aufgabenstellung" },
+  { key: "objective", label: "Zielsetzung" },
+  { key: "serviceScope", label: "Leistungsrahmen" },
+  { key: "contractorRole", label: "Auftragnehmerrolle" },
+  { key: "serviceDirectoryIntro", label: "Einleitung Leistungsverzeichnis", offerTypes: ["Mit Leistungsverzeichnis"] },
+  { key: "serviceExclusion", label: "Leistungsabgrenzung", offerTypes: ["Mit Leistungsverzeichnis"] },
+  { key: "changeTerms", label: "Leistungsänderungen" },
+  { key: "contractBasis", label: "Vertragsgrundlage" },
+  { key: "paymentTerms", label: "Zahlungsbedingungen" },
+  { key: "validityText", label: "Gültigkeit" },
+  { key: "offerClarification", label: "Angebotsgrundlagen" },
+  { key: "offerNote", label: "Hinweis" },
+  { key: "acceptanceText", label: "Auftragserteilung" }
+];
+
+function defaultSectionVisibilityForOfferType(offerType: Project["offerType"]) {
+  return offerType === "Anschreiben ohne LV" ? coverLetterOfferSectionVisibility : defaultOfferSectionVisibility;
+}
 
 function offerTemplateTextFromProject(project: Project): OfferTemplateTextFields {
   return offerTemplateTextFieldLabels.reduce<OfferTemplateTextFields>((fields, field) => {
@@ -1341,6 +1367,7 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
     "Dieses Angebot basiert auf den zum Zeitpunkt der Angebotserstellung vorliegenden Informationen und Rahmenbedingungen. Änderungen des Leistungsumfangs, der Projektanforderungen oder sonstiger wesentlicher Rahmenbedingungen können eine Anpassung des Angebots erforderlich machen."
   ]);
   const oldContractBasis = "Die Leistungserbringung erfolgt auf Grundlage dieses Angebots sowie der Allgemeinen Geschäftsbedingungen von Metzger - Real Estate Advisory. Mit Auftragserteilung erkennt der Auftraggeber diese als Vertragsbestandteil an.";
+  const offerType = project.offerType ?? "Mit Leistungsverzeichnis";
   return {
     ...project,
     customerId: project.customerId ?? "",
@@ -1349,7 +1376,11 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
     servicePeriod: project.servicePeriod ?? sampleProject.servicePeriod,
     plannedProjectStart: project.plannedProjectStart ?? "",
     projectName: stripCompanyNameFromProjectName(project.projectName ?? sampleProject.projectName, profiles),
-    offerType: project.offerType ?? "Mit Leistungsverzeichnis",
+    offerType,
+    sectionVisibility: {
+      ...defaultSectionVisibilityForOfferType(offerType),
+      ...(project.sectionVisibility ?? {})
+    },
     shortDescription: project.shortDescription ?? sampleProject.shortDescription,
     offerIntro: project.offerIntro ?? profileDefaults.offerText,
     assignmentReason: project.assignmentReason ?? defaultAssignmentReason,
@@ -1743,6 +1774,7 @@ export default function HomePage() {
       contactPerson: "",
       projectName: "",
       offerType: "Mit Leistungsverzeichnis",
+      sectionVisibility: { ...defaultOfferSectionVisibility },
       projectLocation: "",
       projectVolume: "",
       plannedProjectStart: "",
@@ -3383,6 +3415,20 @@ function ProjectWorkspace({
     customers.find((customer) => customer.companyName === project.client && customer.contactPerson === project.contactPerson);
   const [newOfferCompanyId, setNewOfferCompanyId] = useState<Project["companyId"]>(project.companyId);
   const selectedNewOfferProfile = profiles.find((profile) => profile.id === newOfferCompanyId);
+  const visibleSectionControls = offerSectionControlLabels.filter((section) => !section.offerTypes || section.offerTypes.includes(project.offerType));
+
+  function updateOfferType(offerType: Project["offerType"]) {
+    updateProject("offerType", offerType);
+    updateProject("sectionVisibility", defaultSectionVisibilityForOfferType(offerType));
+  }
+
+  function updateSectionVisibility(sectionKey: OfferSectionKey, active: boolean) {
+    updateProject("sectionVisibility", {
+      ...defaultSectionVisibilityForOfferType(project.offerType),
+      ...(project.sectionVisibility ?? {}),
+      [sectionKey]: active
+    });
+  }
 
   return (
     <div className="grid gap-6">
@@ -3407,7 +3453,7 @@ function ProjectWorkspace({
                   </Select>
                 </Field>
                 <Field label="Angebotsart">
-                  <Select value={project.offerType} onChange={(event) => updateProject("offerType", event.target.value as Project["offerType"])}>
+                  <Select value={project.offerType} onChange={(event) => updateOfferType(event.target.value as Project["offerType"])}>
                     <option>Mit Leistungsverzeichnis</option>
                     <option>Anschreiben ohne LV</option>
                   </Select>
@@ -3489,6 +3535,30 @@ function ProjectWorkspace({
 
           <section className="rounded-md border border-line p-4">
             <h3 className="font-semibold text-ink">3 Inhalt und Angebotsklarstellung</h3>
+            <div className="mt-4 rounded-md border border-line bg-slate-50 p-4">
+              <p className="text-sm font-semibold text-ink">Abschnitte im Angebot anzeigen</p>
+              <p className="mt-1 text-xs leading-5 text-muted">
+                Aktiviere nur die Textbausteine, die in der Angebotsvorschau erscheinen sollen. Leere aktive Felder werden weiterhin nicht gedruckt.
+              </p>
+              <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+                {visibleSectionControls.map((section) => {
+                  const checked =
+                    (project.sectionVisibility ?? {})[section.key] ??
+                    defaultSectionVisibilityForOfferType(project.offerType)[section.key];
+                  return (
+                    <label key={section.key} className="flex min-h-10 items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm font-medium text-ink">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(event) => updateSectionVisibility(section.key, event.target.checked)}
+                        className="h-4 w-4 rounded border-line text-blue-700"
+                      />
+                      <span>{section.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
             <div className="mt-4 grid gap-4">
               <Field label="Angebotseinleitung">
                 <TextArea value={project.offerIntro} onChange={(event) => updateProject("offerIntro", event.target.value)} className="min-h-28" />

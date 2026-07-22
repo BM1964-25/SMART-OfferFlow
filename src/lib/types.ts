@@ -48,6 +48,24 @@ export type CompanyProfile = {
 
 export type RateCard = Record<RateKey, number>;
 
+export type OfferSectionKey =
+  | "offerIntro"
+  | "assignmentReason"
+  | "coverLetterText"
+  | "shortDescription"
+  | "objective"
+  | "serviceScope"
+  | "contractorRole"
+  | "serviceDirectoryIntro"
+  | "serviceExclusion"
+  | "changeTerms"
+  | "contractBasis"
+  | "paymentTerms"
+  | "validityText"
+  | "offerClarification"
+  | "offerNote"
+  | "acceptanceText";
+
 export type Project = {
   id: string;
   companyId: CompanyId;
@@ -60,6 +78,7 @@ export type Project = {
   plannedProjectStart: string;
   projectName: string;
   offerType: "Mit Leistungsverzeichnis" | "Anschreiben ohne LV";
+  sectionVisibility: Partial<Record<OfferSectionKey, boolean>>;
   shortDescription: string;
   offerIntro: string;
   assignmentReason: string;
