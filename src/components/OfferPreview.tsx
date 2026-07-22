@@ -364,7 +364,7 @@ export function OfferPreview({
           </div>
         </div>
         <div className="mt-16 grid gap-4 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
-          <PreviewMeta label="Empfänger" value={recipientAddress} />
+          <PreviewMeta label="Mandat" value={project.projectName || project.offerType} />
           <PreviewMeta label="Ansprechpartner" value={project.contactPerson} />
           <PreviewMeta label="Angebotsnummer" value={project.offerNumber} />
           <PreviewMeta label="Datum" value={offerDate} />
