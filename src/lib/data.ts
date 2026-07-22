@@ -55,6 +55,26 @@ export const defaultOfferSectionVisibility: Record<OfferSectionKey, boolean> = {
   signatureText: false
 };
 
+export const defaultOfferSectionTitleVisibility: Record<OfferSectionKey, boolean> = {
+  offerIntro: false,
+  assignmentReason: true,
+  coverLetterText: false,
+  shortDescription: true,
+  objective: true,
+  serviceScope: true,
+  contractorRole: true,
+  serviceDirectoryIntro: false,
+  serviceExclusion: true,
+  changeTerms: true,
+  contractBasis: true,
+  paymentTerms: true,
+  validityText: true,
+  offerClarification: true,
+  offerNote: true,
+  acceptanceText: true,
+  signatureText: false
+};
+
 export const coverLetterOfferSectionVisibility: Record<OfferSectionKey, boolean> = {
   ...defaultOfferSectionVisibility,
   assignmentReason: false,
@@ -216,6 +236,7 @@ export const sampleProject: Project = {
   projectName: "KI-gestützte Angebotsplattform",
   offerType: "Mit Leistungsverzeichnis",
   sectionVisibility: { ...defaultOfferSectionVisibility },
+  sectionTitleVisibility: { ...defaultOfferSectionTitleVisibility },
   shortDescription: "Konzeption und Entwicklung einer KI-Anwendung zur strukturierten Auswertung, Angebotserstellung und Angebotsvorbereitung.",
   offerIntro: "Die Lösung wird auf robuste KI-Workflows, transparente Wissensquellen und eine anwenderfreundliche Oberfläche ausgerichtet.",
   assignmentReason: defaultAssignmentReason,

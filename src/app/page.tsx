@@ -42,6 +42,7 @@ import { activeGroups, calculateSummary, formatCurrency, groupNumber, groupTotal
 import {
   companyProfiles,
   coverLetterOfferSectionVisibility,
+  defaultOfferSectionTitleVisibility,
   defaultCoverLetterText,
   defaultAcceptanceText,
   defaultAssignmentReason,
@@ -334,6 +335,7 @@ function savedOfferSnapshotChanged(existing: SavedOffer | undefined, next: Saved
     existing.project.customerId !== next.project.customerId ||
     existing.project.offerType !== next.project.offerType ||
     JSON.stringify(existing.project.sectionVisibility ?? {}) !== JSON.stringify(next.project.sectionVisibility ?? {}) ||
+    JSON.stringify(existing.project.sectionTitleVisibility ?? {}) !== JSON.stringify(next.project.sectionTitleVisibility ?? {}) ||
     existing.project.coverLetterText !== next.project.coverLetterText ||
     existing.project.signatureText !== next.project.signatureText ||
     existing.groups.length !== next.groups.length ||
@@ -1396,6 +1398,10 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
       ...defaultSectionVisibilityForOfferType(offerType),
       ...(project.sectionVisibility ?? {})
     },
+    sectionTitleVisibility: {
+      ...defaultOfferSectionTitleVisibility,
+      ...(project.sectionTitleVisibility ?? {})
+    },
     shortDescription: project.shortDescription ?? sampleProject.shortDescription,
     offerIntro: project.offerIntro ?? profileDefaults.offerText,
     assignmentReason: project.assignmentReason ?? defaultAssignmentReason,
@@ -1793,6 +1799,7 @@ export default function HomePage() {
       projectName: "",
       offerType: "Mit Leistungsverzeichnis",
       sectionVisibility: { ...defaultOfferSectionVisibility },
+      sectionTitleVisibility: { ...defaultOfferSectionTitleVisibility },
       projectLocation: "",
       projectVolume: "",
       plannedProjectStart: "",
@@ -3506,15 +3513,28 @@ function ProjectWorkspace({
     return (project.sectionVisibility ?? {})[sectionKey] ?? defaultSectionVisibilityForOfferType(project.offerType)[sectionKey];
   }
 
+  function isSectionTitleVisible(sectionKey: OfferSectionKey) {
+    return (project.sectionTitleVisibility ?? {})[sectionKey] ?? defaultOfferSectionTitleVisibility[sectionKey];
+  }
+
   function updateOfferType(offerType: Project["offerType"]) {
     updateProject("offerType", offerType);
     updateProject("sectionVisibility", defaultSectionVisibilityForOfferType(offerType));
+    updateProject("sectionTitleVisibility", defaultOfferSectionTitleVisibility);
   }
 
   function updateSectionVisibility(sectionKey: OfferSectionKey, active: boolean) {
     updateProject("sectionVisibility", {
       ...defaultSectionVisibilityForOfferType(project.offerType),
       ...(project.sectionVisibility ?? {}),
+      [sectionKey]: active
+    });
+  }
+
+  function updateSectionTitleVisibility(sectionKey: OfferSectionKey, active: boolean) {
+    updateProject("sectionTitleVisibility", {
+      ...defaultOfferSectionTitleVisibility,
+      ...(project.sectionTitleVisibility ?? {}),
       [sectionKey]: active
     });
   }
@@ -3663,6 +3683,35 @@ function ProjectWorkspace({
                     </label>
                   );
                 })}
+              </div>
+              <div className="mt-5 border-t border-line pt-4">
+                <p className="text-sm font-semibold text-ink">Überschriften im Angebot anzeigen</p>
+                <p className="mt-1 text-xs leading-5 text-muted">
+                  Diese Auswahl steuert nur den sichtbaren Titel im Angebot. Der Textinhalt wird weiterhin oben über „Abschnitte im Angebot anzeigen“ gesteuert.
+                </p>
+                <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+                  {visibleSectionControls.map((section) => {
+                    const checked = isSectionTitleVisible(section.key);
+                    return (
+                      <label
+                        key={`title-${section.key}`}
+                        className={`flex min-h-10 items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition ${
+                          checked
+                            ? "border-slate-300 bg-slate-100 text-ink"
+                            : "border-line bg-white text-muted"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(event) => updateSectionTitleVisibility(section.key, event.target.checked)}
+                          className="h-4 w-4 rounded border-line text-slate-700"
+                        />
+                        <span>{section.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
             </div>
             <div className="mt-4 grid gap-4">

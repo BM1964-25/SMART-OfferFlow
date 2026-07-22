@@ -81,6 +81,7 @@ export type Project = {
   projectName: string;
   offerType: "Mit Leistungsverzeichnis" | "Anschreiben ohne LV";
   sectionVisibility: Partial<Record<OfferSectionKey, boolean>>;
+  sectionTitleVisibility: Partial<Record<OfferSectionKey, boolean>>;
   shortDescription: string;
   offerIntro: string;
   assignmentReason: string;

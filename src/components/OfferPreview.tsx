@@ -4,7 +4,7 @@ import { Check, Download, Printer, Save, Send } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { activeGroups, calculateSummary, formatCurrency, groupNumber, groupTotal, positionNumber, positionTotal } from "@/lib/calculations";
-import { coverLetterOfferSectionVisibility, defaultOfferSectionVisibility } from "@/lib/data";
+import { coverLetterOfferSectionVisibility, defaultOfferSectionTitleVisibility, defaultOfferSectionVisibility } from "@/lib/data";
 import { printElement } from "@/lib/print";
 import { CompanyProfile, OfferSectionKey, PositionGroup, Project } from "@/lib/types";
 
@@ -143,6 +143,10 @@ function formatRecipientAddress(project: Project) {
 function sectionEnabled(project: Project, key: OfferSectionKey) {
   const defaults = project.offerType === "Anschreiben ohne LV" ? coverLetterOfferSectionVisibility : defaultOfferSectionVisibility;
   return (project.sectionVisibility ?? {})[key] ?? defaults[key];
+}
+
+function sectionTitleEnabled(project: Project, key: OfferSectionKey) {
+  return (project.sectionTitleVisibility ?? {})[key] ?? defaultOfferSectionTitleVisibility[key];
 }
 
 export function OfferPreview({
@@ -378,24 +382,24 @@ export function OfferPreview({
         ) : null}
         {sectionEnabled(project, "assignmentReason") && hasText(project.assignmentReason) ? (
           <div className="mt-6">
-            <h3 className="text-base font-semibold text-black">Anlass der Beauftragung</h3>
-            <TextBlock text={project.assignmentReason} className="mt-2 whitespace-pre-line leading-7 text-black" />
+            {sectionTitleEnabled(project, "assignmentReason") ? <h3 className="text-base font-semibold text-black">Anlass der Beauftragung</h3> : null}
+            <TextBlock text={project.assignmentReason} className={`${sectionTitleEnabled(project, "assignmentReason") ? "mt-2 " : ""}whitespace-pre-line leading-7 text-black`} />
           </div>
         ) : null}
         {projectTextCards.length > 0 ? (
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             {projectTextCards.map((item) => (
               <div key={item.title} className="rounded-md border border-[#D9DEE5] bg-[#F3F4F6] p-4">
-                <h3 className="text-base font-semibold text-black">{item.title}</h3>
-                <TextBlock text={item.body} className="mt-2 whitespace-pre-line leading-7 text-black" />
+                {sectionTitleEnabled(project, item.key) ? <h3 className="text-base font-semibold text-black">{item.title}</h3> : null}
+                <TextBlock text={item.body} className={`${sectionTitleEnabled(project, item.key) ? "mt-2 " : ""}whitespace-pre-line leading-7 text-black`} />
               </div>
             ))}
           </div>
         ) : null}
         {!hasServiceDirectory && sectionEnabled(project, "coverLetterText") && hasText(project.coverLetterText) ? (
           <div className="mt-6 rounded-md border border-[#D9DEE5] bg-white p-5">
-            <h3 className="text-base font-semibold text-black">Allgemeiner Angebotstext</h3>
-            <TextBlock text={project.coverLetterText} className="mt-3 whitespace-pre-line leading-7 text-black" />
+            {sectionTitleEnabled(project, "coverLetterText") ? <h3 className="text-base font-semibold text-black">Allgemeiner Angebotstext</h3> : null}
+            <TextBlock text={project.coverLetterText} className={`${sectionTitleEnabled(project, "coverLetterText") ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} />
           </div>
         ) : null}
         </section>
@@ -491,8 +495,8 @@ export function OfferPreview({
 
       {sectionEnabled(project, "serviceExclusion") && hasText(project.serviceExclusion) ? (
         <section className="print-section print-compact border-t border-line py-6">
-          <h2 className="text-lg font-semibold text-ink">Leistungsabgrenzung</h2>
-          <TextBlock text={project.serviceExclusion} className="mt-3 whitespace-pre-line leading-7 text-black" />
+          {sectionTitleEnabled(project, "serviceExclusion") ? <h2 className="text-lg font-semibold text-ink">Leistungsabgrenzung</h2> : null}
+          <TextBlock text={project.serviceExclusion} className={`${sectionTitleEnabled(project, "serviceExclusion") ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} />
         </section>
       ) : null}
       </>
@@ -500,8 +504,8 @@ export function OfferPreview({
 
       {sectionEnabled(project, "changeTerms") && hasText(project.changeTerms) ? (
         <section className="print-section print-compact border-t border-line py-6">
-          <h2 className="text-lg font-semibold text-ink">Leistungsänderungen</h2>
-          <TextBlock text={project.changeTerms} className="mt-3 whitespace-pre-line leading-7 text-black" />
+          {sectionTitleEnabled(project, "changeTerms") ? <h2 className="text-lg font-semibold text-ink">Leistungsänderungen</h2> : null}
+          <TextBlock text={project.changeTerms} className={`${sectionTitleEnabled(project, "changeTerms") ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} />
         </section>
       ) : null}
 
@@ -510,14 +514,14 @@ export function OfferPreview({
         <div>
           {sectionEnabled(project, "contractBasis") && hasText(project.contractBasis) ? (
             <>
-              <h2 className="text-lg font-semibold text-ink">Vertragsgrundlage</h2>
-              <TextBlock text={project.contractBasis} linkedAgbUrl={company.agbUrl} className="mt-3 whitespace-pre-line leading-7 text-black" />
+              {sectionTitleEnabled(project, "contractBasis") ? <h2 className="text-lg font-semibold text-ink">Vertragsgrundlage</h2> : null}
+              <TextBlock text={project.contractBasis} linkedAgbUrl={company.agbUrl} className={`${sectionTitleEnabled(project, "contractBasis") ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} />
             </>
           ) : null}
           {sectionEnabled(project, "paymentTerms") && hasText(project.paymentTerms) ? (
             <>
-              <h2 className="mt-6 text-lg font-semibold text-ink">Zahlungsbedingungen</h2>
-              <TextBlock text={project.paymentTerms} className="mt-3 whitespace-pre-line leading-7 text-black" />
+              {sectionTitleEnabled(project, "paymentTerms") ? <h2 className="mt-6 text-lg font-semibold text-ink">Zahlungsbedingungen</h2> : null}
+              <TextBlock text={project.paymentTerms} className={`${sectionTitleEnabled(project, "paymentTerms") ? "mt-3 " : "mt-6 "}whitespace-pre-line leading-7 text-black`} />
             </>
           ) : null}
           {project.skontoPercent > 0 ? (
@@ -528,20 +532,20 @@ export function OfferPreview({
           ) : null}
           {sectionEnabled(project, "validityText") && hasText(project.validityText) ? (
             <>
-              <h2 className="mt-6 text-lg font-semibold text-ink">Gültigkeit</h2>
-              <TextBlock text={project.validityText} className="mt-3 whitespace-pre-line leading-7 text-black" />
+              {sectionTitleEnabled(project, "validityText") ? <h2 className="mt-6 text-lg font-semibold text-ink">Gültigkeit</h2> : null}
+              <TextBlock text={project.validityText} className={`${sectionTitleEnabled(project, "validityText") ? "mt-3 " : "mt-6 "}whitespace-pre-line leading-7 text-black`} />
             </>
           ) : null}
           {sectionEnabled(project, "offerClarification") && hasText(project.offerClarification) ? (
             <>
-              <h2 className="mt-6 text-lg font-semibold text-ink">Angebotsgrundlagen</h2>
-              <TextBlock text={project.offerClarification} className="mt-3 whitespace-pre-line leading-7 text-black" />
+              {sectionTitleEnabled(project, "offerClarification") ? <h2 className="mt-6 text-lg font-semibold text-ink">Angebotsgrundlagen</h2> : null}
+              <TextBlock text={project.offerClarification} className={`${sectionTitleEnabled(project, "offerClarification") ? "mt-3 " : "mt-6 "}whitespace-pre-line leading-7 text-black`} />
             </>
           ) : null}
           {sectionEnabled(project, "offerNote") && hasText(project.offerNote) ? (
             <>
-              <h2 className="mt-6 text-lg font-semibold text-ink">Hinweis</h2>
-              <TextBlock text={project.offerNote} className="mt-3 whitespace-pre-line leading-7 text-black" />
+              {sectionTitleEnabled(project, "offerNote") ? <h2 className="mt-6 text-lg font-semibold text-ink">Hinweis</h2> : null}
+              <TextBlock text={project.offerNote} className={`${sectionTitleEnabled(project, "offerNote") ? "mt-3 " : "mt-6 "}whitespace-pre-line leading-7 text-black`} />
             </>
           ) : null}
         </div>
@@ -550,8 +554,8 @@ export function OfferPreview({
 
       {sectionEnabled(project, "acceptanceText") && hasText(project.acceptanceText) ? (
         <section className="print-section print-compact print-keep border-t border-line py-6">
-          <h2 className="text-lg font-semibold text-ink">Auftragserteilung</h2>
-          <TextBlock text={project.acceptanceText} className="mt-3 whitespace-pre-line leading-7 text-black" />
+          {sectionTitleEnabled(project, "acceptanceText") ? <h2 className="text-lg font-semibold text-ink">Auftragserteilung</h2> : null}
+          <TextBlock text={project.acceptanceText} className={`${sectionTitleEnabled(project, "acceptanceText") ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} />
           <div className="mt-28 grid gap-6 md:grid-cols-4">
             {["Ort, Datum", "Name", "Funktion", "Unterschrift"].map((label) => (
               <div key={label} className="border-t border-line pt-3 text-sm font-medium text-black">
@@ -564,8 +568,8 @@ export function OfferPreview({
 
       {sectionEnabled(project, "signatureText") && hasText(project.signatureText) ? (
         <section className="print-section print-compact print-keep border-t border-line py-5">
-          <h2 className="text-lg font-semibold text-ink">Unterschrift</h2>
-          <TextBlock text={project.signatureText} className="mt-2 whitespace-pre-line leading-7 text-black" />
+          {sectionTitleEnabled(project, "signatureText") ? <h2 className="text-lg font-semibold text-ink">Unterschrift</h2> : null}
+          <TextBlock text={project.signatureText} className={`${sectionTitleEnabled(project, "signatureText") ? "mt-2 " : ""}whitespace-pre-line leading-7 text-black`} />
           <div className="mt-1 w-64">
             <Image
               src="/bernhard-metzger-signature.png"
