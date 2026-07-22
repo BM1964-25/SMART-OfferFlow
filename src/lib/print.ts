@@ -25,7 +25,7 @@ export function printElement(selector: string, title: string) {
     <meta name="document-title" content="${escapeHtml(title)}" />
     ${styleNodes}
     <style>
-      @page { size: A4; margin: 14mm 12mm 16mm; }
+      @page { size: A4; margin: 22mm 20mm 24mm; }
       html, body {
         height: auto !important;
         min-height: 0 !important;

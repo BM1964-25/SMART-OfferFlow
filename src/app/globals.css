@@ -186,7 +186,7 @@ input[type="number"]::-webkit-outer-spin-button {
 @media print {
   @page {
     size: A4;
-    margin: 14mm 12mm 16mm;
+    margin: 22mm 20mm 24mm;
   }
 
   html {
