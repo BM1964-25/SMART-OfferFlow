@@ -188,6 +188,7 @@ export function OfferPreview({
   const hasFooterLegal = hasText(footerLegal);
   const hasFooterBank = hasText(footerBank);
   const companyAddressLines = formatCompanyAddressLines(company);
+  const recipientAddress = formatRecipientAddress(project);
   const summary = calculateSummary(groups, project);
   const offerDate = new Intl.DateTimeFormat("de-DE", { dateStyle: "long" }).format(new Date(`${project.offerDate}T12:00:00`));
   const visibleGroups = activeGroups(groups).filter((group) => group.positions.some((position) => position.active));
@@ -320,7 +321,7 @@ export function OfferPreview({
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div>
             {company.id === "metzger-real-estate" ? (
-              <div className="mb-20">
+              <div className="mb-12">
                 <p className="text-3xl font-semibold uppercase leading-tight tracking-[0.12em] text-[#5F6671] sm:text-4xl">
                   METZGER - REAL ESTATE ADVISORY
                 </p>
@@ -328,12 +329,17 @@ export function OfferPreview({
               </div>
             ) : (
               <div
-                className="mb-20 inline-flex h-14 min-w-14 items-center justify-center rounded-md px-4 text-sm font-bold"
+                className="mb-12 inline-flex h-14 min-w-14 items-center justify-center rounded-md px-4 text-sm font-bold"
                 style={{ background: company.colors.primary, color: readableTextColor(company.colors.primary) }}
               >
                 {company.logoText}
               </div>
             )}
+            {hasText(recipientAddress) ? (
+              <div className="mb-16 max-w-md text-base font-medium leading-7 text-black">
+                <TextBlock text={recipientAddress} className="whitespace-pre-line" />
+              </div>
+            ) : null}
             <p className="text-lg font-bold uppercase tracking-[0.16em] text-black">Angebot</p>
             <h1 className="mt-3 max-w-2xl text-4xl font-semibold tracking-normal text-black">{project.projectName}</h1>
             {sectionEnabled(project, "offerIntro") && hasText(project.offerIntro) ? <TextBlock text={project.offerIntro} className="mt-5 max-w-3xl whitespace-pre-line text-lg leading-8 text-black" /> : null}
@@ -354,7 +360,7 @@ export function OfferPreview({
           </div>
         </div>
         <div className="mt-16 grid gap-4 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
-          <PreviewMeta label="Empfänger" value={formatRecipientAddress(project)} />
+          <PreviewMeta label="Empfänger" value={recipientAddress} />
           <PreviewMeta label="Ansprechpartner" value={project.contactPerson} />
           <PreviewMeta label="Angebotsnummer" value={project.offerNumber} />
           <PreviewMeta label="Datum" value={offerDate} />

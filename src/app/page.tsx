@@ -2531,6 +2531,14 @@ export default function HomePage() {
     }));
   }
 
+  const projectCustomer =
+    customers.find((customer) => customer.id === project.customerId) ??
+    customers.find((customer) => customer.companyName === project.client && customer.contactPerson === project.contactPerson);
+  const offerPreviewProject: Project = {
+    ...project,
+    clientAddress: project.clientAddress || projectCustomer?.address || ""
+  };
+
   if (publicOfferMode) {
     return (
       <main className="min-h-screen bg-canvas">
@@ -2546,7 +2554,7 @@ export default function HomePage() {
               <p className="mt-2 text-sm text-rose-800">{storageMessage}</p>
             </div>
           ) : (
-            <OfferPreview project={project} groups={groups} profiles={profiles} publicView />
+            <OfferPreview project={offerPreviewProject} groups={groups} profiles={profiles} publicView />
           )}
         </div>
         <AppFooter />
@@ -2801,7 +2809,7 @@ export default function HomePage() {
           ) : null}
 
           {activeView === "Angebotsvorschau" ? (
-            <OfferPreview project={project} groups={groups} profiles={profiles} onSaveOffer={saveCurrentOffer} onExportJson={exportJson} onExportOffer={() => exportSingleOffer()} onOfferSent={markOfferAsSent} />
+            <OfferPreview project={offerPreviewProject} groups={groups} profiles={profiles} onSaveOffer={saveCurrentOffer} onExportJson={exportJson} onExportOffer={() => exportSingleOffer()} onOfferSent={markOfferAsSent} />
           ) : null}
 
           {activeView === "Auftrag & Abrechnung" ? (
