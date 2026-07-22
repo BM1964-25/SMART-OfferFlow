@@ -557,16 +557,19 @@ export function OfferPreview({
       ) : null}
 
       {sectionEnabled(project, "signatureText") && hasText(project.signatureText) ? (
-        <section className="print-section print-compact print-keep border-t border-line py-8">
+        <section className="print-section print-compact print-keep border-t border-line py-5">
           <h2 className="text-lg font-semibold text-ink">Unterschrift</h2>
-          <TextBlock text={project.signatureText} className="mt-3 whitespace-pre-line leading-7 text-black" />
-          <Image
-            src="/bernhard-metzger-signature.png"
-            alt="Unterschrift Bernhard Metzger"
-            width={300}
-            height={200}
-            className="mt-4 h-auto w-56 object-contain"
-          />
+          <TextBlock text={project.signatureText} className="mt-2 whitespace-pre-line leading-7 text-black" />
+          <div className="mt-1 w-64">
+            <Image
+              src="/bernhard-metzger-signature.png"
+              alt="Unterschrift Bernhard Metzger"
+              width={300}
+              height={200}
+              className="h-auto w-56 object-contain"
+            />
+            <p className="-mt-4 pl-2 text-base font-semibold text-black">Bernhard Metzger</p>
+          </div>
         </section>
       ) : null}
 
