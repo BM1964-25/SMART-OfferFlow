@@ -327,6 +327,7 @@ function savedOfferSnapshotChanged(existing: SavedOffer | undefined, next: Saved
     existing.project.projectName !== next.project.projectName ||
     existing.project.client !== next.project.client ||
     existing.project.contactPerson !== next.project.contactPerson ||
+    existing.project.clientAddress !== next.project.clientAddress ||
     existing.project.offerNumber !== next.project.offerNumber ||
     existing.project.companyId !== next.project.companyId ||
     existing.project.customerId !== next.project.customerId ||
@@ -1371,6 +1372,7 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
   return {
     ...project,
     customerId: project.customerId ?? "",
+    clientAddress: project.clientAddress ?? "",
     projectLocation: project.projectLocation ?? "",
     projectVolume: project.projectVolume ?? "",
     servicePeriod: project.servicePeriod ?? sampleProject.servicePeriod,
@@ -1416,6 +1418,7 @@ function metzgerAlignedProject(project: Project): Project {
     customerId: "",
     client: project.client === sampleProject.client ? "" : project.client,
     contactPerson: project.contactPerson === sampleProject.contactPerson ? "" : project.contactPerson,
+    clientAddress: project.client === sampleProject.client ? "" : project.clientAddress ?? "",
     projectName: hasAiDemoText(project.projectName) ? "Beratungs- und Unterstützungsleistungen" : cleanProjectName,
     shortDescription: hasAiDemoText(project.shortDescription)
       ? "Leistungsangebot für strategische Beratung, Projektsteuerung, technische Prüfungen, Qualitätsmanagement, Baurevision, Sachverständigenleistungen sowie abrechenbare Reise- und Auslagenpositionen."
@@ -1772,6 +1775,7 @@ export default function HomePage() {
       customerId: "",
       client: "",
       contactPerson: "",
+      clientAddress: "",
       projectName: "",
       offerType: "Mit Leistungsverzeichnis",
       sectionVisibility: { ...defaultOfferSectionVisibility },
@@ -1926,7 +1930,8 @@ export default function HomePage() {
       return {
         ...current,
         client: changes.companyName ?? current.client,
-        contactPerson: changes.contactPerson ?? current.contactPerson
+        contactPerson: changes.contactPerson ?? current.contactPerson,
+        clientAddress: changes.address ?? current.clientAddress
       };
     });
   }
@@ -1956,7 +1961,7 @@ export default function HomePage() {
     if (!customer) return;
     if (!window.confirm(`Kunde "${customer.companyName}" löschen?`)) return;
     setCustomers((current) => current.filter((item) => item.id !== customerId));
-    setProject((current) => (current.customerId === customerId ? { ...current, customerId: "", client: "", contactPerson: "" } : current));
+    setProject((current) => (current.customerId === customerId ? { ...current, customerId: "", client: "", contactPerson: "", clientAddress: "" } : current));
   }
 
   function applyCustomerToProject(customerId: string) {
@@ -1966,13 +1971,15 @@ export default function HomePage() {
       ...current,
       customerId: customer.id,
       client: customer.companyName,
-      contactPerson: customer.contactPerson
+      contactPerson: customer.contactPerson,
+      clientAddress: customer.address
     }));
   }
 
   function saveProjectRecipientAsCustomer() {
     const companyName = project.client.trim();
     const contactPerson = project.contactPerson.trim();
+    const clientAddress = project.clientAddress.trim();
     if (!companyName) {
       setStorageMessage("Bitte zuerst einen Empfänger im Angebot eintragen.");
       return;
@@ -1989,12 +1996,13 @@ export default function HomePage() {
             ? {
                 ...customer,
                 companyName,
-                contactPerson
+                contactPerson,
+                address: clientAddress
               }
             : customer
         )
       );
-      setProject((current) => ({ ...current, customerId: existingCustomer.id, client: companyName, contactPerson }));
+      setProject((current) => ({ ...current, customerId: existingCustomer.id, client: companyName, contactPerson, clientAddress }));
       setStorageMessage(`Kunde aktualisiert: ${companyName}`);
       return;
     }
@@ -2007,7 +2015,7 @@ export default function HomePage() {
         id,
         companyName,
         contactPerson,
-        address: "",
+        address: clientAddress,
         email: "",
         phone: "",
         mobile: "",
@@ -2017,7 +2025,7 @@ export default function HomePage() {
         notes: `Aus Angebot ${project.offerNumber} angelegt.`
       }
     ]);
-    setProject((current) => ({ ...current, customerId: id, client: companyName, contactPerson }));
+    setProject((current) => ({ ...current, customerId: id, client: companyName, contactPerson, clientAddress }));
     setStorageMessage(`Kunde gespeichert: ${companyName}`);
   }
 
@@ -3554,6 +3562,11 @@ function ProjectWorkspace({
               <Field label="Ansprechpartner">
                 <TextInput value={project.contactPerson} onChange={(event) => updateProject("contactPerson", event.target.value)} />
               </Field>
+              <div className="md:col-span-2">
+                <Field label="Empfängeradresse">
+                  <TextArea value={project.clientAddress} onChange={(event) => updateProject("clientAddress", event.target.value)} className="min-h-20" />
+                </Field>
+              </div>
             </div>
             <div className="mt-5 border-t border-line pt-4">
               <h4 className="text-sm font-semibold text-ink">Projektinformationen</h4>

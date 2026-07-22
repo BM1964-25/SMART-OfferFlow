@@ -72,6 +72,7 @@ export type Project = {
   customerId: string;
   client: string;
   contactPerson: string;
+  clientAddress: string;
   projectLocation: string;
   projectVolume: string;
   servicePeriod: string;

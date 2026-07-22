@@ -129,6 +129,16 @@ function hasText(value?: string | null) {
   return Boolean(value?.trim());
 }
 
+function formatRecipientAddress(project: Project) {
+  const client = project.client.trim();
+  const address = (project.clientAddress ?? "").trim();
+  if (!address) return client;
+  if (!client) return address;
+  const firstAddressLine = address.split("\n")[0]?.trim().toLowerCase();
+  if (firstAddressLine === client.toLowerCase()) return address;
+  return `${client}\n${address}`;
+}
+
 function sectionEnabled(project: Project, key: OfferSectionKey) {
   const defaults = project.offerType === "Anschreiben ohne LV" ? coverLetterOfferSectionVisibility : defaultOfferSectionVisibility;
   return (project.sectionVisibility ?? {})[key] ?? defaults[key];
@@ -343,7 +353,7 @@ export function OfferPreview({
           </div>
         </div>
         <div className="mt-16 grid gap-4 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
-          <PreviewMeta label="Empfänger" value={project.client} />
+          <PreviewMeta label="Empfänger" value={formatRecipientAddress(project)} />
           <PreviewMeta label="Ansprechpartner" value={project.contactPerson} />
           <PreviewMeta label="Angebotsnummer" value={project.offerNumber} />
           <PreviewMeta label="Datum" value={offerDate} />
@@ -589,7 +599,7 @@ function PreviewMeta({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex min-h-24 flex-col items-center justify-center rounded-lg border border-[#D9DEE5] bg-[#F3F4F6] p-4 text-center">
       <p className="text-sm font-semibold uppercase tracking-[0.14em] text-black">{label}</p>
-      <p className="mt-2 text-base font-semibold text-black">{value}</p>
+      <p className="mt-2 whitespace-pre-line text-base font-semibold text-black">{value}</p>
     </div>
   );
 }

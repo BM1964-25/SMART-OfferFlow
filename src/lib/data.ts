@@ -207,6 +207,7 @@ export const sampleProject: Project = {
   customerId: "",
   client: "Musterbau Immobilien GmbH",
   contactPerson: "Dr. Julia Hartmann",
+  clientAddress: "Musterbau Immobilien GmbH\nBeispielstraße 10\n80331 München",
   projectLocation: "",
   projectVolume: "",
   servicePeriod: "Die Leistungserbringung erfolgt nach Abruf durch den Auftraggeber im vereinbarten Projektzeitraum.",
