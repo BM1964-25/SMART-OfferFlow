@@ -340,8 +340,7 @@ input[type="number"]::-webkit-outer-spin-button {
   }
 
   .offer-footer {
-    margin-top: 18mm !important;
-    padding-top: 5mm !important;
+    display: none !important;
   }
 
   .offer-footer-full {
@@ -349,7 +348,7 @@ input[type="number"]::-webkit-outer-spin-button {
   }
 
   .offer-footer-date {
-    display: block !important;
+    display: none !important;
   }
 
   .rounded-lg,

@@ -21,7 +21,8 @@ export function printElement(selector: string, title: string) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escapeHtml(title)}</title>
+    <title></title>
+    <meta name="document-title" content="${escapeHtml(title)}" />
     ${styleNodes}
     <style>
       @page { size: A4; margin: 14mm 12mm 16mm; }
@@ -119,14 +120,13 @@ export function printElement(selector: string, title: string) {
         display: none !important;
       }
       .offer-footer {
-        margin-top: 18mm !important;
-        padding-top: 5mm !important;
+        display: none !important;
       }
       .offer-footer-full {
         display: none !important;
       }
       .offer-footer-date {
-        display: block !important;
+        display: none !important;
       }
       @media print {
         html, body {
