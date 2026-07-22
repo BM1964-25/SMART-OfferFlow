@@ -441,7 +441,7 @@ export function OfferPreview({
       ) : null}
 
       {hasStructuredDescription && structuredSections.length > 0 ? (
-        <section className="print-section border-t border-line py-8">
+        <section className="print-section py-8">
           <div className="grid gap-6">
             {structuredSections.map((section, index) => {
               const sectionSubsections = (section.subsections ?? []).filter(
@@ -593,7 +593,7 @@ export function OfferPreview({
       </section>
 
       {sectionEnabled(project, "serviceExclusion") && hasText(project.serviceExclusion) ? (
-        <section className="print-section print-compact border-t border-line py-6">
+        <section className="print-section print-compact py-6">
           {sectionTitleEnabled(project, "serviceExclusion") ? <h2 className="text-lg font-semibold text-ink">Leistungsabgrenzung</h2> : null}
           <TextBlock text={project.serviceExclusion} className={`${sectionTitleEnabled(project, "serviceExclusion") ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} />
         </section>
@@ -602,14 +602,14 @@ export function OfferPreview({
       ) : null}
 
       {sectionEnabled(project, "changeTerms") && hasText(project.changeTerms) ? (
-        <section className="print-section print-compact border-t border-line py-6">
+        <section className="print-section print-compact py-6">
           {sectionTitleEnabled(project, "changeTerms") ? <h2 className="text-lg font-semibold text-ink">Leistungsänderungen</h2> : null}
           <TextBlock text={project.changeTerms} className={`${sectionTitleEnabled(project, "changeTerms") ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} />
         </section>
       ) : null}
 
       {hasLegalContent ? (
-        <section className="print-section print-compact border-t border-line py-6">
+        <section className="print-section print-compact py-6">
         <div>
           {sectionEnabled(project, "contractBasis") && hasText(project.contractBasis) ? (
             <>
@@ -652,7 +652,7 @@ export function OfferPreview({
       ) : null}
 
       {sectionEnabled(project, "acceptanceText") && hasText(project.acceptanceText) ? (
-        <section className="print-section print-compact print-keep border-t border-line py-6">
+        <section className="print-section print-compact print-keep py-6">
           {sectionTitleEnabled(project, "acceptanceText") ? <h2 className="text-lg font-semibold text-ink">Auftragserteilung</h2> : null}
           <TextBlock text={project.acceptanceText} className={`${sectionTitleEnabled(project, "acceptanceText") ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} />
           <div className="mt-28 grid gap-6 md:grid-cols-4">
@@ -666,7 +666,7 @@ export function OfferPreview({
       ) : null}
 
       {sectionEnabled(project, "signatureText") && hasText(project.signatureText) ? (
-        <section className="print-section print-compact print-keep border-t border-line py-5">
+        <section className="print-section print-compact print-keep py-5">
           {sectionTitleEnabled(project, "signatureText") ? <h2 className="text-lg font-semibold text-ink">Unterschrift</h2> : null}
           <TextBlock text={project.signatureText} className={`${sectionTitleEnabled(project, "signatureText") ? "mt-2 " : ""}whitespace-pre-line leading-7 text-black`} />
           <div className="mt-1 w-64">
@@ -682,7 +682,7 @@ export function OfferPreview({
         </section>
       ) : null}
 
-      <footer className="offer-footer print-keep mt-16 border-t border-line pt-6 text-base leading-7 text-black">
+      <footer className="offer-footer print-keep mt-16 pt-6 text-base leading-7 text-black">
         <div className="offer-footer-full">
           <p className="text-lg font-semibold text-slate-700">{company.name}</p>
           {hasFooterIntro ? <FooterTextBlock text={footerIntro} bookingUrl={bookingUrl} /> : null}
