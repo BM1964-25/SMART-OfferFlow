@@ -382,7 +382,6 @@ export function OfferPreview({
             {hasText(project.offerSubject) ? (
               <p className="mt-6 max-w-3xl text-xl font-semibold leading-8 text-black">Betreff: {project.offerSubject}</p>
             ) : null}
-            <h1 className="mt-3 max-w-2xl text-4xl font-semibold tracking-normal text-black">{project.projectName}</h1>
           </div>
           <div className="min-w-64 rounded-lg border border-line p-4 text-base text-black">
             <p className="text-lg font-semibold leading-6 text-black">{company.name}</p>
