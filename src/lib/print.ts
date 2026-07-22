@@ -21,8 +21,7 @@ export function printElement(selector: string, title: string) {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title></title>
-    <meta name="document-title" content="${escapeHtml(title)}" />
+    <title> </title>
     ${styleNodes}
     <style>
       @page { size: A4; margin: 22mm 20mm 24mm; }
@@ -141,6 +140,7 @@ export function printElement(selector: string, title: string) {
   </body>
 </html>`);
   printWindow.document.close();
+  printWindow.document.title = " ";
 
   printWindow.setTimeout(() => {
     printWindow.focus();
