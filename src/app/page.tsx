@@ -3621,12 +3621,19 @@ function ProjectWorkspace({
                     (project.sectionVisibility ?? {})[section.key] ??
                     defaultSectionVisibilityForOfferType(project.offerType)[section.key];
                   return (
-                    <label key={section.key} className="flex min-h-10 items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm font-medium text-ink">
+                    <label
+                      key={section.key}
+                      className={`flex min-h-10 items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition ${
+                        checked
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-950"
+                          : "border-line bg-white text-ink"
+                      }`}
+                    >
                       <input
                         type="checkbox"
                         checked={checked}
                         onChange={(event) => updateSectionVisibility(section.key, event.target.checked)}
-                        className="h-4 w-4 rounded border-line text-blue-700"
+                        className="h-4 w-4 rounded border-line text-emerald-700"
                       />
                       <span>{section.label}</span>
                     </label>
