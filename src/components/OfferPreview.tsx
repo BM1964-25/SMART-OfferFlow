@@ -360,7 +360,7 @@ export function OfferPreview({
           <div>
             {company.id === "metzger-real-estate" ? (
               <div className="mb-12">
-                <p className="text-3xl font-semibold uppercase leading-tight tracking-[0.12em] text-[#5F6671] sm:text-4xl">
+                <p className="metzger-letterhead text-3xl font-semibold uppercase leading-tight tracking-[0.12em] text-[#5F6671] sm:text-4xl">
                   METZGER - REAL ESTATE ADVISORY
                 </p>
                 <p className="mt-2 text-base text-black">use experience - secure values</p>
@@ -455,7 +455,7 @@ export function OfferPreview({
               return (
                 <div key={section.id} className="break-inside-avoid">
                   {hasText(section.title) ? (
-                    <h2 className="text-lg font-semibold text-ink">
+                    <h2 className="structured-section-title text-lg font-semibold text-ink">
                       {index + 1}. {section.title}
                     </h2>
                   ) : null}
@@ -467,21 +467,21 @@ export function OfferPreview({
                         return (
                           <div key={subsection.id} className="break-inside-avoid">
                             {hasText(subsection.title) ? (
-                              <h3 className="text-base font-semibold text-black">
+                              <h3 className="structured-subsection-title text-base font-semibold text-black">
                                 {index + 1}.{subsectionIndex + 1} {subsection.title}
                               </h3>
                             ) : null}
                             {hasText(subsection.body) ? (
-                              <TextBlock text={subsection.body} className={`${hasText(subsection.title) ? "mt-2 " : ""}whitespace-pre-line leading-7 text-black`} />
+                              <TextBlock text={subsection.body} className={`${hasText(subsection.title) ? "mt-2 " : ""}structured-offer-text whitespace-pre-line text-base leading-7 text-black`} />
                             ) : null}
                             {bullets.length > 0 ? (
-                              <ul className="mt-3 list-disc space-y-1 pl-6 leading-7 text-black">
+                              <ul className="structured-offer-list mt-3 list-disc space-y-1 pl-6 text-base leading-7 text-black">
                                 {bullets.map((bullet) => (
                                   <li key={bullet}>{bullet}</li>
                                 ))}
                               </ul>
                             ) : null}
-                            {hasText(subsection.afterBulletsText) ? <TextBlock text={subsection.afterBulletsText} className="mt-3 whitespace-pre-line leading-7 text-black" /> : null}
+                            {hasText(subsection.afterBulletsText) ? <TextBlock text={subsection.afterBulletsText} className="structured-offer-text mt-3 whitespace-pre-line text-base leading-7 text-black" /> : null}
                             {tableRows.length > 0 ? (
                               <div className="mt-4 overflow-hidden rounded-md border border-[#D9DEE5]">
                                 {tableRows.map((row) => (

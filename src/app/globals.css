@@ -253,6 +253,29 @@ input[type="number"]::-webkit-outer-spin-button {
     line-height: 1.35 !important;
   }
 
+  .metzger-letterhead {
+    white-space: nowrap !important;
+    font-size: 22px !important;
+    letter-spacing: 0.08em !important;
+    line-height: 1.2 !important;
+  }
+
+  .structured-section-title {
+    font-size: 13px !important;
+    line-height: 1.35 !important;
+  }
+
+  .structured-subsection-title {
+    font-size: 11.5px !important;
+    line-height: 1.4 !important;
+  }
+
+  .structured-offer-text,
+  .structured-offer-list {
+    font-size: 11.5px !important;
+    line-height: 1.55 !important;
+  }
+
   .print-area p,
   .print-area span,
   .print-area div {
