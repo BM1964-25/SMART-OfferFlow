@@ -4,7 +4,7 @@ import { Check, Download, Printer, Save, Send } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { activeGroups, calculateSummary, formatCurrency, groupNumber, groupTotal, positionNumber, positionTotal } from "@/lib/calculations";
-import { coverLetterOfferSectionVisibility, defaultOfferSectionTitleVisibility, defaultOfferSectionVisibility } from "@/lib/data";
+import { coverLetterOfferSectionVisibility, defaultOfferSectionTitleVisibility, defaultOfferSectionVisibility, structuredOfferSectionVisibility } from "@/lib/data";
 import { printElement } from "@/lib/print";
 import { CompanyProfile, OfferSectionKey, PositionGroup, Project } from "@/lib/types";
 
@@ -141,7 +141,12 @@ function formatRecipientAddress(project: Project) {
 }
 
 function sectionEnabled(project: Project, key: OfferSectionKey) {
-  const defaults = project.offerType === "Anschreiben ohne LV" ? coverLetterOfferSectionVisibility : defaultOfferSectionVisibility;
+  const defaults =
+    project.offerType === "Anschreiben ohne LV"
+      ? coverLetterOfferSectionVisibility
+      : project.offerType === "Strukturierte Leistungsbeschreibung"
+        ? structuredOfferSectionVisibility
+        : defaultOfferSectionVisibility;
   return (project.sectionVisibility ?? {})[key] ?? defaults[key];
 }
 
@@ -196,8 +201,16 @@ export function OfferPreview({
   const summary = calculateSummary(groups, project);
   const offerDate = new Intl.DateTimeFormat("de-DE", { dateStyle: "long" }).format(new Date(`${project.offerDate}T12:00:00`));
   const visibleGroups = activeGroups(groups).filter((group) => group.positions.some((position) => position.active));
-  const hasServiceDirectory = project.offerType !== "Anschreiben ohne LV";
+  const hasServiceDirectory = project.offerType === "Mit Leistungsverzeichnis";
+  const hasStructuredDescription = project.offerType === "Strukturierte Leistungsbeschreibung";
   const subtotal = summary.net + summary.discount;
+  const structuredSections = (project.structuredSections ?? []).filter(
+    (section) =>
+      hasText(section.title) ||
+      hasText(section.body) ||
+      (section.bullets ?? []).some(hasText) ||
+      (section.tableRows ?? []).some((row) => hasText(row.label) || hasText(row.value))
+  );
   const projectTextCards = [
     { key: "shortDescription" as const, title: "Aufgabenstellung", body: project.shortDescription },
     { key: "objective" as const, title: "Zielsetzung", body: project.objective },
@@ -373,7 +386,7 @@ export function OfferPreview({
         ) : null}
       </section>
 
-      {(sectionEnabled(project, "assignmentReason") && hasText(project.assignmentReason)) || projectTextCards.length > 0 || (!hasServiceDirectory && sectionEnabled(project, "coverLetterText") && hasText(project.coverLetterText)) ? (
+      {(sectionEnabled(project, "assignmentReason") && hasText(project.assignmentReason)) || projectTextCards.length > 0 || (project.offerType === "Anschreiben ohne LV" && sectionEnabled(project, "coverLetterText") && hasText(project.coverLetterText)) ? (
         <section className="print-section pb-8 pt-4">
         {sectionEnabled(project, "assignmentReason") && hasText(project.assignmentReason) ? (
           <div className="mt-6">
@@ -391,12 +404,50 @@ export function OfferPreview({
             ))}
           </div>
         ) : null}
-        {!hasServiceDirectory && sectionEnabled(project, "coverLetterText") && hasText(project.coverLetterText) ? (
+        {project.offerType === "Anschreiben ohne LV" && sectionEnabled(project, "coverLetterText") && hasText(project.coverLetterText) ? (
           <div className="mt-6 rounded-md border border-[#D9DEE5] bg-white p-5">
             {sectionTitleEnabled(project, "coverLetterText") ? <h3 className="text-base font-semibold text-black">Allgemeiner Angebotstext</h3> : null}
             <TextBlock text={project.coverLetterText} className={`${sectionTitleEnabled(project, "coverLetterText") ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} />
           </div>
         ) : null}
+        </section>
+      ) : null}
+
+      {hasStructuredDescription && structuredSections.length > 0 ? (
+        <section className="print-section border-t border-line py-8">
+          <div className="grid gap-6">
+            {structuredSections.map((section, index) => {
+              const bullets = (section.bullets ?? []).filter(hasText);
+              const tableRows = (section.tableRows ?? []).filter((row) => hasText(row.label) || hasText(row.value));
+              return (
+                <div key={section.id} className="break-inside-avoid">
+                  {hasText(section.title) ? (
+                    <h2 className="text-lg font-semibold text-ink">
+                      {index + 1}. {section.title}
+                    </h2>
+                  ) : null}
+                  {hasText(section.body) ? <TextBlock text={section.body} className={`${hasText(section.title) ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} /> : null}
+                  {bullets.length > 0 ? (
+                    <ul className="mt-3 list-disc space-y-1 pl-6 leading-7 text-black">
+                      {bullets.map((bullet) => (
+                        <li key={bullet}>{bullet}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {tableRows.length > 0 ? (
+                    <div className="mt-4 overflow-hidden rounded-md border border-[#D9DEE5]">
+                      {tableRows.map((row) => (
+                        <div key={row.id} className="grid gap-3 border-b border-[#D9DEE5] px-4 py-3 text-sm last:border-b-0 md:grid-cols-[1fr_220px]">
+                          <p className="font-medium text-black">{row.label}</p>
+                          <p className="font-semibold text-black md:text-right">{row.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
         </section>
       ) : null}
 

@@ -67,6 +67,22 @@ export type OfferSectionKey =
   | "acceptanceText"
   | "signatureText";
 
+export type OfferType = "Mit Leistungsverzeichnis" | "Anschreiben ohne LV" | "Strukturierte Leistungsbeschreibung";
+
+export type StructuredOfferTableRow = {
+  id: string;
+  label: string;
+  value: string;
+};
+
+export type StructuredOfferSection = {
+  id: string;
+  title: string;
+  body: string;
+  bullets: string[];
+  tableRows: StructuredOfferTableRow[];
+};
+
 export type Project = {
   id: string;
   companyId: CompanyId;
@@ -80,7 +96,8 @@ export type Project = {
   plannedProjectStart: string;
   projectName: string;
   offerSubject: string;
-  offerType: "Mit Leistungsverzeichnis" | "Anschreiben ohne LV";
+  offerType: OfferType;
+  structuredSections: StructuredOfferSection[];
   sectionVisibility: Partial<Record<OfferSectionKey, boolean>>;
   sectionTitleVisibility: Partial<Record<OfferSectionKey, boolean>>;
   shortDescription: string;

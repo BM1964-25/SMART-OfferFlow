@@ -1,4 +1,4 @@
-import { CompanyProfile, OfferSectionKey, OrderBilling, PositionGroup, Project, RateCard } from "./types";
+import { CompanyProfile, OfferSectionKey, OrderBilling, PositionGroup, Project, RateCard, StructuredOfferSection } from "./types";
 
 export const standardRates: RateCard = {
   strategy: 250,
@@ -85,6 +85,60 @@ export const coverLetterOfferSectionVisibility: Record<OfferSectionKey, boolean>
   serviceDirectoryIntro: false,
   serviceExclusion: false
 };
+
+export const structuredOfferSectionVisibility: Record<OfferSectionKey, boolean> = {
+  ...defaultOfferSectionVisibility,
+  assignmentReason: false,
+  coverLetterText: false,
+  shortDescription: false,
+  objective: false,
+  serviceScope: false,
+  contractorRole: false,
+  serviceDirectoryIntro: false,
+  serviceExclusion: false
+};
+
+export const defaultStructuredOfferSections: StructuredOfferSection[] = [
+  {
+    id: "structured-subject",
+    title: "Gegenstand der Beauftragung",
+    body: "Gegenstand der Beauftragung ist die fachliche Prüfung der abgestimmten Unterlagen, Abläufe und Sachverhalte auf Grundlage der vom Auftraggeber bereitgestellten Informationen.",
+    bullets: ["Prüfung der relevanten Unterlagen", "Bewertung fachlicher und wirtschaftlicher Auffälligkeiten", "Ableitung konkreter Feststellungen und Empfehlungen"],
+    tableRows: []
+  },
+  {
+    id: "structured-services",
+    title: "Prüfungsleistungen",
+    body: "Die Prüfungsleistungen werden strukturiert, nachvollziehbar und mit Blick auf die vereinbarte Zielsetzung erbracht.",
+    bullets: ["Sichtung und Bewertung der bereitgestellten Unterlagen", "Plausibilisierung von Angeboten, Kostenansätzen und Nachweisen", "Dokumentation wesentlicher Feststellungen"],
+    tableRows: []
+  },
+  {
+    id: "structured-method",
+    title: "Prüfmethodik",
+    body: "Zur Sicherstellung einer vergleichbaren Bewertung wird ein einheitliches Prüfraster verwendet.",
+    bullets: ["Ausgangssituation", "Unterlagenlage", "fachliche Plausibilität", "wirtschaftliche Bewertung", "Risiken und Handlungsempfehlungen"],
+    tableRows: []
+  },
+  {
+    id: "structured-results",
+    title: "Arbeitsergebnisse",
+    body: "Als Ergebnis werden prüffähige Unterlagen und eine zusammenfassende Bewertung erstellt.",
+    bullets: ["strukturierte Prüfung", "fall- oder themenbezogene Feststellungen", "Management Summary", "priorisierte Handlungsempfehlungen"],
+    tableRows: []
+  },
+  {
+    id: "structured-fee",
+    title: "Honorar",
+    body: "Für die beschriebenen Leistungen wird folgendes Honorar angeboten. Die Abrechnung erfolgt nach dem tatsächlich angefallenen und nachgewiesenen Aufwand.",
+    bullets: [],
+    tableRows: [
+      { id: "structured-fee-rate", label: "Tagessatz je Prüfertag", value: "1.600,00 Euro netto" },
+      { id: "structured-fee-days", label: "Voraussichtlicher Aufwand", value: "15 bis 18 Prüfertage" },
+      { id: "structured-fee-total", label: "Voraussichtliches Gesamthonorar", value: "24.000,00 bis 28.800,00 Euro netto" }
+    ]
+  }
+];
 
 export const defaultServiceScope =
   "Die Leistungen werden als unabhängige Beratungs-, Steuerungs-, Analyse- und Unterstützungsleistungen erbracht. Der konkrete Umfang richtet sich nach den Anforderungen des Projekts und den jeweils abgestimmten Leistungsabrufen.";
@@ -236,6 +290,7 @@ export const sampleProject: Project = {
   projectName: "KI-gestützte Angebotsplattform",
   offerSubject: "",
   offerType: "Mit Leistungsverzeichnis",
+  structuredSections: defaultStructuredOfferSections,
   sectionVisibility: { ...defaultOfferSectionVisibility },
   sectionTitleVisibility: { ...defaultOfferSectionTitleVisibility },
   shortDescription: "Konzeption und Entwicklung einer KI-Anwendung zur strukturierten Auswertung, Angebotserstellung und Angebotsvorbereitung.",

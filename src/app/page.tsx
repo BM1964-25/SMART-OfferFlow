@@ -55,15 +55,17 @@ import {
   defaultServiceDirectoryIntro,
   defaultServiceExclusion,
   defaultServiceScope,
+  defaultStructuredOfferSections,
   defaultValidityText,
   initialGroups,
   rateLabels,
   sampleOrderBilling,
-  sampleProject
+  sampleProject,
+  structuredOfferSectionVisibility
 } from "@/lib/data";
 import { printElement } from "@/lib/print";
 import { readOfferSharePayloadFromLocation, readOfferTokenFromLocation } from "@/lib/share";
-import { ChangeOrder, CompanyProfile, InvoicePlanItem, OfferSectionKey, OfferStatus, OrderBilling, Position, PositionGroup, Project, WorkLogItem } from "@/lib/types";
+import { ChangeOrder, CompanyProfile, InvoicePlanItem, OfferSectionKey, OfferStatus, OrderBilling, Position, PositionGroup, Project, StructuredOfferSection, WorkLogItem } from "@/lib/types";
 
 type View =
   | "Dashboard"
@@ -335,6 +337,7 @@ function savedOfferSnapshotChanged(existing: SavedOffer | undefined, next: Saved
     existing.project.companyId !== next.project.companyId ||
     existing.project.customerId !== next.project.customerId ||
     existing.project.offerType !== next.project.offerType ||
+    JSON.stringify(existing.project.structuredSections ?? []) !== JSON.stringify(next.project.structuredSections ?? []) ||
     JSON.stringify(existing.project.sectionVisibility ?? {}) !== JSON.stringify(next.project.sectionVisibility ?? {}) ||
     JSON.stringify(existing.project.sectionTitleVisibility ?? {}) !== JSON.stringify(next.project.sectionTitleVisibility ?? {}) ||
     existing.project.coverLetterText !== next.project.coverLetterText ||
@@ -451,7 +454,55 @@ const offerSectionControlLabels: { key: OfferSectionKey; label: string; offerTyp
 ];
 
 function defaultSectionVisibilityForOfferType(offerType: Project["offerType"]) {
-  return offerType === "Anschreiben ohne LV" ? coverLetterOfferSectionVisibility : defaultOfferSectionVisibility;
+  if (offerType === "Anschreiben ohne LV") return coverLetterOfferSectionVisibility;
+  if (offerType === "Strukturierte Leistungsbeschreibung") return structuredOfferSectionVisibility;
+  return defaultOfferSectionVisibility;
+}
+
+function makeId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function cloneStructuredSections(sections: StructuredOfferSection[] = defaultStructuredOfferSections) {
+  return sections.map((section) => ({
+    ...section,
+    bullets: [...(section.bullets ?? [])],
+    tableRows: (section.tableRows ?? []).map((row) => ({ ...row }))
+  }));
+}
+
+function normalizeStructuredSections(sections?: StructuredOfferSection[]) {
+  if (!Array.isArray(sections) || sections.length === 0) return cloneStructuredSections(defaultStructuredOfferSections);
+  return sections.map((section, index) => ({
+    id: section.id || makeId(`structured-${index + 1}`),
+    title: section.title ?? "",
+    body: section.body ?? "",
+    bullets: Array.isArray(section.bullets) ? section.bullets : [],
+    tableRows: Array.isArray(section.tableRows)
+      ? section.tableRows.map((row, rowIndex) => ({
+          id: row.id || makeId(`structured-row-${index + 1}-${rowIndex + 1}`),
+          label: row.label ?? "",
+          value: row.value ?? ""
+        }))
+      : []
+  }));
+}
+
+function createBlankStructuredSection(): StructuredOfferSection {
+  return {
+    id: makeId("structured-section"),
+    title: "Neuer Abschnitt",
+    body: "",
+    bullets: [],
+    tableRows: []
+  };
+}
+
+function normalizeOfferType(offerType: unknown): Project["offerType"] {
+  if (offerType === "Anschreiben ohne LV" || offerType === "Strukturierte Leistungsbeschreibung" || offerType === "Mit Leistungsverzeichnis") {
+    return offerType;
+  }
+  return "Mit Leistungsverzeichnis";
 }
 
 function OfferSectionField({ active, children }: { active: boolean; children: ReactNode }) {
@@ -1384,7 +1435,7 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
     "Dieses Angebot basiert auf den zum Zeitpunkt der Angebotserstellung vorliegenden Informationen und Rahmenbedingungen. Änderungen des Leistungsumfangs, der Projektanforderungen oder sonstiger wesentlicher Rahmenbedingungen können eine Anpassung des Angebots erforderlich machen."
   ]);
   const oldContractBasis = "Die Leistungserbringung erfolgt auf Grundlage dieses Angebots sowie der Allgemeinen Geschäftsbedingungen von Metzger - Real Estate Advisory. Mit Auftragserteilung erkennt der Auftraggeber diese als Vertragsbestandteil an.";
-  const offerType = project.offerType ?? "Mit Leistungsverzeichnis";
+  const offerType = normalizeOfferType(project.offerType);
   return {
     ...project,
     customerId: project.customerId ?? "",
@@ -1396,6 +1447,7 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
     projectName: stripCompanyNameFromProjectName(project.projectName ?? sampleProject.projectName, profiles),
     offerSubject: project.offerSubject ?? "",
     offerType,
+    structuredSections: normalizeStructuredSections(project.structuredSections),
     sectionVisibility: {
       ...defaultSectionVisibilityForOfferType(offerType),
       ...(project.sectionVisibility ?? {})
@@ -1801,6 +1853,7 @@ export default function HomePage() {
       projectName: "",
       offerSubject: "",
       offerType: "Mit Leistungsverzeichnis",
+      structuredSections: cloneStructuredSections(defaultStructuredOfferSections),
       sectionVisibility: { ...defaultOfferSectionVisibility },
       sectionTitleVisibility: { ...defaultOfferSectionTitleVisibility },
       projectLocation: "",
@@ -3021,7 +3074,15 @@ function StartAssistant({
 }) {
   const summary = calculateSummary(groups, project);
   const company = profiles.find((profile) => profile.id === project.companyId);
-  const hasServiceDirectory = project.offerType !== "Anschreiben ohne LV";
+  const hasServiceDirectory = project.offerType === "Mit Leistungsverzeichnis";
+  const hasStructuredDescription = project.offerType === "Strukturierte Leistungsbeschreibung";
+  const structuredSectionCount = (project.structuredSections ?? []).filter(
+    (section) =>
+      section.title.trim() ||
+      section.body.trim() ||
+      (section.bullets ?? []).some((bullet) => bullet.trim()) ||
+      (section.tableRows ?? []).some((row) => row.label.trim() || row.value.trim())
+  ).length;
   const positionCount = activeGroups(groups).reduce((sum, group) => sum + group.positions.filter((position) => position.active).length, 0);
   const steps = [
     {
@@ -3043,9 +3104,15 @@ function StartAssistant({
       view: "Neues Angebot" as View
     },
     {
-      label: "LV",
-      done: !hasServiceDirectory || positionCount > 0,
-      hint: hasServiceDirectory ? (positionCount > 0 ? `${positionCount} aktive Positionen` : "Vorlage wählen oder Positionen anlegen") : "Anschreiben ohne LV",
+      label: hasServiceDirectory ? "LV" : hasStructuredDescription ? "Leistungsbeschreibung" : "Text",
+      done: hasServiceDirectory ? positionCount > 0 : hasStructuredDescription ? structuredSectionCount > 0 : true,
+      hint: hasServiceDirectory
+        ? positionCount > 0
+          ? `${positionCount} aktive Positionen`
+          : "Vorlage wählen oder Positionen anlegen"
+        : hasStructuredDescription
+          ? `${structuredSectionCount} Abschnitte`
+          : "Anschreiben ohne LV",
       view: "Neues LV" as View
     },
     {
@@ -3531,6 +3598,9 @@ function ProjectWorkspace({
     updateProject("offerType", offerType);
     updateProject("sectionVisibility", defaultSectionVisibilityForOfferType(offerType));
     updateProject("sectionTitleVisibility", defaultOfferSectionTitleVisibility);
+    if (offerType === "Strukturierte Leistungsbeschreibung" && !project.structuredSections.length) {
+      updateProject("structuredSections", cloneStructuredSections(defaultStructuredOfferSections));
+    }
   }
 
   function updateSectionVisibility(sectionKey: OfferSectionKey, active: boolean) {
@@ -3547,6 +3617,46 @@ function ProjectWorkspace({
       ...(project.sectionTitleVisibility ?? {}),
       [sectionKey]: active
     });
+  }
+
+  function updateStructuredSection(sectionId: string, changes: Partial<StructuredOfferSection>) {
+    updateProject(
+      "structuredSections",
+      project.structuredSections.map((section) => (section.id === sectionId ? { ...section, ...changes } : section))
+    );
+  }
+
+  function addStructuredSection() {
+    updateProject("structuredSections", [...project.structuredSections, createBlankStructuredSection()]);
+  }
+
+  function duplicateStructuredSection(sectionId: string) {
+    const source = project.structuredSections.find((section) => section.id === sectionId);
+    if (!source) return;
+    updateProject("structuredSections", [
+      ...project.structuredSections,
+      {
+        ...source,
+        id: makeId("structured-section-copy"),
+        title: `${source.title} Kopie`,
+        bullets: [...source.bullets],
+        tableRows: source.tableRows.map((row) => ({ ...row, id: makeId("structured-row-copy") }))
+      }
+    ]);
+  }
+
+  function deleteStructuredSection(sectionId: string) {
+    updateProject("structuredSections", project.structuredSections.filter((section) => section.id !== sectionId));
+  }
+
+  function moveStructuredSection(sectionId: string, direction: -1 | 1) {
+    const index = project.structuredSections.findIndex((section) => section.id === sectionId);
+    const targetIndex = index + direction;
+    if (index < 0 || targetIndex < 0 || targetIndex >= project.structuredSections.length) return;
+    const next = [...project.structuredSections];
+    const [section] = next.splice(index, 1);
+    next.splice(targetIndex, 0, section);
+    updateProject("structuredSections", next);
   }
 
   return (
@@ -3575,6 +3685,7 @@ function ProjectWorkspace({
                   <Select value={project.offerType} onChange={(event) => updateOfferType(event.target.value as Project["offerType"])}>
                     <option>Mit Leistungsverzeichnis</option>
                     <option>Anschreiben ohne LV</option>
+                    <option>Strukturierte Leistungsbeschreibung</option>
                   </Select>
                 </Field>
               </div>
@@ -3811,8 +3922,118 @@ function ProjectWorkspace({
             </div>
           </section>
 
+          {project.offerType === "Strukturierte Leistungsbeschreibung" ? (
+            <section className="rounded-md border border-line p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <h3 className="font-semibold text-ink">4 Strukturierte Leistungsbeschreibung</h3>
+                  <p className="mt-1 text-sm leading-6 text-muted">
+                    Erstelle nummerierte Angebotsabschnitte mit Fließtext, Aufzählungen und optionalen Tabellen. Aufzählungen und Tabellen werden in der Vorschau sauber formatiert.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={addStructuredSection}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-line bg-white px-3 text-sm font-semibold text-ink transition hover:border-slate-300"
+                >
+                  <Plus className="h-4 w-4" />
+                  Abschnitt hinzufügen
+                </button>
+              </div>
+              <div className="mt-4 grid gap-4">
+                {project.structuredSections.map((section, index) => (
+                  <div key={section.id} className="rounded-md border border-line bg-slate-50 p-4">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <p className="text-sm font-semibold uppercase tracking-[0.08em] text-muted">Abschnitt {index + 1}</p>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => moveStructuredSection(section.id, -1)}
+                          disabled={index === 0}
+                          className="rounded-md border border-line bg-white px-3 py-2 text-xs font-semibold text-ink transition hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Nach oben
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveStructuredSection(section.id, 1)}
+                          disabled={index === project.structuredSections.length - 1}
+                          className="rounded-md border border-line bg-white px-3 py-2 text-xs font-semibold text-ink transition hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Nach unten
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => duplicateStructuredSection(section.id)}
+                          className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-xs font-semibold text-ink transition hover:border-slate-300"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                          Duplizieren
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteStructuredSection(section.id)}
+                          className="inline-flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-xs font-semibold text-ink transition hover:border-red-200 hover:text-red-700"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Löschen
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-4 grid gap-4">
+                      <Field label="Titel">
+                        <TextInput value={section.title} onChange={(event) => updateStructuredSection(section.id, { title: event.target.value })} />
+                      </Field>
+                      <Field label="Text">
+                        <TextArea value={section.body} onChange={(event) => updateStructuredSection(section.id, { body: event.target.value })} className="min-h-28" />
+                      </Field>
+                      <Field label="Aufzählungspunkte">
+                        <TextArea
+                          value={section.bullets.join("\n")}
+                          placeholder="Jeder Punkt in eine eigene Zeile"
+                          onChange={(event) =>
+                            updateStructuredSection(section.id, {
+                              bullets: event.target.value
+                                .split("\n")
+                                .map((line) => line.trim())
+                                .filter(Boolean)
+                            })
+                          }
+                          className="min-h-28"
+                        />
+                      </Field>
+                      <Field label="Optionale Tabelle">
+                        <TextArea
+                          value={section.tableRows.map((row) => `${row.label} | ${row.value}`).join("\n")}
+                          placeholder="Leistung | Vergütung"
+                          onChange={(event) =>
+                            updateStructuredSection(section.id, {
+                              tableRows: event.target.value
+                                .split("\n")
+                                .map((line) => line.trim())
+                                .filter(Boolean)
+                                .map((line, rowIndex) => {
+                                  const [label, ...valueParts] = line.split("|");
+                                  return {
+                                    id: section.tableRows[rowIndex]?.id ?? makeId(`structured-row-${index + 1}-${rowIndex + 1}`),
+                                    label: label?.trim() ?? "",
+                                    value: valueParts.join("|").trim()
+                                  };
+                                })
+                            })
+                          }
+                          className="min-h-24"
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
           <section className="rounded-md border border-line p-4">
-            <h3 className="font-semibold text-ink">4 Konditionen und Kalkulation</h3>
+            <h3 className="font-semibold text-ink">{project.offerType === "Strukturierte Leistungsbeschreibung" ? "5" : "4"} Konditionen und Kalkulation</h3>
             <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <Field label="Kalkulationsart">
                 <Select value={project.calculationType} onChange={(event) => updateProject("calculationType", event.target.value as Project["calculationType"])}>
@@ -4576,7 +4797,7 @@ function QualityManagement({
   const visibleGroups = activeGroups(groups);
   const activePositions = visibleGroups.flatMap((group) => group.positions.filter((position) => position.active));
   const summary = calculateSummary(groups, project);
-  const hasServiceDirectory = project.offerType !== "Anschreiben ohne LV";
+  const hasServiceDirectory = project.offerType === "Mit Leistungsverzeichnis";
   const masterTemplate = templates.find((template) => template.companyId === project.companyId && template.id === `template-${project.companyId}-standard`);
   const activeSavedOffer = savedOffers.find((offer) => offer.id === project.id);
   const matchingCompanyTemplates = templates.filter((template) => template.companyId === project.companyId);

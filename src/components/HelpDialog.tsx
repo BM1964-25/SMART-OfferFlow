@@ -271,6 +271,16 @@ const helpSections: HelpSection[] = [
           Die Angebotsnummer kann je Firmenprofil über einen Nummernkreis aus Präfix, Jahr und Zähler automatisch erzeugt werden. Im Angebotskopf
           bleibt sie trotzdem manuell überschreibbar.
         </p>
+        <h3>Angebotsarten</h3>
+        <p>
+          Im neuen Angebot stehen drei Angebotsarten zur Verfügung: „Mit Leistungsverzeichnis“ für positionsweise kalkulierte Angebote,
+          „Anschreiben ohne LV“ für ein reines Textangebot und „Strukturierte Leistungsbeschreibung“ für Angebote mit nummerierten Kapiteln,
+          Aufzählungen und optionalen Tabellen.
+        </p>
+        <p>
+          Die strukturierte Leistungsbeschreibung eignet sich für Sonderprüfungen, Revisionen, Gutachten, Beratungsmandate oder Prüfaufträge, bei
+          denen der Leistungsumfang fachlich beschrieben wird, ohne jede Position als LV auszuweisen.
+        </p>
         <h3>Angebotsvorlagen</h3>
         <p>
           Vollständige Leistungsverzeichnisse werden unter „Vorlagen verwalten“ gespeichert und jeweils einem Firmenprofil zugeordnet. Innerhalb eines
