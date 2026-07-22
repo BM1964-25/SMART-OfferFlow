@@ -41,6 +41,7 @@ import { Field, IconButton, SectionTitle, Select, StatCard, TextArea, TextInput 
 import { activeGroups, calculateSummary, formatCurrency, groupNumber, groupTotal, positionNumber, positionTotal, renumberGroups } from "@/lib/calculations";
 import {
   companyProfiles,
+  defaultCoverLetterText,
   defaultAcceptanceText,
   defaultAssignmentReason,
   defaultChangeTerms,
@@ -133,6 +134,7 @@ type OfferTemplateTextFields = Partial<
     Project,
     | "offerIntro"
     | "assignmentReason"
+    | "coverLetterText"
     | "shortDescription"
     | "serviceScope"
     | "contractorRole"
@@ -325,6 +327,8 @@ function savedOfferSnapshotChanged(existing: SavedOffer | undefined, next: Saved
     existing.project.contactPerson !== next.project.contactPerson ||
     existing.project.offerNumber !== next.project.offerNumber ||
     existing.project.companyId !== next.project.companyId ||
+    existing.project.offerType !== next.project.offerType ||
+    existing.project.coverLetterText !== next.project.coverLetterText ||
     existing.groups.length !== next.groups.length ||
     existingPositionCount !== nextPositionCount ||
     existing.orderBilling.invoicePlan.length !== next.orderBilling.invoicePlan.length ||
@@ -399,6 +403,7 @@ function cloneGroups(groups: PositionGroup[]) {
 const offerTemplateTextFieldLabels: { key: keyof OfferTemplateTextFields; label: string }[] = [
   { key: "offerIntro", label: "Angebotseinleitung" },
   { key: "assignmentReason", label: "Anlass der Beauftragung" },
+  { key: "coverLetterText", label: "Allgemeiner Angebotstext" },
   { key: "shortDescription", label: "Aufgabenstellung" },
   { key: "objective", label: "Zielsetzung" },
   { key: "serviceScope", label: "Leistungsrahmen" },
@@ -1342,9 +1347,11 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
     servicePeriod: project.servicePeriod ?? sampleProject.servicePeriod,
     plannedProjectStart: project.plannedProjectStart ?? "",
     projectName: stripCompanyNameFromProjectName(project.projectName ?? sampleProject.projectName, profiles),
+    offerType: project.offerType ?? "Mit Leistungsverzeichnis",
     shortDescription: project.shortDescription ?? sampleProject.shortDescription,
     offerIntro: project.offerIntro ?? profileDefaults.offerText,
     assignmentReason: project.assignmentReason ?? defaultAssignmentReason,
+    coverLetterText: project.coverLetterText ?? defaultCoverLetterText,
     serviceScope: project.serviceScope ?? defaultServiceScope,
     contractorRole: project.contractorRole ?? defaultContractorRole,
     serviceDirectoryIntro: !project.serviceDirectoryIntro || project.serviceDirectoryIntro === oldServiceDirectoryIntro ? defaultServiceDirectoryIntro : project.serviceDirectoryIntro,
@@ -1731,6 +1738,7 @@ export default function HomePage() {
       client: "",
       contactPerson: "",
       projectName: "",
+      offerType: "Mit Leistungsverzeichnis",
       projectLocation: "",
       projectVolume: "",
       plannedProjectStart: "",
@@ -2858,6 +2866,7 @@ function StartAssistant({
 }) {
   const summary = calculateSummary(groups, project);
   const company = profiles.find((profile) => profile.id === project.companyId);
+  const hasServiceDirectory = project.offerType !== "Anschreiben ohne LV";
   const positionCount = activeGroups(groups).reduce((sum, group) => sum + group.positions.filter((position) => position.active).length, 0);
   const steps = [
     {
@@ -2880,14 +2889,14 @@ function StartAssistant({
     },
     {
       label: "LV",
-      done: positionCount > 0,
-      hint: positionCount > 0 ? `${positionCount} aktive Positionen` : "Vorlage wählen oder Positionen anlegen",
+      done: !hasServiceDirectory || positionCount > 0,
+      hint: hasServiceDirectory ? (positionCount > 0 ? `${positionCount} aktive Positionen` : "Vorlage wählen oder Positionen anlegen") : "Anschreiben ohne LV",
       view: "Neues LV" as View
     },
     {
       label: "Prüfung",
-      done: summary.net > 0 && savedOffers.some((offer) => offer.id === project.id),
-      hint: summary.net > 0 ? `${formatCurrency(summary.net)} netto` : "Speichern und prüfen",
+      done: (summary.net > 0 || !hasServiceDirectory) && savedOffers.some((offer) => offer.id === project.id),
+      hint: summary.net > 0 ? `${formatCurrency(summary.net)} netto` : hasServiceDirectory ? "Speichern und prüfen" : "Textangebot prüfen",
       view: "Angebotsvorschau" as View
     }
   ];
@@ -2902,7 +2911,7 @@ function StartAssistant({
             {completed} von {steps.length} Prüfpunkten erledigt. Fehlende Angaben können direkt geöffnet werden.
           </p>
         </div>
-        <div className="grid gap-2 md:grid-cols-5 xl:min-w-[900px]">
+        <div className="grid gap-2 md:grid-cols-[repeat(auto-fit,minmax(150px,1fr))] xl:min-w-[900px]">
           {steps.map((step) => (
             <button
               key={step.label}
@@ -3444,6 +3453,12 @@ function ProjectWorkspace({
                   <option>Archiviert</option>
                 </Select>
               </Field>
+              <Field label="Angebotsart">
+                <Select value={project.offerType} onChange={(event) => updateProject("offerType", event.target.value as Project["offerType"])}>
+                  <option>Mit Leistungsverzeichnis</option>
+                  <option>Anschreiben ohne LV</option>
+                </Select>
+              </Field>
             </div>
           </section>
 
@@ -3460,6 +3475,11 @@ function ProjectWorkspace({
                   className="min-h-28"
                 />
               </Field>
+              {project.offerType === "Anschreiben ohne LV" ? (
+                <Field label="Allgemeiner Angebotstext">
+                  <TextArea value={project.coverLetterText} onChange={(event) => updateProject("coverLetterText", event.target.value)} className="min-h-40" />
+                </Field>
+              ) : null}
               <Field label="Aufgabenstellung">
                 <TextArea value={project.shortDescription} onChange={(event) => updateProject("shortDescription", event.target.value)} className="min-h-28" />
               </Field>
@@ -3472,16 +3492,20 @@ function ProjectWorkspace({
               <Field label="Zielsetzung">
                 <TextArea value={project.objective} onChange={(event) => updateProject("objective", event.target.value)} className="min-h-28" />
               </Field>
-              <Field label="Einleitung Leistungsverzeichnis">
-                <TextArea
-                  value={project.serviceDirectoryIntro}
-                  onChange={(event) => updateProject("serviceDirectoryIntro", event.target.value)}
-                  className="min-h-28"
-                />
-              </Field>
-              <Field label="Leistungsabgrenzung">
-                <TextArea value={project.serviceExclusion} onChange={(event) => updateProject("serviceExclusion", event.target.value)} className="min-h-28" />
-              </Field>
+              {project.offerType === "Mit Leistungsverzeichnis" ? (
+                <>
+                  <Field label="Einleitung Leistungsverzeichnis">
+                    <TextArea
+                      value={project.serviceDirectoryIntro}
+                      onChange={(event) => updateProject("serviceDirectoryIntro", event.target.value)}
+                      className="min-h-28"
+                    />
+                  </Field>
+                  <Field label="Leistungsabgrenzung">
+                    <TextArea value={project.serviceExclusion} onChange={(event) => updateProject("serviceExclusion", event.target.value)} className="min-h-28" />
+                  </Field>
+                </>
+              ) : null}
               <Field label="Leistungsänderungen">
                 <TextArea value={project.changeTerms} onChange={(event) => updateProject("changeTerms", event.target.value)} className="min-h-28" />
               </Field>
@@ -4244,6 +4268,7 @@ function QualityManagement({
   const visibleGroups = activeGroups(groups);
   const activePositions = visibleGroups.flatMap((group) => group.positions.filter((position) => position.active));
   const summary = calculateSummary(groups, project);
+  const hasServiceDirectory = project.offerType !== "Anschreiben ohne LV";
   const masterTemplate = templates.find((template) => template.companyId === project.companyId && template.id === `template-${project.companyId}-standard`);
   const activeSavedOffer = savedOffers.find((offer) => offer.id === project.id);
   const matchingCompanyTemplates = templates.filter((template) => template.companyId === project.companyId);
@@ -4344,7 +4369,7 @@ function QualityManagement({
     });
   }
 
-  if (project.companyId === "metzger-real-estate" && !hasMetzgerStructure) {
+  if (hasServiceDirectory && project.companyId === "metzger-real-estate" && !hasMetzgerStructure) {
     issues.push({
       id: "mrea-master-missing",
       severity: "Fehler",
@@ -4388,7 +4413,7 @@ function QualityManagement({
     });
   }
 
-  if (!activePositions.length) {
+  if (hasServiceDirectory && !activePositions.length) {
     issues.push({
       id: "no-positions",
       severity: "Fehler",
@@ -4423,7 +4448,7 @@ function QualityManagement({
     });
   }
 
-  if (summary.net <= 0) {
+  if (hasServiceDirectory && summary.net <= 0) {
     issues.push({
       id: "no-total",
       severity: "Fehler",
@@ -4434,7 +4459,7 @@ function QualityManagement({
     });
   }
 
-  if (!masterTemplate) {
+  if (hasServiceDirectory && !masterTemplate) {
     issues.push({
       id: "no-master",
       severity: "Hinweis",
@@ -4542,7 +4567,7 @@ function QualityManagement({
 
       <div className="rounded-lg border border-line bg-white p-6 shadow-sm">
         <SectionTitle title="Empfohlener Workflow" />
-        <div className="mt-5 grid gap-3 md:grid-cols-5">
+        <div className="mt-5 grid gap-3 md:grid-cols-[repeat(auto-fit,minmax(190px,1fr))]">
           {[
             ["1", "Firmenprofil", "Profil wählen, Farben und Angebotslogik prüfen."],
             ["2", "Kunde", "Empfänger und Ansprechpartner aus der Kundendatenbank übernehmen."],

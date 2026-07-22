@@ -174,6 +174,7 @@ export function OfferPreview({
   const summary = calculateSummary(groups, project);
   const offerDate = new Intl.DateTimeFormat("de-DE", { dateStyle: "long" }).format(new Date(`${project.offerDate}T12:00:00`));
   const visibleGroups = activeGroups(groups).filter((group) => group.positions.some((position) => position.active));
+  const hasServiceDirectory = project.offerType !== "Anschreiben ohne LV";
   const subtotal = summary.net + summary.discount;
   const projectMetaItems = [
     { label: "Mandat", value: project.projectName },
@@ -335,7 +336,7 @@ export function OfferPreview({
             <p>{company.website}</p>
           </div>
         </div>
-        <div className="mt-16 grid gap-4 md:grid-cols-4">
+        <div className="mt-16 grid gap-4 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
           <PreviewMeta label="Empfänger" value={project.client} />
           <PreviewMeta label="Ansprechpartner" value={project.contactPerson} />
           <PreviewMeta label="Angebotsnummer" value={project.offerNumber} />
@@ -346,7 +347,7 @@ export function OfferPreview({
       {projectMetaItems.length > 0 || hasText(project.assignmentReason) || projectTextCards.length > 0 ? (
         <section className="print-section pb-8 pt-4">
           {projectMetaItems.length > 0 ? (
-          <div className="mb-16 grid gap-4 md:grid-cols-4">
+          <div className="mb-16 grid gap-4 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
             {projectMetaItems.map((item) => (
               <PreviewMeta key={item.label} label={item.label} value={item.value} />
             ))}
@@ -368,9 +369,17 @@ export function OfferPreview({
             ))}
           </div>
         ) : null}
+        {!hasServiceDirectory && hasText(project.coverLetterText) ? (
+          <div className="mt-6 rounded-md border border-[#D9DEE5] bg-white p-5">
+            <h3 className="text-base font-semibold text-black">Allgemeiner Angebotstext</h3>
+            <TextBlock text={project.coverLetterText} className="mt-3 whitespace-pre-line leading-7 text-black" />
+          </div>
+        ) : null}
         </section>
       ) : null}
 
+      {hasServiceDirectory ? (
+      <>
       <section className="print-section print-page-break-before screen-page-break-before border-t border-line py-8">
         <h2 className="text-lg font-semibold text-ink">Leistungsverzeichnis</h2>
         {project.serviceDirectoryIntro ? <TextBlock text={project.serviceDirectoryIntro} className="mt-2 max-w-4xl whitespace-pre-line text-base leading-7 text-black" /> : null}
@@ -462,6 +471,8 @@ export function OfferPreview({
           <h2 className="text-lg font-semibold text-ink">Leistungsabgrenzung</h2>
           <TextBlock text={project.serviceExclusion} className="mt-3 whitespace-pre-line leading-7 text-black" />
         </section>
+      ) : null}
+      </>
       ) : null}
 
       {hasText(project.changeTerms) ? (

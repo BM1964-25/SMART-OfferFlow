@@ -58,9 +58,11 @@ export type Project = {
   servicePeriod: string;
   plannedProjectStart: string;
   projectName: string;
+  offerType: "Mit Leistungsverzeichnis" | "Anschreiben ohne LV";
   shortDescription: string;
   offerIntro: string;
   assignmentReason: string;
+  coverLetterText: string;
   serviceScope: string;
   contractorRole: string;
   serviceDirectoryIntro: string;

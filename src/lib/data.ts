@@ -32,6 +32,9 @@ export const defaultAssignmentReason =
 export const defaultServiceDirectoryIntro =
   "Die nachfolgende Leistungsübersicht enthält die vereinbarten Leistungen einschließlich Mengenansätzen, Einheiten, Vergütungssätzen und Positionssummen.";
 
+export const defaultCoverLetterText =
+  "Gerne unterbreiten wir Ihnen auf Grundlage der geführten Gespräche und der derzeit bekannten Anforderungen ein Angebot für die beschriebenen Beratungs- und Unterstützungsleistungen.\n\nDer Leistungsumfang wird im Rahmen dieses Anschreibens allgemein beschrieben. Eine gesonderte positionsweise Aufstellung ist nicht Bestandteil dieses Angebots.";
+
 export const defaultServiceScope =
   "Die Leistungen werden als unabhängige Beratungs-, Steuerungs-, Analyse- und Unterstützungsleistungen erbracht. Der konkrete Umfang richtet sich nach den Anforderungen des Projekts und den jeweils abgestimmten Leistungsabrufen.";
 
@@ -178,9 +181,11 @@ export const sampleProject: Project = {
   servicePeriod: "Die Leistungserbringung erfolgt nach Abruf durch den Auftraggeber im vereinbarten Projektzeitraum.",
   plannedProjectStart: "",
   projectName: "KI-gestützte Angebotsplattform",
+  offerType: "Mit Leistungsverzeichnis",
   shortDescription: "Konzeption und Entwicklung einer KI-Anwendung zur strukturierten Auswertung, Angebotserstellung und Angebotsvorbereitung.",
   offerIntro: "Die Lösung wird auf robuste KI-Workflows, transparente Wissensquellen und eine anwenderfreundliche Oberfläche ausgerichtet.",
   assignmentReason: defaultAssignmentReason,
+  coverLetterText: defaultCoverLetterText,
   serviceScope: defaultServiceScope,
   contractorRole: defaultContractorRole,
   serviceDirectoryIntro: defaultServiceDirectoryIntro,
