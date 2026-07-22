@@ -664,7 +664,7 @@ export function OfferPreview({
         </section>
       ) : null}
 
-      {sectionEnabled(project, "signatureText") && hasText(project.signatureText) ? (
+      {hasText(project.signatureText) ? (
         <section className="print-section print-compact print-keep py-5">
           {sectionTitleEnabled(project, "signatureText") ? <h2 className="text-lg font-semibold text-ink">Unterschrift</h2> : null}
           <TextBlock text={project.signatureText} className={`${sectionTitleEnabled(project, "signatureText") ? "mt-2 " : ""}whitespace-pre-line leading-7 text-black`} />

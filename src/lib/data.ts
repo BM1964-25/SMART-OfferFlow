@@ -52,7 +52,7 @@ export const defaultOfferSectionVisibility: Record<OfferSectionKey, boolean> = {
   offerClarification: true,
   offerNote: true,
   acceptanceText: true,
-  signatureText: false
+  signatureText: true
 };
 
 export const defaultOfferSectionTitleVisibility: Record<OfferSectionKey, boolean> = {
