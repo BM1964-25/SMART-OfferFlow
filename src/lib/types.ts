@@ -78,8 +78,10 @@ export type StructuredOfferTableRow = {
 export type StructuredOfferSection = {
   id: string;
   title: string;
+  subtitle: string;
   body: string;
   bullets: string[];
+  afterBulletsText: string;
   tableRows: StructuredOfferTableRow[];
 };
 

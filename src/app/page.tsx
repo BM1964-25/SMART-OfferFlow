@@ -466,7 +466,9 @@ function makeId(prefix: string) {
 function cloneStructuredSections(sections: StructuredOfferSection[] = defaultStructuredOfferSections) {
   return sections.map((section) => ({
     ...section,
+    subtitle: section.subtitle ?? "",
     bullets: [...(section.bullets ?? [])],
+    afterBulletsText: section.afterBulletsText ?? "",
     tableRows: (section.tableRows ?? []).map((row) => ({ ...row }))
   }));
 }
@@ -476,8 +478,10 @@ function normalizeStructuredSections(sections?: StructuredOfferSection[]) {
   return sections.map((section, index) => ({
     id: section.id || makeId(`structured-${index + 1}`),
     title: section.title ?? "",
+    subtitle: section.subtitle ?? "",
     body: section.body ?? "",
     bullets: Array.isArray(section.bullets) ? section.bullets : [],
+    afterBulletsText: section.afterBulletsText ?? "",
     tableRows: Array.isArray(section.tableRows)
       ? section.tableRows.map((row, rowIndex) => ({
           id: row.id || makeId(`structured-row-${index + 1}-${rowIndex + 1}`),
@@ -492,8 +496,10 @@ function createBlankStructuredSection(): StructuredOfferSection {
   return {
     id: makeId("structured-section"),
     title: "Neuer Abschnitt",
+    subtitle: "",
     body: "",
     bullets: [],
+    afterBulletsText: "",
     tableRows: []
   };
 }
@@ -3984,6 +3990,13 @@ function ProjectWorkspace({
                       <Field label="Titel">
                         <TextInput value={section.title} onChange={(event) => updateStructuredSection(section.id, { title: event.target.value })} />
                       </Field>
+                      <Field label="Untertitel">
+                        <TextInput
+                          value={section.subtitle}
+                          placeholder={`${index + 1}.1 Untertitel zum Abschnitt`}
+                          onChange={(event) => updateStructuredSection(section.id, { subtitle: event.target.value })}
+                        />
+                      </Field>
                       <Field label="Text">
                         <TextArea value={section.body} onChange={(event) => updateStructuredSection(section.id, { body: event.target.value })} className="min-h-28" />
                       </Field>
@@ -4000,6 +4013,14 @@ function ProjectWorkspace({
                             })
                           }
                           className="min-h-28"
+                        />
+                      </Field>
+                      <Field label="Ergänzung nach Aufzählung">
+                        <TextArea
+                          value={section.afterBulletsText}
+                          placeholder="Optionaler Text nach den Aufzählungspunkten"
+                          onChange={(event) => updateStructuredSection(section.id, { afterBulletsText: event.target.value })}
+                          className="min-h-24"
                         />
                       </Field>
                       <Field label="Optionale Tabelle">

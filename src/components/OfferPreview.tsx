@@ -207,8 +207,10 @@ export function OfferPreview({
   const structuredSections = (project.structuredSections ?? []).filter(
     (section) =>
       hasText(section.title) ||
+      hasText(section.subtitle) ||
       hasText(section.body) ||
       (section.bullets ?? []).some(hasText) ||
+      hasText(section.afterBulletsText) ||
       (section.tableRows ?? []).some((row) => hasText(row.label) || hasText(row.value))
   );
   const projectTextCards = [
@@ -426,7 +428,12 @@ export function OfferPreview({
                       {index + 1}. {section.title}
                     </h2>
                   ) : null}
-                  {hasText(section.body) ? <TextBlock text={section.body} className={`${hasText(section.title) ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} /> : null}
+                  {hasText(section.subtitle) ? (
+                    <h3 className={`${hasText(section.title) ? "mt-3 " : ""}text-base font-semibold text-black`}>
+                      {index + 1}.1 {section.subtitle}
+                    </h3>
+                  ) : null}
+                  {hasText(section.body) ? <TextBlock text={section.body} className={`${hasText(section.title) || hasText(section.subtitle) ? "mt-3 " : ""}whitespace-pre-line leading-7 text-black`} /> : null}
                   {bullets.length > 0 ? (
                     <ul className="mt-3 list-disc space-y-1 pl-6 leading-7 text-black">
                       {bullets.map((bullet) => (
@@ -434,6 +441,7 @@ export function OfferPreview({
                       ))}
                     </ul>
                   ) : null}
+                  {hasText(section.afterBulletsText) ? <TextBlock text={section.afterBulletsText} className="mt-3 whitespace-pre-line leading-7 text-black" /> : null}
                   {tableRows.length > 0 ? (
                     <div className="mt-4 overflow-hidden rounded-md border border-[#D9DEE5]">
                       {tableRows.map((row) => (
