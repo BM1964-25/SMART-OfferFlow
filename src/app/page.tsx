@@ -3366,7 +3366,7 @@ function ProjectWorkspace({
         <div className="mt-6 grid gap-5">
           <section className="rounded-md border border-line bg-white p-4">
             <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
-              <div className="grid gap-4 md:grid-cols-[1fr_1fr]">
+              <div className="grid gap-4 md:grid-cols-3">
                 <Field label="Ausgewähltes Firmenprofil">
                   <div className="flex min-h-10 items-center rounded-md border border-line bg-slate-50 px-3 text-sm font-semibold text-ink">
                     {selectedNewOfferProfile?.name ?? "Kein Firmenprofil"}
@@ -3379,6 +3379,12 @@ function ProjectWorkspace({
                         {profile.name}
                       </option>
                     ))}
+                  </Select>
+                </Field>
+                <Field label="Angebotsart">
+                  <Select value={project.offerType} onChange={(event) => updateProject("offerType", event.target.value as Project["offerType"])}>
+                    <option>Mit Leistungsverzeichnis</option>
+                    <option>Anschreiben ohne LV</option>
                   </Select>
                 </Field>
               </div>
@@ -3451,12 +3457,6 @@ function ProjectWorkspace({
                   <option>Versendet</option>
                   <option>Beauftragt</option>
                   <option>Archiviert</option>
-                </Select>
-              </Field>
-              <Field label="Angebotsart">
-                <Select value={project.offerType} onChange={(event) => updateProject("offerType", event.target.value as Project["offerType"])}>
-                  <option>Mit Leistungsverzeichnis</option>
-                  <option>Anschreiben ohne LV</option>
                 </Select>
               </Field>
             </div>
