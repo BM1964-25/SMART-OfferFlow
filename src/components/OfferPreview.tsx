@@ -153,6 +153,15 @@ function createPdfFileName(project: Project, company?: CompanyProfile) {
   return `${offerNumber}-${companyPart}-${clientPart}-${subjectPart}-${dateStamp()}-angebot.pdf`;
 }
 
+function pdfBase64ToBlob(pdfBase64: string) {
+  const binary = window.atob(pdfBase64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return new Blob([bytes], { type: "application/pdf" });
+}
+
 function formatRecipientAddress(project: Project) {
   const client = project.client.trim();
   const address = (project.clientAddress ?? "").trim();
@@ -214,6 +223,7 @@ export function OfferPreview({
 }) {
   const [shareStatus, setShareStatus] = useState<"idle" | "saving" | "copied" | "error">("idle");
   const [pdfStatus, setPdfStatus] = useState<"idle" | "creating" | "error">("idle");
+  const [pdfFallback, setPdfFallback] = useState<{ url: string; filename: string } | null>(null);
   const [shareMessage, setShareMessage] = useState("");
   const [localSaveStatus, setLocalSaveStatus] = useState<"idle" | "saved">("idle");
   const company = profiles.find((profile) => profile.id === project.companyId) ?? profiles[0];
@@ -288,45 +298,62 @@ export function OfferPreview({
 
     try {
       setPdfStatus("creating");
+      setPdfFallback((current) => {
+        if (current) URL.revokeObjectURL(current.url);
+        return null;
+      });
       setShareMessage("Professionelles PDF wird erstellt.");
       const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
         .map((node) => node.outerHTML)
         .join("\n");
       const title = `${project.offerNumber || "Angebot"} ${project.projectName || project.client || ""}`.trim();
       const fileName = createPdfFileName(project, company);
-
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = "/api/pdf";
-      form.target = "_blank";
-      form.enctype = "multipart/form-data";
-      form.style.display = "none";
-
-      const fields = {
-        html: element.outerHTML,
-        styles,
-        title,
-        filename: fileName,
-        baseUrl: window.location.origin
-      };
-
-      Object.entries(fields).forEach(([name, value]) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = name;
-        input.value = value;
-        form.appendChild(input);
+      const isLocalApp = ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
+      const response = await fetch("/api/pdf/", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          html: element.outerHTML,
+          styles,
+          title,
+          filename: fileName,
+          baseUrl: window.location.origin,
+          responseMode: "json",
+          saveLocal: isLocalApp
+        })
       });
+      const result = (await response.json()) as {
+        saved?: boolean;
+        path?: string;
+        filename?: string;
+        pdfBase64?: string;
+        error?: string;
+      };
+      if (!response.ok) {
+        throw new Error(result.error || "PDF konnte serverseitig nicht erstellt werden.");
+      }
 
-      document.body.appendChild(form);
-      form.submit();
-      form.remove();
-      setShareMessage(`PDF wurde in einem neuen Tab erzeugt: ${fileName}`);
+      if (result.saved && result.path) {
+        setShareMessage(`PDF gespeichert: ${result.path}`);
+      } else if (result.pdfBase64 && result.filename) {
+        const blob = pdfBase64ToBlob(result.pdfBase64);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = result.filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setPdfFallback({ url, filename: result.filename });
+        setShareMessage(`PDF erstellt: ${result.filename}. Falls kein Download erscheint, bitte den manuellen Downloadlink nutzen.`);
+      } else {
+        throw new Error("PDF wurde erstellt, aber die Serverantwort enthielt keine Datei.");
+      }
       window.setTimeout(() => setPdfStatus("idle"), 2500);
     } catch (error) {
       const message = error instanceof Error ? error.message : "PDF konnte nicht erstellt werden.";
       setPdfStatus("error");
-      setShareMessage(`${message} Bitte auf Vercel oder lokal mit laufendem Next-Server erneut versuchen.`);
+      setShareMessage(`${message} Bitte lokal mit laufendem Next-Server oder auf Vercel erneut versuchen.`);
       window.setTimeout(() => setPdfStatus("idle"), 4500);
     }
   };
@@ -374,8 +401,13 @@ export function OfferPreview({
               {shareMessage || "Kundenlink speichert das Angebot in Supabase und kopiert einen kurzen Link."}
             </p>
             <p className="mt-1 text-xs text-muted">
-              PDF-Hinweis: Die PDF wird in einem neuen Tab erzeugt und kann dort gespeichert oder aus dem Downloadbereich geöffnet werden.
+              PDF-Hinweis: Lokal wird die PDF direkt im Downloads-Ordner gespeichert. Online wird ein Download erzeugt und bei Bedarf zusätzlich als manueller Link angezeigt.
             </p>
+            {pdfFallback ? (
+              <a className="mt-2 inline-flex text-xs font-semibold text-blue-700 underline underline-offset-2" href={pdfFallback.url} download={pdfFallback.filename}>
+                PDF manuell herunterladen
+              </a>
+            ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-2">
           <button

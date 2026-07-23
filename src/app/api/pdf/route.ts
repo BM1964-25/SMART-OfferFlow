@@ -1,5 +1,8 @@
 import chromium from "@sparticuz/chromium";
 import { NextRequest, NextResponse } from "next/server";
+import { mkdir, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { chromium as playwrightChromium } from "playwright-core";
 
 export const runtime = "nodejs";
@@ -23,9 +26,27 @@ function sanitizeFilename(value: string) {
 }
 
 function contentDispositionFilename(filename: string) {
-  const sanitized = sanitizeFilename(filename.replace(/\.pdf$/i, ""));
-  const finalName = `${sanitized}.pdf`;
+  const finalName = finalPdfFilename(filename);
   return `attachment; filename="${finalName}"; filename*=UTF-8''${encodeURIComponent(finalName)}`;
+}
+
+function finalPdfFilename(filename: string) {
+  const sanitized = sanitizeFilename(filename.replace(/\.pdf$/i, ""));
+  return `${sanitized}.pdf`;
+}
+
+function isLocalRequest(request: NextRequest) {
+  const host = request.headers.get("host") ?? "";
+  return host.startsWith("localhost") || host.startsWith("127.0.0.1") || host.startsWith("0.0.0.0");
+}
+
+async function savePdfToDownloads(filename: string, pdf: Buffer | Uint8Array) {
+  const downloadsDir = path.join(os.homedir(), "Downloads");
+  const finalName = finalPdfFilename(filename);
+  const targetPath = path.join(downloadsDir, finalName);
+  await mkdir(downloadsDir, { recursive: true });
+  await writeFile(targetPath, pdf);
+  return { filename: finalName, path: targetPath };
 }
 
 async function executablePath() {
@@ -175,13 +196,17 @@ export async function POST(request: NextRequest) {
           title?: string;
           filename?: string;
           baseUrl?: string;
+          responseMode?: "download" | "json";
+          saveLocal?: boolean;
         })
       : await request.formData().then((formData) => ({
           html: String(formData.get("html") ?? ""),
           styles: String(formData.get("styles") ?? ""),
           title: String(formData.get("title") ?? ""),
           filename: String(formData.get("filename") ?? ""),
-          baseUrl: String(formData.get("baseUrl") ?? "")
+          baseUrl: String(formData.get("baseUrl") ?? ""),
+          responseMode: String(formData.get("responseMode") ?? "download") as "download" | "json",
+          saveLocal: String(formData.get("saveLocal") ?? "") === "true"
         }));
     const pdfRequest = body as {
       html?: string;
@@ -189,6 +214,8 @@ export async function POST(request: NextRequest) {
       title?: string;
       filename?: string;
       baseUrl?: string;
+      responseMode?: "download" | "json";
+      saveLocal?: boolean;
     };
 
     if (!pdfRequest.html) {
@@ -241,6 +268,23 @@ export async function POST(request: NextRequest) {
         left: "20mm"
       }
     });
+
+    if (pdfRequest.responseMode === "json") {
+      if (pdfRequest.saveLocal && isLocalRequest(request) && !process.env.VERCEL) {
+        const savedFile = await savePdfToDownloads(filename, pdf);
+        return NextResponse.json({
+          saved: true,
+          filename: savedFile.filename,
+          path: savedFile.path
+        });
+      }
+
+      return NextResponse.json({
+        saved: false,
+        filename: finalPdfFilename(filename),
+        pdfBase64: Buffer.from(pdf).toString("base64")
+      });
+    }
 
     return new NextResponse(new Uint8Array(pdf), {
       headers: {
