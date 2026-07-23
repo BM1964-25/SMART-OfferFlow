@@ -503,7 +503,7 @@ export function OfferPreview({
               <p className="mt-6 max-w-3xl text-xl font-semibold leading-8 text-black">Betreff: {project.offerSubject}</p>
             ) : null}
           </div>
-          <div className="sender-card w-full rounded-md border border-line p-4 text-sm leading-6 text-black md:mt-5 md:w-[17.25rem] md:shrink-0">
+          <div className="sender-card w-full rounded-md border border-line p-4 text-sm leading-6 text-black md:mt-14 md:w-[17.25rem] md:shrink-0">
             <p className="sender-card-company text-base font-semibold leading-6 text-black">{company.name}</p>
             <div className="sender-card-lines mt-2 grid gap-0.5">
               {companyAddressLines.map((line) => (
