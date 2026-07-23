@@ -294,17 +294,13 @@ export function OfferPreview({
         .join("\n");
       const title = `${project.offerNumber || "Angebot"} ${project.projectName || project.client || ""}`.trim();
       const fileName = createPdfFileName(project, company);
-      const iframeName = `offerflow-pdf-download-${Date.now()}`;
-      const iframe = document.createElement("iframe");
-      iframe.name = iframeName;
-      iframe.hidden = true;
-      document.body.appendChild(iframe);
 
       const form = document.createElement("form");
       form.method = "POST";
       form.action = "/api/pdf";
-      form.target = iframeName;
+      form.target = "_blank";
       form.enctype = "multipart/form-data";
+      form.style.display = "none";
 
       const fields = {
         html: element.outerHTML,
@@ -325,8 +321,7 @@ export function OfferPreview({
       document.body.appendChild(form);
       form.submit();
       form.remove();
-      window.setTimeout(() => iframe.remove(), 30000);
-      setShareMessage(`PDF-Download wurde angefordert: ${fileName}`);
+      setShareMessage(`PDF wurde in einem neuen Tab erzeugt: ${fileName}`);
       window.setTimeout(() => setPdfStatus("idle"), 2500);
     } catch (error) {
       const message = error instanceof Error ? error.message : "PDF konnte nicht erstellt werden.";
@@ -379,7 +374,7 @@ export function OfferPreview({
               {shareMessage || "Kundenlink speichert das Angebot in Supabase und kopiert einen kurzen Link."}
             </p>
             <p className="mt-1 text-xs text-muted">
-              PDF-Hinweis: Im Druckdialog A4, Skalierung 100 %, Hintergrundgrafiken aktivieren und Browser-Kopf-/Fußzeilen deaktivieren.
+              PDF-Hinweis: Die PDF wird in einem neuen Tab erzeugt und kann dort gespeichert oder aus dem Downloadbereich geöffnet werden.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
