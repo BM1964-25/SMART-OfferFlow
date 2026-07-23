@@ -269,16 +269,16 @@ input[type="number"]::-webkit-outer-spin-button {
 
   .metzger-letterhead {
     white-space: nowrap !important;
-    font-size: 22px !important;
+    font-size: 24px !important;
     letter-spacing: 0.08em !important;
     line-height: 1.2 !important;
   }
 
   .sender-card {
-    width: 64mm !important;
-    min-width: 64mm !important;
-    max-width: 64mm !important;
-    flex: 0 0 64mm !important;
+    width: 60mm !important;
+    min-width: 60mm !important;
+    max-width: 60mm !important;
+    flex: 0 0 60mm !important;
     padding: 5mm !important;
     border-radius: 0 !important;
     overflow: visible !important;

@@ -125,14 +125,14 @@ function pdfShell({ baseUrl, styles, html }: { baseUrl: string; styles: string; 
       }
       .metzger-letterhead {
         white-space: nowrap !important;
-        font-size: 21px !important;
+        font-size: 23px !important;
         line-height: 1.15 !important;
       }
       .sender-card {
-        width: 64mm !important;
-        min-width: 64mm !important;
-        max-width: 64mm !important;
-        flex: 0 0 64mm !important;
+        width: 60mm !important;
+        min-width: 60mm !important;
+        max-width: 60mm !important;
+        flex: 0 0 60mm !important;
         padding: 5mm !important;
         border-radius: 0 !important;
         overflow: visible !important;
