@@ -4,6 +4,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { chromium as playwrightChromium } from "playwright-core";
+import { generateOfferPdf } from "@/lib/server-pdf";
+import { CompanyProfile, PositionGroup, Project } from "@/lib/types";
 
 export const runtime = "nodejs";
 
@@ -219,6 +221,9 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get("content-type") ?? "";
     const body = contentType.includes("application/json")
       ? ((await request.json()) as {
+          project?: Project;
+          groups?: PositionGroup[];
+          profiles?: CompanyProfile[];
           html?: string;
           styles?: string;
           title?: string;
@@ -237,6 +242,9 @@ export async function POST(request: NextRequest) {
           saveLocal: String(formData.get("saveLocal") ?? "") === "true"
         }));
     const pdfRequest = body as {
+      project?: Project;
+      groups?: PositionGroup[];
+      profiles?: CompanyProfile[];
       html?: string;
       styles?: string;
       title?: string;
@@ -245,6 +253,40 @@ export async function POST(request: NextRequest) {
       responseMode?: "download" | "json";
       saveLocal?: boolean;
     };
+
+    if (pdfRequest.project && pdfRequest.profiles) {
+      const generated = await generateOfferPdf({
+        project: pdfRequest.project,
+        groups: pdfRequest.groups ?? [],
+        profiles: pdfRequest.profiles
+      });
+      const filename = pdfRequest.filename || generated.filename;
+
+      if (pdfRequest.responseMode === "json") {
+        if (pdfRequest.saveLocal && isLocalRequest(request) && !process.env.VERCEL) {
+          const savedFile = await savePdfToDownloads(filename, generated.pdf);
+          return NextResponse.json({
+            saved: true,
+            filename: savedFile.filename,
+            path: savedFile.path
+          });
+        }
+
+        return NextResponse.json({
+          saved: false,
+          filename: finalPdfFilename(filename),
+          pdfBase64: generated.pdf.toString("base64")
+        });
+      }
+
+      return new NextResponse(new Uint8Array(generated.pdf), {
+        headers: {
+          "content-type": "application/pdf",
+          "content-disposition": contentDispositionFilename(filename),
+          "cache-control": "no-store"
+        }
+      });
+    }
 
     if (!pdfRequest.html) {
       return NextResponse.json({ error: "Angebots-HTML fehlt." }, { status: 400 });

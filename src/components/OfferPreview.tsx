@@ -291,13 +291,6 @@ export function OfferPreview({
     printElement(".print-area", `${project.offerNumber} ${project.projectName}`.trim());
   };
   const createProfessionalPdf = async () => {
-    const element = document.querySelector(".print-area");
-    if (!element) {
-      setPdfStatus("error");
-      setShareMessage("Angebotsbereich wurde nicht gefunden. PDF konnte nicht erstellt werden.");
-      return;
-    }
-
     try {
       setPdfStatus("creating");
       setPdfFallback((current) => {
@@ -305,11 +298,7 @@ export function OfferPreview({
         return null;
       });
       setShareMessage("Professionelles PDF wird erstellt.");
-      const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-        .map((node) => node.outerHTML)
-        .join("\n");
       const title = `${project.offerNumber || "Angebot"} ${project.projectName || project.client || ""}`.trim();
-      const fileName = createPdfFileName(project, company);
       const isLocalApp = ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 90000);
@@ -318,10 +307,10 @@ export function OfferPreview({
         headers: { "content-type": "application/json" },
         signal: controller.signal,
         body: JSON.stringify({
-          html: element.outerHTML,
-          styles,
+          project,
+          groups,
+          profiles,
           title,
-          filename: fileName,
           baseUrl: window.location.origin,
           responseMode: "json",
           saveLocal: isLocalApp
