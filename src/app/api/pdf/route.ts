@@ -22,6 +22,12 @@ function sanitizeFilename(value: string) {
   );
 }
 
+function contentDispositionFilename(filename: string) {
+  const sanitized = sanitizeFilename(filename.replace(/\.pdf$/i, ""));
+  const finalName = `${sanitized}.pdf`;
+  return `attachment; filename="${finalName}"; filename*=UTF-8''${encodeURIComponent(finalName)}`;
+}
+
 async function executablePath() {
   if (process.env.CHROME_EXECUTABLE_PATH) return process.env.CHROME_EXECUTABLE_PATH;
   if (process.env.VERCEL || process.env.AWS_REGION) return chromium.executablePath();
@@ -165,6 +171,7 @@ export async function POST(request: NextRequest) {
       html?: string;
       styles?: string;
       title?: string;
+      filename?: string;
       baseUrl?: string;
     };
 
@@ -175,6 +182,7 @@ export async function POST(request: NextRequest) {
     const requestOrigin = new URL(request.url).origin;
     const baseUrl = (body.baseUrl || requestOrigin).replace(/\/$/, "");
     const title = sanitizeFilename(body.title || "angebot");
+    const filename = body.filename || `${title}.pdf`;
 
     browser = await playwrightChromium.launch({
       args: process.env.VERCEL || process.env.AWS_REGION ? chromium.args : ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -221,7 +229,7 @@ export async function POST(request: NextRequest) {
     return new NextResponse(new Uint8Array(pdf), {
       headers: {
         "content-type": "application/pdf",
-        "content-disposition": `attachment; filename="${title}.pdf"`,
+        "content-disposition": contentDispositionFilename(filename),
         "cache-control": "no-store"
       }
     });

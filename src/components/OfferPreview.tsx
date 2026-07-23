@@ -130,6 +130,29 @@ function hasText(value?: string | null) {
   return Boolean(value?.trim());
 }
 
+function slugifyFilePart(value: string, fallback: string) {
+  const slug = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, " und ")
+    .replace(/[^a-z0-9]+/gi, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+  return slug || fallback;
+}
+
+function dateStamp(date = new Date()) {
+  return new Intl.DateTimeFormat("de-DE", { year: "numeric", month: "2-digit", day: "2-digit" }).format(date).split(".").reverse().join("-");
+}
+
+function createPdfFileName(project: Project, company?: CompanyProfile) {
+  const offerNumber = slugifyFilePart(project.offerNumber, "ohne-angebotsnummer");
+  const companyPart = slugifyFilePart(company?.logoText || company?.name || project.companyId, "firmenprofil");
+  const clientPart = slugifyFilePart(project.client, "ohne-kunde");
+  const subjectPart = slugifyFilePart(project.offerSubject || project.projectName, "angebot");
+  return `${offerNumber}-${companyPart}-${clientPart}-${subjectPart}-${dateStamp()}-angebot.pdf`;
+}
+
 function formatRecipientAddress(project: Project) {
   const client = project.client.trim();
   const address = (project.clientAddress ?? "").trim();
@@ -270,6 +293,7 @@ export function OfferPreview({
         .map((node) => node.outerHTML)
         .join("\n");
       const title = `${project.offerNumber || "Angebot"} ${project.projectName || project.client || ""}`.trim();
+      const fileName = createPdfFileName(project, company);
       const response = await fetch("/api/pdf", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -277,6 +301,7 @@ export function OfferPreview({
           html: element.outerHTML,
           styles,
           title,
+          filename: fileName,
           baseUrl: window.location.origin
         })
       });
@@ -290,12 +315,12 @@ export function OfferPreview({
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${title.replace(/[^\w\s.-]/g, "").replace(/\s+/g, "-") || "angebot"}.pdf`;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      setShareMessage("Professionelles PDF wurde erstellt.");
+      setShareMessage(`Professionelles PDF wurde erstellt: ${fileName}`);
       setPdfStatus("idle");
     } catch (error) {
       const message = error instanceof Error ? error.message : "PDF konnte nicht erstellt werden.";
