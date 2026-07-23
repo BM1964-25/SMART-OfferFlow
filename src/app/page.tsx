@@ -3974,41 +3974,6 @@ function ProjectWorkspace({
                   );
                 })}
               </div>
-              {isStructuredOffer ? (
-                <div className="mt-5 border-t border-line pt-4">
-                  <p className="text-sm font-semibold text-ink">Überschriften im Angebot anzeigen</p>
-                  <p className="mt-1 text-xs leading-5 text-muted">
-                    Diese Auswahl steuert nur den sichtbaren Titel im Angebot. Der Textinhalt wird weiterhin oben über „Abschnitte im Angebot anzeigen“ gesteuert.
-                  </p>
-                  <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-                    {visibleSectionControls.map((section) => {
-                      const sectionActive = isSectionVisible(section.key);
-                      const checked = sectionActive && isSectionTitleVisible(section.key);
-                      return (
-                        <label
-                          key={`title-${section.key}`}
-                          className={`flex min-h-10 items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition ${
-                            !sectionActive
-                              ? "border-line bg-white text-slate-400 opacity-60"
-                              : checked
-                                ? "border-slate-300 bg-slate-100 text-ink"
-                                : "border-line bg-white text-muted"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            disabled={!sectionActive}
-                            onChange={(event) => updateSectionTitleVisibility(section.key, event.target.checked)}
-                            className="h-4 w-4 rounded border-line text-slate-700 disabled:cursor-not-allowed"
-                          />
-                          <span>{section.label}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              ) : null}
             </div>
             <div className="mt-4 grid gap-4">
               <OfferSectionField active={isSectionVisible("offerIntro")}>
@@ -4109,6 +4074,39 @@ function ProjectWorkspace({
                   <Plus className="h-4 w-4" />
                   Abschnitt hinzufügen
                 </button>
+              </div>
+              <div className="mt-4 rounded-md border border-line bg-slate-50 p-4">
+                <p className="text-sm font-semibold text-ink">Überschriften im Angebot anzeigen</p>
+                <p className="mt-1 text-xs leading-5 text-muted">
+                  Diese Auswahl steuert nur den sichtbaren Titel im Angebot. Der Textinhalt wird weiterhin über „Abschnitte im Angebot anzeigen“ gesteuert.
+                </p>
+                <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+                  {visibleSectionControls.map((section) => {
+                    const sectionActive = isSectionVisible(section.key);
+                    const checked = sectionActive && isSectionTitleVisible(section.key);
+                    return (
+                      <label
+                        key={`title-${section.key}`}
+                        className={`flex min-h-10 items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition ${
+                          !sectionActive
+                            ? "border-line bg-white text-slate-400 opacity-60"
+                            : checked
+                              ? "border-slate-300 bg-slate-100 text-ink"
+                              : "border-line bg-white text-muted"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={!sectionActive}
+                          onChange={(event) => updateSectionTitleVisibility(section.key, event.target.checked)}
+                          className="h-4 w-4 rounded border-line text-slate-700 disabled:cursor-not-allowed"
+                        />
+                        <span>{section.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
               <div className="mt-4 grid gap-4">
                 {project.structuredSections.map((section, index) => (
