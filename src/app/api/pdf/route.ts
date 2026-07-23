@@ -27,9 +27,9 @@ function sanitizeFilename(value: string) {
   );
 }
 
-function contentDispositionFilename(filename: string) {
+function contentDispositionFilename(filename: string, disposition: "attachment" | "inline" = "attachment") {
   const finalName = finalPdfFilename(filename);
-  return `attachment; filename="${finalName}"; filename*=UTF-8''${encodeURIComponent(finalName)}`;
+  return `${disposition}; filename="${finalName}"; filename*=UTF-8''${encodeURIComponent(finalName)}`;
 }
 
 function finalPdfFilename(filename: string) {
@@ -231,16 +231,35 @@ export async function POST(request: NextRequest) {
           baseUrl?: string;
           responseMode?: "download" | "json";
           saveLocal?: boolean;
+          inline?: boolean;
         })
-      : await request.formData().then((formData) => ({
-          html: String(formData.get("html") ?? ""),
-          styles: String(formData.get("styles") ?? ""),
-          title: String(formData.get("title") ?? ""),
-          filename: String(formData.get("filename") ?? ""),
-          baseUrl: String(formData.get("baseUrl") ?? ""),
-          responseMode: String(formData.get("responseMode") ?? "download") as "download" | "json",
-          saveLocal: String(formData.get("saveLocal") ?? "") === "true"
-        }));
+      : await request.formData().then((formData) => {
+          const payload = String(formData.get("payload") ?? "");
+          if (payload) {
+            const parsed = JSON.parse(payload) as {
+              project?: Project;
+              groups?: PositionGroup[];
+              profiles?: CompanyProfile[];
+              title?: string;
+              filename?: string;
+              baseUrl?: string;
+              responseMode?: "download" | "json";
+              saveLocal?: boolean;
+              inline?: boolean;
+            };
+            return parsed;
+          }
+
+          return {
+            html: String(formData.get("html") ?? ""),
+            styles: String(formData.get("styles") ?? ""),
+            title: String(formData.get("title") ?? ""),
+            filename: String(formData.get("filename") ?? ""),
+            baseUrl: String(formData.get("baseUrl") ?? ""),
+            responseMode: String(formData.get("responseMode") ?? "download") as "download" | "json",
+            saveLocal: String(formData.get("saveLocal") ?? "") === "true"
+          };
+        });
     const pdfRequest = body as {
       project?: Project;
       groups?: PositionGroup[];
@@ -252,6 +271,7 @@ export async function POST(request: NextRequest) {
       baseUrl?: string;
       responseMode?: "download" | "json";
       saveLocal?: boolean;
+      inline?: boolean;
     };
 
     if (pdfRequest.project && pdfRequest.profiles) {
@@ -282,7 +302,7 @@ export async function POST(request: NextRequest) {
       return new NextResponse(new Uint8Array(generated.pdf), {
         headers: {
           "content-type": "application/pdf",
-          "content-disposition": contentDispositionFilename(filename),
+          "content-disposition": contentDispositionFilename(filename, pdfRequest.inline ? "inline" : "attachment"),
           "cache-control": "no-store"
         }
       });
