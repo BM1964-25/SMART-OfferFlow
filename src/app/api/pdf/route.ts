@@ -134,6 +134,7 @@ function pdfShell({ baseUrl, styles, html }: { baseUrl: string; styles: string; 
         max-width: 60mm !important;
         flex: 0 0 60mm !important;
         padding: 5mm !important;
+        border: 0 !important;
         border-radius: 0 !important;
         overflow: visible !important;
       }
