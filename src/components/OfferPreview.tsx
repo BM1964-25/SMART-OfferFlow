@@ -183,6 +183,9 @@ async function errorMessageFromPdfResponse(response: Response) {
     return payload?.error || `PDF konnte nicht erstellt werden. Serverstatus: ${response.status}`;
   }
   const text = await response.text().catch(() => "");
+  if (contentType.includes("text/html") || text.trim().startsWith("<!DOCTYPE") || text.trim().startsWith("<html")) {
+    return `PDF konnte auf Vercel nicht erstellt werden. Serverstatus: ${response.status}. Bitte nach dem nächsten Deployment erneut versuchen.`;
+  }
   return text || `PDF konnte nicht erstellt werden. Serverstatus: ${response.status}`;
 }
 
