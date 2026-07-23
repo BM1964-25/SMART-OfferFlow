@@ -318,13 +318,11 @@ export function OfferPreview({
           writePdfWindowMessage("PDF wird erstellt", "Bitte einen Moment warten. Das Angebot wird vorbereitet und als PDF geöffnet.");
         }
 
-        const response = await fetch("/api/offers", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ project, groups, profiles })
-        });
-        const result = (await response.json()) as { token?: string; error?: string };
-        if (!response.ok || !result.token) {
+        const createFallbackPdf = async (reason?: string) => {
+          writePdfWindowMessage(
+            "PDF wird direkt erstellt",
+            reason ? `${reason} Die App erstellt die PDF jetzt direkt und stellt danach einen Download bereit.` : "Die App erstellt die PDF jetzt direkt und stellt danach einen Download bereit."
+          );
           const fallbackResponse = await fetch("/api/pdf/", {
             method: "POST",
             headers: { "content-type": "application/json" },
@@ -340,7 +338,7 @@ export function OfferPreview({
           });
           const fallbackResult = (await fallbackResponse.json()) as { filename?: string; pdfBase64?: string; error?: string };
           if (!fallbackResponse.ok || !fallbackResult.pdfBase64 || !fallbackResult.filename) {
-            const message = result.error || fallbackResult.error || "PDF konnte online nicht vorbereitet werden.";
+            const message = fallbackResult.error || reason || "PDF konnte online nicht vorbereitet werden.";
             writePdfWindowMessage("PDF konnte nicht erstellt werden", message);
             throw new Error(message);
           }
@@ -351,7 +349,34 @@ export function OfferPreview({
           writePdfWindowMessage("PDF wurde erstellt", "Safari konnte die PDF nicht automatisch öffnen. Bitte im ursprünglichen App-Fenster den Button \"PDF herunterladen\" nutzen.");
           setShareMessage(`PDF erstellt: ${fallbackResult.filename}. Bitte unten "PDF herunterladen" nutzen.`);
           window.setTimeout(() => setPdfStatus("idle"), 1800);
+        };
+
+        const offerController = new AbortController();
+        const offerTimeout = window.setTimeout(() => offerController.abort(), 8000);
+        let result: { token?: string; error?: string };
+        try {
+          const response = await fetch("/api/offers", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            signal: offerController.signal,
+            body: JSON.stringify({ project, groups, profiles })
+          });
+          result = (await response.json()) as { token?: string; error?: string };
+          if (!response.ok || !result.token) {
+            await createFallbackPdf(result.error || "Der kurze PDF-Link konnte nicht vorbereitet werden.");
+            return;
+          }
+        } catch (error) {
+          const reason =
+            error instanceof DOMException && error.name === "AbortError"
+              ? "Der kurze PDF-Link hat zu lange gebraucht."
+              : error instanceof Error
+                ? error.message
+                : "Der kurze PDF-Link konnte nicht vorbereitet werden.";
+          await createFallbackPdf(reason);
           return;
+        } finally {
+          window.clearTimeout(offerTimeout);
         }
 
         const pdfUrl = `/api/pdf?token=${encodeURIComponent(result.token)}&inline=1`;

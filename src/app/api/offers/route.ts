@@ -3,7 +3,7 @@ import { createOfferSharePayload } from "@/lib/share";
 import { loadOfferFromSupabase, saveOfferToSupabase } from "@/lib/supabase-offers";
 import { CompanyProfile, PositionGroup, Project } from "@/lib/types";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 function publicBaseUrl(request: NextRequest) {
   const configured = process.env.NEXT_PUBLIC_OFFERFLOW_PUBLIC_URL;

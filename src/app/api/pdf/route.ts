@@ -9,6 +9,7 @@ import { loadOfferFromSupabase } from "@/lib/supabase-offers";
 import { CompanyProfile, PositionGroup, Project } from "@/lib/types";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const localChromePaths = [
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
