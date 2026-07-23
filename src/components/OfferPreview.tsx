@@ -162,6 +162,58 @@ function pdfBase64ToBlob(pdfBase64: string) {
   return new Blob([bytes], { type: "application/pdf" });
 }
 
+function filenameFromContentDisposition(header: string | null) {
+  if (!header) return "";
+  const encodedMatch = header.match(/filename\*=UTF-8''([^;]+)/i);
+  if (encodedMatch?.[1]) {
+    try {
+      return decodeURIComponent(encodedMatch[1]);
+    } catch {
+      return encodedMatch[1];
+    }
+  }
+  const plainMatch = header.match(/filename="([^"]+)"/i);
+  return plainMatch?.[1] ?? "";
+}
+
+async function errorMessageFromPdfResponse(response: Response) {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+    return payload?.error || `PDF konnte nicht erstellt werden. Serverstatus: ${response.status}`;
+  }
+  const text = await response.text().catch(() => "");
+  return text || `PDF konnte nicht erstellt werden. Serverstatus: ${response.status}`;
+}
+
+function triggerPdfDownload(url: string, filename: string) {
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.rel = "noopener";
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function pdfBlobToDataUrl(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error ?? new Error("PDF konnte nicht als Download-Link vorbereitet werden."));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function createPdfDownloadUrl(blob: Blob) {
+  try {
+    return URL.createObjectURL(blob);
+  } catch {
+    return pdfBlobToDataUrl(blob);
+  }
+}
+
 function formatRecipientAddress(project: Project) {
   const client = project.client.trim();
   const address = (project.clientAddress ?? "").trim();
@@ -300,6 +352,48 @@ export function OfferPreview({
       setShareMessage("Professionelles PDF wird erstellt.");
       const title = `${project.offerNumber || "Angebot"} ${project.projectName || project.client || ""}`.trim();
       const isLocalApp = ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
+
+      if (!isLocalApp) {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 90000);
+        const response = await fetch("/api/pdf/", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            project,
+            groups,
+            profiles,
+            title,
+            baseUrl: window.location.origin,
+            responseMode: "download",
+            saveLocal: false
+          })
+        });
+        window.clearTimeout(timeout);
+        if (!response.ok) {
+          throw new Error(await errorMessageFromPdfResponse(response));
+        }
+        const contentType = response.headers.get("content-type") ?? "";
+        if (!contentType.includes("application/pdf")) {
+          throw new Error(`PDF-Server lieferte keine PDF-Datei, sondern ${contentType || "einen unbekannten Inhaltstyp"}.`);
+        }
+        const blob = await response.blob();
+        if (!blob.size) {
+          throw new Error("PDF-Server lieferte eine leere PDF-Datei.");
+        }
+        const url = await createPdfDownloadUrl(blob);
+        const filename = filenameFromContentDisposition(response.headers.get("content-disposition")) || createPdfFileName(project, company);
+        try {
+          triggerPdfDownload(url, filename);
+        } catch {
+          // Safari or embedded browsers can block synthetic downloads. The manual link remains visible.
+        }
+        setPdfFallback({ url, filename });
+        setShareMessage(`PDF erstellt: ${filename}. Der Download wurde gestartet. Falls nichts gespeichert wurde, bitte den Download-Button darunter nutzen.`);
+        window.setTimeout(() => setPdfStatus("idle"), 2500);
+        return;
+      }
 
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 90000);
