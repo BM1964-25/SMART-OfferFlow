@@ -309,9 +309,12 @@ export function OfferPreview({
       const title = `${project.offerNumber || "Angebot"} ${project.projectName || project.client || ""}`.trim();
       const fileName = createPdfFileName(project, company);
       const isLocalApp = ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 90000);
       const response = await fetch("/api/pdf/", {
         method: "POST",
         headers: { "content-type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           html: element.outerHTML,
           styles,
@@ -322,6 +325,7 @@ export function OfferPreview({
           saveLocal: isLocalApp
         })
       });
+      window.clearTimeout(timeout);
       const result = (await response.json()) as {
         saved?: boolean;
         path?: string;
@@ -351,7 +355,12 @@ export function OfferPreview({
       }
       window.setTimeout(() => setPdfStatus("idle"), 2500);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "PDF konnte nicht erstellt werden.";
+      const message =
+        error instanceof DOMException && error.name === "AbortError"
+          ? "PDF-Erstellung wurde nach 90 Sekunden abgebrochen. Bitte die Angebotsvorschau neu laden und erneut versuchen."
+          : error instanceof Error
+            ? error.message
+            : "PDF konnte nicht erstellt werden.";
       setPdfStatus("error");
       setShareMessage(`${message} Bitte lokal mit laufendem Next-Server oder auf Vercel erneut versuchen.`);
       window.setTimeout(() => setPdfStatus("idle"), 4500);
