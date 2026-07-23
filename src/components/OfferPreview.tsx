@@ -340,7 +340,7 @@ export function OfferPreview({
         link.click();
         link.remove();
         setPdfFallback({ url, filename: result.filename });
-        setShareMessage(`PDF erstellt: ${result.filename}. Falls kein Download erscheint, bitte den manuellen Downloadlink nutzen.`);
+        setShareMessage(`PDF erstellt: ${result.filename}. Falls Safari keinen Download ablegt, bitte unten "PDF herunterladen" oder "PDF öffnen" nutzen.`);
       } else {
         throw new Error("PDF wurde erstellt, aber die Serverantwort enthielt keine Datei.");
       }
@@ -404,9 +404,28 @@ export function OfferPreview({
               PDF-Hinweis: Lokal wird die PDF direkt im Downloads-Ordner gespeichert. Online wird ein Download erzeugt und bei Bedarf zusätzlich als manueller Link angezeigt.
             </p>
             {pdfFallback ? (
-              <a className="mt-2 inline-flex text-xs font-semibold text-blue-700 underline underline-offset-2" href={pdfFallback.url} download={pdfFallback.filename}>
-                PDF manuell herunterladen
-              </a>
+              <div className="mt-3 rounded-md border border-blue-100 bg-blue-50 p-3">
+                <p className="text-xs font-semibold text-blue-950">PDF ist erstellt, aber Safari speichert Downloads nicht immer automatisch.</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <a
+                    className="inline-flex h-9 items-center gap-2 rounded-md bg-blue-700 px-3 text-xs font-semibold text-white transition hover:bg-blue-800"
+                    href={pdfFallback.url}
+                    download={pdfFallback.filename}
+                  >
+                    <Download className="h-4 w-4" />
+                    PDF herunterladen
+                  </a>
+                  <a
+                    className="inline-flex h-9 items-center gap-2 rounded-md border border-blue-200 bg-white px-3 text-xs font-semibold text-blue-800 transition hover:bg-blue-100"
+                    href={pdfFallback.url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Printer className="h-4 w-4" />
+                    PDF öffnen
+                  </a>
+                </div>
+              </div>
             ) : null}
           </div>
           <div className="flex flex-wrap items-center gap-2">
