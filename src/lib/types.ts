@@ -82,6 +82,7 @@ export type StructuredOfferSubsection = {
   bullets: string[];
   afterBulletsText: string;
   tableRows: StructuredOfferTableRow[];
+  afterTableText: string;
 };
 
 export type StructuredOfferSection = {
@@ -93,6 +94,7 @@ export type StructuredOfferSection = {
   bullets: string[];
   afterBulletsText: string;
   tableRows: StructuredOfferTableRow[];
+  afterTableText: string;
   subsections: StructuredOfferSubsection[];
 };
 

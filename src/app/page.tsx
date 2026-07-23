@@ -473,6 +473,7 @@ function cloneStructuredSections(sections: StructuredOfferSection[] = defaultStr
     bullets: [...(section.bullets ?? [])],
     afterBulletsText: section.afterBulletsText ?? "",
     tableRows: (section.tableRows ?? []).map((row) => ({ ...row })),
+    afterTableText: section.afterTableText ?? "",
     subsections: normalizeStructuredSubsections(section, index)
   }));
 }
@@ -485,6 +486,7 @@ function normalizeStructuredSubsections(section: StructuredOfferSection, section
       body: subsection.body ?? "",
       bullets: Array.isArray(subsection.bullets) ? subsection.bullets : [],
       afterBulletsText: subsection.afterBulletsText ?? "",
+      afterTableText: subsection.afterTableText ?? "",
       tableRows: Array.isArray(subsection.tableRows)
         ? subsection.tableRows.map((row, rowIndex) => ({
             id: row.id || makeId(`structured-subsection-row-${sectionIndex + 1}-${subsectionIndex + 1}-${rowIndex + 1}`),
@@ -501,7 +503,8 @@ function normalizeStructuredSubsections(section: StructuredOfferSection, section
     `${section.body ?? ""}`.trim() ||
     (section.bullets ?? []).some((bullet) => `${bullet ?? ""}`.trim()) ||
     `${section.afterBulletsText ?? ""}`.trim() ||
-    (section.tableRows ?? []).some((row) => `${row.label ?? ""}`.trim() || `${row.value ?? ""}`.trim());
+    (section.tableRows ?? []).some((row) => `${row.label ?? ""}`.trim() || `${row.value ?? ""}`.trim()) ||
+    `${section.afterTableText ?? ""}`.trim();
   const subsections: StructuredOfferSubsection[] = firstSubsectionHasContent
     ? [
         {
@@ -510,7 +513,8 @@ function normalizeStructuredSubsections(section: StructuredOfferSection, section
           body: section.body ?? "",
           bullets: Array.isArray(section.bullets) ? section.bullets : [],
           afterBulletsText: section.afterBulletsText ?? "",
-          tableRows: Array.isArray(section.tableRows) ? section.tableRows.map((row) => ({ ...row })) : []
+          tableRows: Array.isArray(section.tableRows) ? section.tableRows.map((row) => ({ ...row })) : [],
+          afterTableText: section.afterTableText ?? ""
         }
       ]
     : [];
@@ -521,7 +525,8 @@ function normalizeStructuredSubsections(section: StructuredOfferSection, section
       body: "",
       bullets: [],
       afterBulletsText: "",
-      tableRows: []
+      tableRows: [],
+      afterTableText: ""
     });
   });
   return subsections;
@@ -537,6 +542,7 @@ function normalizeStructuredSections(sections?: StructuredOfferSection[]) {
     body: section.body ?? "",
     bullets: Array.isArray(section.bullets) ? section.bullets : [],
     afterBulletsText: section.afterBulletsText ?? "",
+    afterTableText: section.afterTableText ?? "",
     tableRows: Array.isArray(section.tableRows)
       ? section.tableRows.map((row, rowIndex) => ({
           id: row.id || makeId(`structured-row-${index + 1}-${rowIndex + 1}`),
@@ -558,6 +564,7 @@ function createBlankStructuredSection(): StructuredOfferSection {
     bullets: [],
     afterBulletsText: "",
     tableRows: [],
+    afterTableText: "",
     subsections: []
   };
 }
@@ -569,7 +576,8 @@ function createBlankStructuredSubsection(): StructuredOfferSubsection {
     body: "",
     bullets: [],
     afterBulletsText: "",
-    tableRows: []
+    tableRows: [],
+    afterTableText: ""
   };
 }
 
@@ -3153,13 +3161,15 @@ function StartAssistant({
       section.body.trim() ||
       (section.bullets ?? []).some((bullet) => bullet.trim()) ||
       (section.tableRows ?? []).some((row) => row.label.trim() || row.value.trim()) ||
+      section.afterTableText.trim() ||
       (section.subsections ?? []).some(
         (subsection) =>
           subsection.title.trim() ||
           subsection.body.trim() ||
           (subsection.bullets ?? []).some((bullet) => bullet.trim()) ||
           subsection.afterBulletsText.trim() ||
-          (subsection.tableRows ?? []).some((row) => row.label.trim() || row.value.trim())
+          (subsection.tableRows ?? []).some((row) => row.label.trim() || row.value.trim()) ||
+          subsection.afterTableText.trim()
       )
   ).length;
   const positionCount = activeGroups(groups).reduce((sum, group) => sum + group.positions.filter((position) => position.active).length, 0);
@@ -4224,27 +4234,38 @@ function ProjectWorkspace({
                                   />
                                 </Field>
                                 <Field label="Optionale Tabelle">
-                                  <TextArea
-                                    value={subsection.tableRows.map((row) => `${row.label} | ${row.value}`).join("\n")}
-                                    placeholder="Leistung | Vergütung"
-                                    onChange={(event) =>
-                                      updateStructuredSubsection(section.id, subsection.id, {
-                                        tableRows: event.target.value
-                                          .split("\n")
-                                          .map((line) => line.trim())
-                                          .filter(Boolean)
-                                          .map((line, rowIndex) => {
-                                            const [label, ...valueParts] = line.split("|");
-                                            return {
-                                              id: subsection.tableRows[rowIndex]?.id ?? makeId(`structured-subsection-row-${index + 1}-${subsectionIndex + 1}-${rowIndex + 1}`),
-                                              label: label?.trim() ?? "",
-                                              value: valueParts.join("|").trim()
-                                            };
-                                          })
-                                      })
-                                    }
-                                    className="min-h-20"
-                                  />
+                                  <div className="grid gap-3">
+                                    <TextArea
+                                      value={subsection.tableRows.map((row) => `${row.label} | ${row.value}`).join("\n")}
+                                      placeholder="Leistung | Vergütung"
+                                      onChange={(event) =>
+                                        updateStructuredSubsection(section.id, subsection.id, {
+                                          tableRows: event.target.value
+                                            .split("\n")
+                                            .map((line) => line.trim())
+                                            .filter(Boolean)
+                                            .map((line, rowIndex) => {
+                                              const [label, ...valueParts] = line.split("|");
+                                              return {
+                                                id: subsection.tableRows[rowIndex]?.id ?? makeId(`structured-subsection-row-${index + 1}-${subsectionIndex + 1}-${rowIndex + 1}`),
+                                                label: label?.trim() ?? "",
+                                                value: valueParts.join("|").trim()
+                                              };
+                                            })
+                                        })
+                                      }
+                                      className="min-h-20"
+                                    />
+                                    <div>
+                                      <p className="mb-1 text-sm font-semibold text-muted">Textergänzung nach Tabelle</p>
+                                      <TextArea
+                                        value={subsection.afterTableText ?? ""}
+                                        placeholder="Optionaler Satz oder Hinweis direkt unterhalb der Tabelle"
+                                        onChange={(event) => updateStructuredSubsection(section.id, subsection.id, { afterTableText: event.target.value })}
+                                        className="min-h-16"
+                                      />
+                                    </div>
+                                  </div>
                                 </Field>
                               </div>
                             </div>

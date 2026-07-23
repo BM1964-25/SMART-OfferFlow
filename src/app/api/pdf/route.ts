@@ -128,6 +128,33 @@ function pdfShell({ baseUrl, styles, html }: { baseUrl: string; styles: string; 
         font-size: 21px !important;
         line-height: 1.15 !important;
       }
+      .sender-card {
+        width: 64mm !important;
+        min-width: 64mm !important;
+        max-width: 64mm !important;
+        flex: 0 0 64mm !important;
+        padding: 5mm !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+      }
+      .sender-card,
+      .sender-card p,
+      .sender-card span,
+      .sender-card div {
+        font-size: 9.4pt !important;
+        line-height: 1.34 !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        hyphens: none !important;
+      }
+      .sender-card-company {
+        font-size: 9.6pt !important;
+        line-height: 1.32 !important;
+      }
+      .sender-card-label {
+        font-size: 8.9pt !important;
+        line-height: 1.3 !important;
+      }
       img {
         max-width: 100% !important;
       }

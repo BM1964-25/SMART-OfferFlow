@@ -263,13 +263,15 @@ export function OfferPreview({
       (section.bullets ?? []).some(hasText) ||
       hasText(section.afterBulletsText) ||
       (section.tableRows ?? []).some((row) => hasText(row.label) || hasText(row.value)) ||
+      hasText(section.afterTableText) ||
       (section.subsections ?? []).some(
         (subsection) =>
           hasText(subsection.title) ||
           hasText(subsection.body) ||
           (subsection.bullets ?? []).some(hasText) ||
           hasText(subsection.afterBulletsText) ||
-          (subsection.tableRows ?? []).some((row) => hasText(row.label) || hasText(row.value))
+          (subsection.tableRows ?? []).some((row) => hasText(row.label) || hasText(row.value)) ||
+          hasText(subsection.afterTableText)
       )
   );
   const projectTextCards = [
@@ -474,8 +476,8 @@ export function OfferPreview({
       ) : null}
       <article className="print-area rounded-lg border border-line bg-white p-8 text-base text-black shadow-soft">
       <section className="print-section pb-0">
-        <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-          <div>
+        <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between md:gap-10">
+          <div className="min-w-0 flex-1">
             {company.id === "metzger-real-estate" ? (
               <div className="mb-12">
                 <p className="metzger-letterhead text-3xl font-semibold uppercase leading-tight tracking-[0.12em] text-[#5F6671] sm:text-4xl">
@@ -501,14 +503,14 @@ export function OfferPreview({
               <p className="mt-6 max-w-3xl text-xl font-semibold leading-8 text-black">Betreff: {project.offerSubject}</p>
             ) : null}
           </div>
-          <div className="min-w-64 rounded-lg border border-line p-4 text-base text-black">
-            <p className="text-lg font-semibold leading-6 text-black">{company.name}</p>
-            <div className="mt-2 grid gap-1">
+          <div className="sender-card w-full rounded-md border border-line p-4 text-sm leading-6 text-black md:w-[18.5rem] md:shrink-0">
+            <p className="sender-card-company text-base font-semibold leading-6 text-black">{company.name}</p>
+            <div className="sender-card-lines mt-2 grid gap-0.5">
               {companyAddressLines.map((line) => (
                 <p key={line}>{line}</p>
               ))}
             </div>
-            <p className="mt-3 font-semibold text-ink">Projektverantwortlicher</p>
+            <p className="sender-card-label mt-3 font-semibold text-ink">Projektverantwortlicher</p>
             <p>{company.contact}</p>
             {company.contactRole ? <p>{company.contactRole}</p> : null}
             <p className="mt-3">{company.email}</p>
@@ -518,7 +520,6 @@ export function OfferPreview({
         </div>
         <div className="mt-16 grid gap-4 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
           <PreviewMeta label="Mandat" value={project.projectName || project.offerType} />
-          <PreviewMeta label="Ansprechpartner" value={project.contactPerson} />
           <PreviewMeta label="Angebotsnummer" value={project.offerNumber} />
           <PreviewMeta label="Datum" value={offerDate} />
         </div>
@@ -567,7 +568,8 @@ export function OfferPreview({
                   hasText(subsection.body) ||
                   (subsection.bullets ?? []).some(hasText) ||
                   hasText(subsection.afterBulletsText) ||
-                  (subsection.tableRows ?? []).some((row) => hasText(row.label) || hasText(row.value))
+                  (subsection.tableRows ?? []).some((row) => hasText(row.label) || hasText(row.value)) ||
+                  hasText(subsection.afterTableText)
               );
               return (
                 <div key={section.id} className="break-inside-avoid">
@@ -609,6 +611,7 @@ export function OfferPreview({
                                 ))}
                               </div>
                             ) : null}
+                            {hasText(subsection.afterTableText) ? <TextBlock text={subsection.afterTableText} className="structured-offer-text mt-3 whitespace-pre-line text-base leading-7 text-black" /> : null}
                           </div>
                         );
                       })}
