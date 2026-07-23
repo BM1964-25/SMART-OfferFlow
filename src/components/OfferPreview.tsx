@@ -258,7 +258,8 @@ export function OfferPreview({
   const createProfessionalPdf = async () => {
     const element = document.querySelector(".print-area");
     if (!element) {
-      printOffer();
+      setPdfStatus("error");
+      setShareMessage("Angebotsbereich wurde nicht gefunden. PDF konnte nicht erstellt werden.");
       return;
     }
 
@@ -299,8 +300,7 @@ export function OfferPreview({
     } catch (error) {
       const message = error instanceof Error ? error.message : "PDF konnte nicht erstellt werden.";
       setPdfStatus("error");
-      setShareMessage(`${message} Es wird der normale Druckdialog geöffnet.`);
-      printOffer();
+      setShareMessage(`${message} Bitte auf Vercel oder lokal mit laufendem Next-Server erneut versuchen.`);
       window.setTimeout(() => setPdfStatus("idle"), 4500);
     }
   };
@@ -725,6 +725,8 @@ export function OfferPreview({
               alt="Unterschrift Bernhard Metzger"
               width={300}
               height={200}
+              priority
+              unoptimized
               className="h-auto w-56 object-contain"
             />
             <p className="-mt-4 pl-2 text-base font-semibold text-black">Bernhard Metzger</p>

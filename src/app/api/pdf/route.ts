@@ -61,13 +61,54 @@ function pdfShell({ baseUrl, styles, html }: { baseUrl: string; styles: string; 
         border: 0 !important;
         border-radius: 0 !important;
         box-shadow: none !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: 11pt !important;
+        line-height: 1.48 !important;
       }
       .print-area p,
       .print-area li,
       .print-area a,
-      .print-area span {
+      .print-area span,
+      .print-area td,
+      .print-area th {
+        font-size: 11pt !important;
+        line-height: 1.48 !important;
         overflow-wrap: break-word;
         word-break: normal;
+      }
+      .print-area h1 {
+        font-size: 24px !important;
+        line-height: 1.2 !important;
+      }
+      .print-area h2 {
+        font-size: 14px !important;
+        line-height: 1.35 !important;
+      }
+      .print-area h3,
+      .structured-section-title {
+        font-size: 12px !important;
+        line-height: 1.35 !important;
+      }
+      .structured-offer-text,
+      .structured-offer-list,
+      .structured-offer-text p,
+      .structured-offer-list li {
+        font-size: 11pt !important;
+        line-height: 1.5 !important;
+      }
+      .metzger-letterhead {
+        white-space: nowrap !important;
+        font-size: 21px !important;
+        line-height: 1.15 !important;
+      }
+      img {
+        max-width: 100% !important;
+      }
+      img[alt="Unterschrift Bernhard Metzger"] {
+        display: block !important;
+        width: 220px !important;
+        height: auto !important;
+        object-fit: contain !important;
       }
       .print-page-break-before {
         break-before: page !important;
@@ -80,10 +121,34 @@ function pdfShell({ baseUrl, styles, html }: { baseUrl: string; styles: string; 
       }
       .offer-footer {
         display: block !important;
-        margin-top: 24mm !important;
+        margin-top: 28mm !important;
         padding-top: 5mm !important;
-        font-size: 9.5px !important;
+        font-size: 9.5pt !important;
         line-height: 1.35 !important;
+      }
+      .offer-footer-company {
+        font-size: 11pt !important;
+        line-height: 1.3 !important;
+      }
+      .offer-footer-columns {
+        display: grid !important;
+        grid-template-columns: 1.05fr 1fr 1.24fr !important;
+        gap: 9mm !important;
+      }
+      .offer-footer-col,
+      .offer-footer-col p,
+      .offer-footer-col a {
+        min-width: 0 !important;
+        font-size: 9.2pt !important;
+        line-height: 1.38 !important;
+        overflow-wrap: break-word !important;
+        word-break: normal !important;
+        hyphens: none !important;
+      }
+      .offer-footer-heading {
+        font-size: 8pt !important;
+        line-height: 1.25 !important;
+        letter-spacing: 0.16em !important;
       }
       .offer-footer-date { display: none !important; }
     </style>
@@ -130,6 +195,13 @@ export async function POST(request: NextRequest) {
       }),
       { waitUntil: "networkidle", timeout: 30000 }
     );
+    await page
+      .waitForFunction(
+        () => Array.from(document.images).every((image) => image.complete && image.naturalWidth > 0),
+        null,
+        { timeout: 5000 }
+      )
+      .catch(() => undefined);
 
     const pdf = await page.pdf({
       format: "A4",
