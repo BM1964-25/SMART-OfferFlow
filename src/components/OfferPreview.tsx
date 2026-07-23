@@ -302,27 +302,29 @@ export function OfferPreview({
       const isLocalApp = ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
 
       if (!isLocalApp) {
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = "/api/pdf/";
-        form.target = "_blank";
-        form.style.display = "none";
-        const payload = document.createElement("input");
-        payload.type = "hidden";
-        payload.name = "payload";
-        payload.value = JSON.stringify({
-          project,
-          groups,
-          profiles,
-          title,
-          baseUrl: window.location.origin,
-          responseMode: "download",
-          inline: true
+        const pdfWindow = window.open("", "_blank");
+        if (pdfWindow) {
+          pdfWindow.document.write("<!doctype html><title>PDF wird erstellt</title><body style=\"font-family: system-ui, sans-serif; padding: 40px;\">PDF wird erstellt ...</body>");
+          pdfWindow.document.close();
+        }
+
+        const response = await fetch("/api/offers", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ project, groups, profiles })
         });
-        form.appendChild(payload);
-        document.body.appendChild(form);
-        form.submit();
-        form.remove();
+        const result = (await response.json()) as { token?: string; error?: string };
+        if (!response.ok || !result.token) {
+          if (pdfWindow && !pdfWindow.closed) pdfWindow.close();
+          throw new Error(result.error || "PDF-Link konnte nicht vorbereitet werden.");
+        }
+
+        const pdfUrl = `/api/pdf?token=${encodeURIComponent(result.token)}&inline=1`;
+        if (pdfWindow && !pdfWindow.closed) {
+          pdfWindow.location.href = pdfUrl;
+        } else {
+          window.open(pdfUrl, "_blank", "noopener,noreferrer");
+        }
         setShareMessage("PDF wird in einem neuen Tab geöffnet. Dort kann sie gespeichert oder gedruckt werden.");
         window.setTimeout(() => setPdfStatus("idle"), 1800);
         return;

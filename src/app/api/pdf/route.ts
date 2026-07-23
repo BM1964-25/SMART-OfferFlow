@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { chromium as playwrightChromium } from "playwright-core";
 import { generateOfferPdf } from "@/lib/server-pdf";
+import { loadOfferFromSupabase } from "@/lib/supabase-offers";
 import { CompanyProfile, PositionGroup, Project } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -49,6 +50,16 @@ async function savePdfToDownloads(filename: string, pdf: Buffer | Uint8Array) {
   await mkdir(downloadsDir, { recursive: true });
   await writeFile(targetPath, pdf);
   return { filename: finalName, path: targetPath };
+}
+
+function pdfResponse(pdf: Buffer | Uint8Array, filename: string, inline = false) {
+  return new NextResponse(new Uint8Array(pdf), {
+    headers: {
+      "content-type": "application/pdf",
+      "content-disposition": contentDispositionFilename(filename, inline ? "inline" : "attachment"),
+      "cache-control": "no-store"
+    }
+  });
 }
 
 async function executablePath() {
@@ -299,13 +310,7 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      return new NextResponse(new Uint8Array(generated.pdf), {
-        headers: {
-          "content-type": "application/pdf",
-          "content-disposition": contentDispositionFilename(filename, pdfRequest.inline ? "inline" : "attachment"),
-          "cache-control": "no-store"
-        }
-      });
+      return pdfResponse(generated.pdf, filename, pdfRequest.inline);
     }
 
     if (!pdfRequest.html) {
@@ -376,17 +381,36 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return new NextResponse(new Uint8Array(pdf), {
-      headers: {
-        "content-type": "application/pdf",
-        "content-disposition": contentDispositionFilename(filename),
-        "cache-control": "no-store"
-      }
-    });
+    return pdfResponse(pdf, filename);
   } catch (error) {
     const message = error instanceof Error ? error.message : "PDF konnte nicht erstellt werden.";
     return NextResponse.json({ error: message }, { status: 500 });
   } finally {
     await browser?.close();
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const token = request.nextUrl.searchParams.get("token");
+    if (!token) {
+      return NextResponse.json({ error: "Token fehlt." }, { status: 400 });
+    }
+
+    const stored = await loadOfferFromSupabase(token);
+    if (!stored) {
+      return NextResponse.json({ error: "Angebot wurde nicht gefunden." }, { status: 404 });
+    }
+
+    const generated = await generateOfferPdf({
+      project: stored.payload.project,
+      groups: stored.payload.groups,
+      profiles: stored.payload.profiles
+    });
+
+    return pdfResponse(generated.pdf, generated.filename, request.nextUrl.searchParams.get("inline") === "1");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "PDF konnte nicht erstellt werden.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
