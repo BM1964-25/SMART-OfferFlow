@@ -301,95 +301,6 @@ export function OfferPreview({
       const title = `${project.offerNumber || "Angebot"} ${project.projectName || project.client || ""}`.trim();
       const isLocalApp = ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
 
-      if (!isLocalApp) {
-        const pdfWindow = window.open("", "_blank");
-        const writePdfWindowMessage = (heading: string, body: string) => {
-          if (!pdfWindow || pdfWindow.closed) return;
-          pdfWindow.document.open();
-          pdfWindow.document.write(`<!doctype html>
-            <title>${heading}</title>
-            <body style="font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; padding: 40px; line-height: 1.5;">
-              <h1 style="font-size: 22px; margin: 0 0 12px;">${heading}</h1>
-              <p style="max-width: 680px;">${body}</p>
-            </body>`);
-          pdfWindow.document.close();
-        };
-        if (pdfWindow) {
-          writePdfWindowMessage("PDF wird erstellt", "Bitte einen Moment warten. Das Angebot wird vorbereitet und als PDF geöffnet.");
-        }
-
-        const createFallbackPdf = async (reason?: string) => {
-          writePdfWindowMessage(
-            "PDF wird direkt erstellt",
-            reason ? `${reason} Die App erstellt die PDF jetzt direkt und stellt danach einen Download bereit.` : "Die App erstellt die PDF jetzt direkt und stellt danach einen Download bereit."
-          );
-          const fallbackResponse = await fetch("/api/pdf/", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              project,
-              groups,
-              profiles,
-              title,
-              baseUrl: window.location.origin,
-              responseMode: "json",
-              saveLocal: false
-            })
-          });
-          const fallbackResult = (await fallbackResponse.json()) as { filename?: string; pdfBase64?: string; error?: string };
-          if (!fallbackResponse.ok || !fallbackResult.pdfBase64 || !fallbackResult.filename) {
-            const message = fallbackResult.error || reason || "PDF konnte online nicht vorbereitet werden.";
-            writePdfWindowMessage("PDF konnte nicht erstellt werden", message);
-            throw new Error(message);
-          }
-
-          const blob = pdfBase64ToBlob(fallbackResult.pdfBase64);
-          const url = URL.createObjectURL(blob);
-          setPdfFallback({ url, filename: fallbackResult.filename });
-          writePdfWindowMessage("PDF wurde erstellt", "Safari konnte die PDF nicht automatisch öffnen. Bitte im ursprünglichen App-Fenster den Button \"PDF herunterladen\" nutzen.");
-          setShareMessage(`PDF erstellt: ${fallbackResult.filename}. Bitte unten "PDF herunterladen" nutzen.`);
-          window.setTimeout(() => setPdfStatus("idle"), 1800);
-        };
-
-        const offerController = new AbortController();
-        const offerTimeout = window.setTimeout(() => offerController.abort(), 8000);
-        let result: { token?: string; error?: string };
-        try {
-          const response = await fetch("/api/offers", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            signal: offerController.signal,
-            body: JSON.stringify({ project, groups, profiles })
-          });
-          result = (await response.json()) as { token?: string; error?: string };
-          if (!response.ok || !result.token) {
-            await createFallbackPdf(result.error || "Der kurze PDF-Link konnte nicht vorbereitet werden.");
-            return;
-          }
-        } catch (error) {
-          const reason =
-            error instanceof DOMException && error.name === "AbortError"
-              ? "Der kurze PDF-Link hat zu lange gebraucht."
-              : error instanceof Error
-                ? error.message
-                : "Der kurze PDF-Link konnte nicht vorbereitet werden.";
-          await createFallbackPdf(reason);
-          return;
-        } finally {
-          window.clearTimeout(offerTimeout);
-        }
-
-        const pdfUrl = `/api/pdf?token=${encodeURIComponent(result.token)}&inline=1`;
-        if (pdfWindow && !pdfWindow.closed) {
-          pdfWindow.location.href = pdfUrl;
-        } else {
-          window.open(pdfUrl, "_blank", "noopener,noreferrer");
-        }
-        setShareMessage("PDF wird in einem neuen Tab geöffnet. Dort kann sie gespeichert oder gedruckt werden.");
-        window.setTimeout(() => setPdfStatus("idle"), 1800);
-        return;
-      }
-
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 90000);
       const response = await fetch("/api/pdf/", {
@@ -423,14 +334,8 @@ export function OfferPreview({
       } else if (result.pdfBase64 && result.filename) {
         const blob = pdfBase64ToBlob(result.pdfBase64);
         const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = result.filename;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
         setPdfFallback({ url, filename: result.filename });
-        setShareMessage(`PDF erstellt: ${result.filename}. Falls Safari keinen Download ablegt, bitte unten "PDF herunterladen" nutzen.`);
+        setShareMessage(`PDF erstellt: ${result.filename}. Bitte unten den Button "PDF herunterladen" nutzen.`);
       } else {
         throw new Error("PDF wurde erstellt, aber die Serverantwort enthielt keine Datei.");
       }
@@ -504,15 +409,6 @@ export function OfferPreview({
                   >
                     <Download className="h-4 w-4" />
                     PDF herunterladen
-                  </a>
-                  <a
-                    className="inline-flex h-9 items-center gap-2 rounded-md border border-blue-200 bg-white px-3 text-xs font-semibold text-blue-800 transition hover:bg-blue-100"
-                    href={pdfFallback.url}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Printer className="h-4 w-4" />
-                    PDF öffnen
                   </a>
                 </div>
               </div>
