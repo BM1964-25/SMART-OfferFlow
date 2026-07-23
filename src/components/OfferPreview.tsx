@@ -291,6 +291,7 @@ export function OfferPreview({
     printElement(".print-area", `${project.offerNumber} ${project.projectName}`.trim());
   };
   const createProfessionalPdf = async () => {
+    let pdfWindow: Window | null = null;
     try {
       setPdfStatus("creating");
       setPdfFallback((current) => {
@@ -300,6 +301,11 @@ export function OfferPreview({
       setShareMessage("Professionelles PDF wird erstellt.");
       const title = `${project.offerNumber || "Angebot"} ${project.projectName || project.client || ""}`.trim();
       const isLocalApp = ["localhost", "127.0.0.1", "0.0.0.0"].includes(window.location.hostname);
+      pdfWindow = isLocalApp ? null : window.open("", "_blank", "noopener,noreferrer");
+      if (pdfWindow) {
+        pdfWindow.document.write("<!doctype html><title>PDF wird erstellt</title><body style=\"font-family: system-ui, sans-serif; padding: 40px;\">PDF wird erstellt ...</body>");
+        pdfWindow.document.close();
+      }
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 90000);
       const response = await fetch("/api/pdf/", {
@@ -333,6 +339,9 @@ export function OfferPreview({
       } else if (result.pdfBase64 && result.filename) {
         const blob = pdfBase64ToBlob(result.pdfBase64);
         const url = URL.createObjectURL(blob);
+        if (pdfWindow && !pdfWindow.closed) {
+          pdfWindow.location.href = url;
+        }
         const link = document.createElement("a");
         link.href = url;
         link.download = result.filename;
@@ -340,7 +349,7 @@ export function OfferPreview({
         link.click();
         link.remove();
         setPdfFallback({ url, filename: result.filename });
-        setShareMessage(`PDF erstellt: ${result.filename}. Falls Safari keinen Download ablegt, bitte unten "PDF herunterladen" oder "PDF öffnen" nutzen.`);
+        setShareMessage(`PDF erstellt: ${result.filename}. Die PDF wurde in einem neuen Tab geöffnet. Falls Safari keinen Download ablegt, bitte unten "PDF herunterladen" nutzen.`);
       } else {
         throw new Error("PDF wurde erstellt, aber die Serverantwort enthielt keine Datei.");
       }
@@ -353,6 +362,9 @@ export function OfferPreview({
             ? error.message
             : "PDF konnte nicht erstellt werden.";
       setPdfStatus("error");
+      if (pdfWindow && !pdfWindow.closed) {
+        pdfWindow.close();
+      }
       setShareMessage(`${message} Bitte lokal mit laufendem Next-Server oder auf Vercel erneut versuchen.`);
       window.setTimeout(() => setPdfStatus("idle"), 4500);
     }
