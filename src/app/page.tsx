@@ -2835,7 +2835,7 @@ export default function HomePage() {
               <IconButton icon={Download} label="CSV exportieren" onClick={exportCsv} />
               <IconButton icon={Braces} label="JSON exportieren" onClick={exportJson} />
               <IconButton icon={FileText} label="Einzelangebot exportieren" onClick={() => exportSingleOffer()} />
-              <IconButton icon={Printer} label="PDF/DOCX über Druckdialog vorbereiten" onClick={printOfferArea} />
+              <IconButton icon={Printer} label="Druckdialog öffnen" onClick={printOfferArea} />
               <button
                 type="button"
                 onClick={() => setHelpOpen(true)}
