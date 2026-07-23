@@ -1532,7 +1532,7 @@ function sanitizeProject(project: Project, profiles: CompanyProfile[] = companyP
       ...(project.sectionTitleVisibility ?? {})
     },
     shortDescription: project.shortDescription ?? sampleProject.shortDescription,
-    offerIntro: project.offerIntro ?? profileDefaults.offerText,
+    offerIntro: project.offerIntro ?? activeProfile.offerText,
     assignmentReason: project.assignmentReason ?? defaultAssignmentReason,
     coverLetterText: project.coverLetterText ?? defaultCoverLetterText,
     serviceScope: project.serviceScope ?? defaultServiceScope,
@@ -1572,10 +1572,6 @@ function metzgerAlignedProject(project: Project): Project {
     shortDescription: hasAiDemoText(project.shortDescription)
       ? "Leistungsangebot für strategische Beratung, Projektsteuerung, technische Prüfungen, Qualitätsmanagement, Baurevision, Sachverständigenleistungen sowie abrechenbare Reise- und Auslagenpositionen."
       : project.shortDescription,
-    offerIntro:
-      "Die Leistungen werden mit besonderem Blick auf belastbare Immobilienprozesse, Entscheidungsqualität und nachhaltige Betriebsfähigkeit strukturiert.",
-    offerClarification:
-      "Dieses Angebot basiert auf den zum Angebotszeitpunkt bekannten Rahmenbedingungen und ersetzt keine rechtliche oder steuerliche Prüfung.",
     objective: hasAiDemoText(project.objective)
       ? "Ziel ist ein belastbares, fachlich klares und prüffähiges Leistungsbild für immobilienbezogene Beratungs-, Steuerungs- und Unterstützungsleistungen."
       : project.objective,
