@@ -294,34 +294,40 @@ export function OfferPreview({
         .join("\n");
       const title = `${project.offerNumber || "Angebot"} ${project.projectName || project.client || ""}`.trim();
       const fileName = createPdfFileName(project, company);
-      const response = await fetch("/api/pdf", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          html: element.outerHTML,
-          styles,
-          title,
-          filename: fileName,
-          baseUrl: window.location.origin
-        })
+      const iframeName = `offerflow-pdf-download-${Date.now()}`;
+      const iframe = document.createElement("iframe");
+      iframe.name = iframeName;
+      iframe.hidden = true;
+      document.body.appendChild(iframe);
+
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "/api/pdf";
+      form.target = iframeName;
+      form.enctype = "multipart/form-data";
+
+      const fields = {
+        html: element.outerHTML,
+        styles,
+        title,
+        filename: fileName,
+        baseUrl: window.location.origin
+      };
+
+      Object.entries(fields).forEach(([name, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
       });
 
-      if (!response.ok) {
-        const result = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(result?.error || "PDF konnte nicht erstellt werden.");
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-      setShareMessage(`Professionelles PDF wurde erstellt: ${fileName}`);
-      setPdfStatus("idle");
+      document.body.appendChild(form);
+      form.submit();
+      form.remove();
+      window.setTimeout(() => iframe.remove(), 30000);
+      setShareMessage(`PDF-Download wurde angefordert: ${fileName}`);
+      window.setTimeout(() => setPdfStatus("idle"), 2500);
     } catch (error) {
       const message = error instanceof Error ? error.message : "PDF konnte nicht erstellt werden.";
       setPdfStatus("error");

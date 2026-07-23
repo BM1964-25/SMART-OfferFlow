@@ -167,7 +167,23 @@ export async function POST(request: NextRequest) {
   let browser: Awaited<ReturnType<typeof playwrightChromium.launch>> | null = null;
 
   try {
-    const body = (await request.json()) as {
+    const contentType = request.headers.get("content-type") ?? "";
+    const body = contentType.includes("application/json")
+      ? ((await request.json()) as {
+          html?: string;
+          styles?: string;
+          title?: string;
+          filename?: string;
+          baseUrl?: string;
+        })
+      : await request.formData().then((formData) => ({
+          html: String(formData.get("html") ?? ""),
+          styles: String(formData.get("styles") ?? ""),
+          title: String(formData.get("title") ?? ""),
+          filename: String(formData.get("filename") ?? ""),
+          baseUrl: String(formData.get("baseUrl") ?? "")
+        }));
+    const pdfRequest = body as {
       html?: string;
       styles?: string;
       title?: string;
@@ -175,14 +191,14 @@ export async function POST(request: NextRequest) {
       baseUrl?: string;
     };
 
-    if (!body.html) {
+    if (!pdfRequest.html) {
       return NextResponse.json({ error: "Angebots-HTML fehlt." }, { status: 400 });
     }
 
     const requestOrigin = new URL(request.url).origin;
-    const baseUrl = (body.baseUrl || requestOrigin).replace(/\/$/, "");
-    const title = sanitizeFilename(body.title || "angebot");
-    const filename = body.filename || `${title}.pdf`;
+    const baseUrl = (pdfRequest.baseUrl || requestOrigin).replace(/\/$/, "");
+    const title = sanitizeFilename(pdfRequest.title || "angebot");
+    const filename = pdfRequest.filename || `${title}.pdf`;
 
     browser = await playwrightChromium.launch({
       args: process.env.VERCEL || process.env.AWS_REGION ? chromium.args : ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -198,8 +214,8 @@ export async function POST(request: NextRequest) {
     await page.setContent(
       pdfShell({
         baseUrl,
-        styles: body.styles || "",
-        html: body.html
+        styles: pdfRequest.styles || "",
+        html: pdfRequest.html
       }),
       { waitUntil: "networkidle", timeout: 30000 }
     );
