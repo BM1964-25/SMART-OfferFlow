@@ -303,9 +303,19 @@ export function OfferPreview({
 
       if (!isLocalApp) {
         const pdfWindow = window.open("", "_blank");
-        if (pdfWindow) {
-          pdfWindow.document.write("<!doctype html><title>PDF wird erstellt</title><body style=\"font-family: system-ui, sans-serif; padding: 40px;\">PDF wird erstellt ...</body>");
+        const writePdfWindowMessage = (heading: string, body: string) => {
+          if (!pdfWindow || pdfWindow.closed) return;
+          pdfWindow.document.open();
+          pdfWindow.document.write(`<!doctype html>
+            <title>${heading}</title>
+            <body style="font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; padding: 40px; line-height: 1.5;">
+              <h1 style="font-size: 22px; margin: 0 0 12px;">${heading}</h1>
+              <p style="max-width: 680px;">${body}</p>
+            </body>`);
           pdfWindow.document.close();
+        };
+        if (pdfWindow) {
+          writePdfWindowMessage("PDF wird erstellt", "Bitte einen Moment warten. Das Angebot wird vorbereitet und als PDF geöffnet.");
         }
 
         const response = await fetch("/api/offers", {
@@ -315,8 +325,33 @@ export function OfferPreview({
         });
         const result = (await response.json()) as { token?: string; error?: string };
         if (!response.ok || !result.token) {
-          if (pdfWindow && !pdfWindow.closed) pdfWindow.close();
-          throw new Error(result.error || "PDF-Link konnte nicht vorbereitet werden.");
+          const fallbackResponse = await fetch("/api/pdf/", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              project,
+              groups,
+              profiles,
+              title,
+              baseUrl: window.location.origin,
+              responseMode: "json",
+              saveLocal: false
+            })
+          });
+          const fallbackResult = (await fallbackResponse.json()) as { filename?: string; pdfBase64?: string; error?: string };
+          if (!fallbackResponse.ok || !fallbackResult.pdfBase64 || !fallbackResult.filename) {
+            const message = result.error || fallbackResult.error || "PDF konnte online nicht vorbereitet werden.";
+            writePdfWindowMessage("PDF konnte nicht erstellt werden", message);
+            throw new Error(message);
+          }
+
+          const blob = pdfBase64ToBlob(fallbackResult.pdfBase64);
+          const url = URL.createObjectURL(blob);
+          setPdfFallback({ url, filename: fallbackResult.filename });
+          writePdfWindowMessage("PDF wurde erstellt", "Safari konnte die PDF nicht automatisch öffnen. Bitte im ursprünglichen App-Fenster den Button \"PDF herunterladen\" nutzen.");
+          setShareMessage(`PDF erstellt: ${fallbackResult.filename}. Bitte unten "PDF herunterladen" nutzen.`);
+          window.setTimeout(() => setPdfStatus("idle"), 1800);
+          return;
         }
 
         const pdfUrl = `/api/pdf?token=${encodeURIComponent(result.token)}&inline=1`;
